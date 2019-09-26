@@ -1,0 +1,13 @@
+- Welcher Ansatz?
+
+    1. Quantil Verfahren: 
+        * Falls ja, welche "Heuristik" zum Sortieren der Werte ? Wert des Eckendetektors ?
+        * Vorher Normalisieren der Werte ?
+
+    2. Iterative Ausdünnung -> Wirklich EED nach jedem Schritt ? (Rechenzeitaufwendig)
+
+- "Nonlocal Pixel Exchange" danach ?
+- Electrostatic Dithering ?
+
+
+
