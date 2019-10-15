@@ -1,13 +1,8 @@
 #include "utils.h"
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-
-typedef struct {
-    long nx;
-    long ny;
-} imsize_t;
 
 
 void alloc_vector (float **vector, long n) {
@@ -91,15 +86,6 @@ int cmpfunc (const void *a, const void *b) {
     return (*(float *)a - *(float *)b);
 }
 
-void flatten (float **u, float *v, long nx, long ny) {
-    long i, j;
-    for (i = 0; i < nx; ++i) {
-        for (j = 0; j < ny; ++j) {
-            v[i * nx + j] = u[i][j];
-        }
-    }
-}
-
 float quantile (float *arr, float q, long n) {
     qsort (arr, n, sizeof (float), cmpfunc);
     long qindex = (long)(q * n);
@@ -111,40 +97,42 @@ float quantile (float *arr, float q, long n) {
 a.k.a. keep the top 1-q percent corners */
 float quantile_2D (float **u, float q, long nx, long ny) {
     float *pixels = malloc (nx * ny * sizeof (float));
-    flatten (u, pixels, nx, ny);
+    /* Flatten image for quantile computation */
+    for (long i = 0; i < nx; ++i) {
+        for (long j = 0; j < ny; ++j) {
+            pixels[i * ny + j] = u[i][j];
+        }
+    }
     return quantile (pixels, q, nx * ny);
 }
 
 
-imsize_t read_image (char *filename, float ***u) {
+void read_pgm_and_allocate_memory (char *filename, long *nx, long *ny, float ***u) {
     /* open pgm file and read header */
     char buf[80];
-    long nx, ny;
 
     FILE *image = fopen (filename, "r");
 
     if (image == NULL) {
         fprintf (stderr, "Image %s not found!", filename);
-        return (imsize_t){ -1, -1 };
     }
 
     fgets (buf, 300, image);
     fgets (buf, 300, image);
     while (buf[0] == '#')
         fgets (buf, 300, image);
-    sscanf (buf, "%ld %ld", &nx, &ny);
+    sscanf (buf, "%ld %ld", nx, ny);
     fgets (buf, 300, image);
 
     /* allocate storage */
-    alloc_matrix(u, nx, ny);
+    alloc_matrix (u, *nx, *ny);
 
     /* read image data */
-    for (long i = 0; i < nx; i++)
-        for (long j = 0; j < ny; j++)
+    for (long i = 0; i < *nx; i++)
+        for (long j = 0; j < *ny; j++)
             (*u)[i][j] = (float)getc (image);
 
     fclose (image);
-    return (imsize_t){ nx, ny };
 }
 
 
@@ -161,18 +149,17 @@ float MSE (float **u, float **v, long nx, long ny) {
 float MSE_filenames (char *im1, char *im2) {
     float **u;
     float **v;
-    imsize_t s1 = read_image (im1, &u);
-    imsize_t s2 = read_image (im2, &v);
+    long unx, uny, vnx, vny;
 
-    if (!(s1.nx == s2.nx && s1.ny == s2.ny && s1.nx > 0 && s1.ny > 0)) {
-        fprintf (stderr, "Error reading images. Invalid dimensions!");
-        return -1;
-    }
+    read_pgm_and_allocate_memory (im1, &unx, &uny, &u);
+    read_pgm_and_allocate_memory (im2, &vnx, &vny, &v);
 
-    float mse = MSE (u, v, s1.nx, s2.ny);
+    assert (unx == vnx && uny == vny);
 
-    disalloc_matrix(u, s1.nx, s1.ny); 
-    disalloc_matrix(v, s2.nx, s2.ny); 
+    float mse = MSE (u, v, unx, uny);
+
+    disalloc_matrix (u, unx, uny);
+    disalloc_matrix (v, vnx, vny);
 
     return mse;
 }

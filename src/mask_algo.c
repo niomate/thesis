@@ -104,12 +104,8 @@ float calc_compression_mask (char *in, char *out, long type, float T, float sigm
     count = 0;
     for (i = 1; i <= nx; ++i) {
         for (j = 1; j <= ny; ++j) {
-            if (nc == 3) {
-                if (mask[0][i][j] != -1.0 || mask[1][i][j] != -1.0 || mask[2][i][j] != -1.0) {
-                    ++count;
-                }
-            } else if (nc == 1) {
-                if (mask[0][i][j] != -1.0) {
+            if (nc == 1) {
+                if (mask[0][i][j] == 255.f) {
                     ++count;
                 }
             }

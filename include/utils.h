@@ -21,4 +21,6 @@ void disalloc_matrix (float **matrix, long nx, long ny);
 
 void disalloc_cubix (float ***cubix, long nx, long ny, long nz);
 
+void read_pgm_and_allocate_memory (char *filename, long *nx, long *ny, float ***u);
+
 #endif // utils_h__

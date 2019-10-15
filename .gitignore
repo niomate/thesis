@@ -6,3 +6,5 @@ lib/
 .clang-format
 .o
 .pyc
+cmake-build-debug/
+.vs/

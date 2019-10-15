@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 /*--------------------------------------------------------------------------*/
 /*                                                                          */
 /*               CORNER DETECTION WITH THE STRUCTURE TENSOR                 */
@@ -20,6 +19,8 @@
  - presmoothing at noise scale:  convolution-based, Neumann b.c.
  - presmoothing at integration scale: convolution-based, Dirichlet b.c.
 */
+
+const float EPSILON = 0.0000001;
 
 /* ----------------------------------------------------------------------- */
 
@@ -348,6 +349,133 @@ void PA_trans
 
 /*--------------------------------------------------------------------------*/
 
+void corner_detection_quantile
+
+(float ***f,  /* image, unaltered */
+ long nc,     /* number of channels of u*/
+ long nx,     /* image dimension in x direction */
+ long ny,     /* image dimension in y direction */
+ float hx,    /* pixel size in x direction */
+ float hy,    /* pixel size in y direction */
+ long type,   /* type of corner detector */
+ float q,     /* quantile for thresholding */
+ float sigma, /* noise scale */
+ float rho,   /* integration scale */
+ float **v)   /* corner locations */
+
+/*
+ calculates structure tensor based corner detector;
+ v[i][j]=255 for corners;
+ v[i][j]=0   else;
+*/
+
+{
+    long i, j, m;              /* loop variables */
+    float ***u;                /* loop */
+    float **dxx, **dxy, **dyy; /* tensor components */
+    float **w;                 /* field for corner detection */
+    float c, s;                /* cosine, sine */
+    float lam1, lam2;          /* eigenvalues */
+    float det, trace;          /* determinant, trace */
+
+    /* allocate storage */
+    alloc_cubix (&u, nc, nx + 2, ny + 2);
+    alloc_matrix (&dxx, nx + 2, ny + 2);
+    alloc_matrix (&dxy, nx + 2, ny + 2);
+    alloc_matrix (&dyy, nx + 2, ny + 2);
+    alloc_matrix (&w, nx + 2, ny + 2);
+
+    /* copy f into u */
+    for (m = 0; m <= nc - 1; m++)
+        for (i = 1; i <= nx; i++)
+            for (j = 1; j <= ny; j++)
+                u[m][i][j] = f[m][i][j];
+
+    /* calculate structure tensor of u */
+    struct_tensor (u, nc, nx, ny, hx, hy, sigma, rho, dxx, dxy, dyy);
+
+    if (type == 0)
+        /* Rohr: det(J) */
+        for (i = 1; i <= nx; i++)
+            for (j = 1; j <= ny; j++) {
+                w[i][j] = dxx[i][j] * dyy[i][j] - dxy[i][j] * dxy[i][j];
+                // if (w[i][j] <= T)
+                //     w[i][j] = 0.0;
+            }
+
+    if (type == 1)
+        /* Tomasi-Kanade: smaller eigenvalue */
+        for (i = 1; i <= nx; i++)
+            for (j = 1; j <= ny; j++) {
+                PA_trans (dxx[i][j], dxy[i][j], dyy[i][j], &c, &s, &lam1, &lam2);
+                w[i][j] = lam2;
+                // if (w[i][j] <= T)
+                //     w[i][j] = 0.0;
+            }
+
+    if (type == 2)
+        /* Foerstner-Harris: det(J)/trace(J) */
+        for (i = 1; i <= nx; i++)
+            for (j = 1; j <= ny; j++) {
+                trace = dxx[i][j] + dyy[i][j] + EPSILON;
+                det = dxx[i][j] * dyy[i][j] - dxy[i][j] * dxy[i][j];
+                w[i][j] = det / trace;
+                // if (trace > T) {
+                //     w[i][j] = det / trace;
+                // } else {
+                //     w[i][j] = 0.0;
+                // }
+            }
+
+    // float T = quantile_2D (w, q, nx, ny);
+
+    long qcount = 0;
+
+   
+
+    printf ("Image size: %ldx%ld\n", nx, ny);
+    printf ("Points of interest detected: %ld\n", qcount);
+    printf ("Percentage: %f\n", (float)(100 * qcount) / (float)(nx * ny));
+
+    /* search for maximum */
+    dummies_mirror (w, nx, ny);
+    for (i = 1; i <= nx; i++)
+        for (j = 1; j <= ny; j++)
+            if ((w[i][j] > w[i + 1][j]) && (w[i][j] > w[i - 1][j]) && (w[i][j] > w[i][j + 1]) &&
+                (w[i][j] > w[i][j - 1]) && (w[i + 1][j] * w[i - 1][j] * w[i][j + 1] * w[i][j - 1] != 0.0))
+                v[i][j] = 255.0;
+            else
+                v[i][j] = 0.0;
+
+    float T = quantile_2D(v, 0.95, nx, ny);
+    printf("Threshold: %.3f\n", T);
+
+     for (i = 1; i <= nx; i++) {
+        for (j = 1; j <= ny; j++) {
+            if (v[i][j] <= T) {
+                v[i][j] = 0;
+            } else {
+                qcount++;
+            }
+        }
+    }
+
+    
+
+    /* free storage */
+    disalloc_cubix (u, nc, nx + 2, ny + 2);
+    disalloc_matrix (dxx, nx + 2, ny + 2);
+    disalloc_matrix (dxy, nx + 2, ny + 2);
+    disalloc_matrix (dyy, nx + 2, ny + 2);
+    disalloc_matrix (w, nx + 2, ny + 2);
+
+    return;
+
+} /* corner_detection */
+
+
+/*--------------------------------------------------------------------------*/
+
 void corner_detection
 
 (float ***f,  /* image, unaltered */
@@ -418,10 +546,11 @@ void corner_detection
             for (j = 1; j <= ny; j++) {
                 trace = dxx[i][j] + dyy[i][j];
                 det = dxx[i][j] * dyy[i][j] - dxy[i][j] * dxy[i][j];
-                if (trace > T)
+                if (trace > T) {
                     w[i][j] = det / trace;
-                else
+                } else {
                     w[i][j] = 0.0;
+                }
             }
 
     /* search for maximum */
@@ -487,7 +616,7 @@ void draw_corners
 
 } /* draw_corners */
 
-int process_image (char *in, char *out, long type, float T, float sigma, float rho)
+int detect_and_draw_corners (char *in, char *out, long type, float T, float sigma, float rho)
 
 {
     char row[80];             /* for reading data */
@@ -500,9 +629,6 @@ int process_image (char *in, char *out, long type, float T, float sigma, float r
     unsigned char byte;       /* for data conversion */
     FILE *inimage, *outimage; /* input file, output file */
     printf ("CORNER DETECTION WITH THE STRUCTURE TENSOR\n\n");
-    printf ("Using parameter values: \n\tCorner detector: %ld\n\tThreshold: %f\n\tSigma: "
-            "%f\n\tRho: %f\n",
-            type, T, sigma, rho);
 
     /* ---- read input image (pgm format P5 or ppm format P6) ---- */
 
@@ -539,7 +665,7 @@ int process_image (char *in, char *out, long type, float T, float sigma, float r
     /* allocate storage for corner detector */
     alloc_matrix (&v, nx + 2, ny + 2);
 
-    /* corner detection 
+    /* corner detection
     v contains corner map */
     corner_detection (u, nc, nx, ny, 1.0, 1.0, type, T, sigma, rho, v);
 
@@ -552,8 +678,7 @@ int process_image (char *in, char *out, long type, float T, float sigma, float r
     for (i = 1; i <= nx; i++)
         for (j = 1; j <= ny; j++)
             if (v[i][j] == 255.0)
-                count = count + 1;
-    printf ("number of corners:   %3ld\n", count);
+                ++count;
 
     /* ---- write output image ---- */
 
