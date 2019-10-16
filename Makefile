@@ -124,19 +124,6 @@ libmask.so/fast:
 .PHONY : libmask.so/fast
 
 #=============================================================================
-# Target rules for targets named libinpaint.so
-
-# Build rule for target.
-libinpaint.so: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 libinpaint.so
-.PHONY : libinpaint.so
-
-# fast build rule for target.
-libinpaint.so/fast:
-	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/build
-.PHONY : libinpaint.so/fast
-
-#=============================================================================
 # Target rules for targets named inpainting
 
 # Build rule for target.
@@ -148,19 +135,6 @@ inpainting: cmake_check_build_system
 inpainting/fast:
 	$(MAKE) -f CMakeFiles/inpainting.dir/build.make CMakeFiles/inpainting.dir/build
 .PHONY : inpainting/fast
-
-#=============================================================================
-# Target rules for targets named corner_detection
-
-# Build rule for target.
-corner_detection: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 corner_detection
-.PHONY : corner_detection
-
-# fast build rule for target.
-corner_detection/fast:
-	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/build
-.PHONY : corner_detection/fast
 
 #=============================================================================
 # Target rules for targets named amss_corner
@@ -176,17 +150,30 @@ amss_corner/fast:
 .PHONY : amss_corner/fast
 
 #=============================================================================
-# Target rules for targets named chain_test
+# Target rules for targets named corner_detection
 
 # Build rule for target.
-chain_test: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 chain_test
-.PHONY : chain_test
+corner_detection: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 corner_detection
+.PHONY : corner_detection
 
 # fast build rule for target.
-chain_test/fast:
-	$(MAKE) -f CMakeFiles/chain_test.dir/build.make CMakeFiles/chain_test.dir/build
-.PHONY : chain_test/fast
+corner_detection/fast:
+	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/build
+.PHONY : corner_detection/fast
+
+#=============================================================================
+# Target rules for targets named libinpaint.so
+
+# Build rule for target.
+libinpaint.so: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 libinpaint.so
+.PHONY : libinpaint.so
+
+# fast build rule for target.
+libinpaint.so/fast:
+	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/build
+.PHONY : libinpaint.so/fast
 
 #=============================================================================
 # Target rules for targets named libamss.so
@@ -268,7 +255,7 @@ src/amss/chain.o: src/amss/chain.c.o
 # target to build an object file
 src/amss/chain.c.o:
 	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/amss/chain.c.o
-	$(MAKE) -f CMakeFiles/chain_test.dir/build.make CMakeFiles/chain_test.dir/src/amss/chain.c.o
+	$(MAKE) -f CMakeFiles/libamss.so.dir/build.make CMakeFiles/libamss.so.dir/src/amss/chain.c.o
 .PHONY : src/amss/chain.c.o
 
 src/amss/chain.i: src/amss/chain.c.i
@@ -278,7 +265,7 @@ src/amss/chain.i: src/amss/chain.c.i
 # target to preprocess a source file
 src/amss/chain.c.i:
 	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/amss/chain.c.i
-	$(MAKE) -f CMakeFiles/chain_test.dir/build.make CMakeFiles/chain_test.dir/src/amss/chain.c.i
+	$(MAKE) -f CMakeFiles/libamss.so.dir/build.make CMakeFiles/libamss.so.dir/src/amss/chain.c.i
 .PHONY : src/amss/chain.c.i
 
 src/amss/chain.s: src/amss/chain.c.s
@@ -288,7 +275,7 @@ src/amss/chain.s: src/amss/chain.c.s
 # target to generate assembly for a file
 src/amss/chain.c.s:
 	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/amss/chain.c.s
-	$(MAKE) -f CMakeFiles/chain_test.dir/build.make CMakeFiles/chain_test.dir/src/amss/chain.c.s
+	$(MAKE) -f CMakeFiles/libamss.so.dir/build.make CMakeFiles/libamss.so.dir/src/amss/chain.c.s
 .PHONY : src/amss/chain.c.s
 
 src/corner_detection.o: src/corner_detection.c.o
@@ -354,8 +341,8 @@ src/inpainting/inpainting.o: src/inpainting/inpainting.c.o
 
 # target to build an object file
 src/inpainting/inpainting.c.o:
-	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/src/inpainting/inpainting.c.o
 	$(MAKE) -f CMakeFiles/inpainting.dir/build.make CMakeFiles/inpainting.dir/src/inpainting/inpainting.c.o
+	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/src/inpainting/inpainting.c.o
 .PHONY : src/inpainting/inpainting.c.o
 
 src/inpainting/inpainting.i: src/inpainting/inpainting.c.i
@@ -364,8 +351,8 @@ src/inpainting/inpainting.i: src/inpainting/inpainting.c.i
 
 # target to preprocess a source file
 src/inpainting/inpainting.c.i:
-	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/src/inpainting/inpainting.c.i
 	$(MAKE) -f CMakeFiles/inpainting.dir/build.make CMakeFiles/inpainting.dir/src/inpainting/inpainting.c.i
+	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/src/inpainting/inpainting.c.i
 .PHONY : src/inpainting/inpainting.c.i
 
 src/inpainting/inpainting.s: src/inpainting/inpainting.c.s
@@ -374,8 +361,8 @@ src/inpainting/inpainting.s: src/inpainting/inpainting.c.s
 
 # target to generate assembly for a file
 src/inpainting/inpainting.c.s:
-	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/src/inpainting/inpainting.c.s
 	$(MAKE) -f CMakeFiles/inpainting.dir/build.make CMakeFiles/inpainting.dir/src/inpainting/inpainting.c.s
+	$(MAKE) -f CMakeFiles/libinpaint.so.dir/build.make CMakeFiles/libinpaint.so.dir/src/inpainting/inpainting.c.s
 .PHONY : src/inpainting/inpainting.c.s
 
 src/mask_algo.o: src/mask_algo.c.o
@@ -443,12 +430,11 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... libmask.so"
-	@echo "... libinpaint.so"
 	@echo "... inpainting"
+	@echo "... amss_corner"
 	@echo "... rebuild_cache"
 	@echo "... corner_detection"
-	@echo "... amss_corner"
-	@echo "... chain_test"
+	@echo "... libinpaint.so"
 	@echo "... libamss.so"
 	@echo "... src/amss/amss.o"
 	@echo "... src/amss/amss.i"
