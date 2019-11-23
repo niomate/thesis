@@ -278,6 +278,36 @@ src/amss/chain.c.s:
 	$(MAKE) -f CMakeFiles/libamss.so.dir/build.make CMakeFiles/libamss.so.dir/src/amss/chain.c.s
 .PHONY : src/amss/chain.c.s
 
+src/amss/least_squares.o: src/amss/least_squares.c.o
+
+.PHONY : src/amss/least_squares.o
+
+# target to build an object file
+src/amss/least_squares.c.o:
+	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/amss/least_squares.c.o
+	$(MAKE) -f CMakeFiles/libamss.so.dir/build.make CMakeFiles/libamss.so.dir/src/amss/least_squares.c.o
+.PHONY : src/amss/least_squares.c.o
+
+src/amss/least_squares.i: src/amss/least_squares.c.i
+
+.PHONY : src/amss/least_squares.i
+
+# target to preprocess a source file
+src/amss/least_squares.c.i:
+	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/amss/least_squares.c.i
+	$(MAKE) -f CMakeFiles/libamss.so.dir/build.make CMakeFiles/libamss.so.dir/src/amss/least_squares.c.i
+.PHONY : src/amss/least_squares.c.i
+
+src/amss/least_squares.s: src/amss/least_squares.c.s
+
+.PHONY : src/amss/least_squares.s
+
+# target to generate assembly for a file
+src/amss/least_squares.c.s:
+	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/amss/least_squares.c.s
+	$(MAKE) -f CMakeFiles/libamss.so.dir/build.make CMakeFiles/libamss.so.dir/src/amss/least_squares.c.s
+.PHONY : src/amss/least_squares.c.s
+
 src/corner_detection.o: src/corner_detection.c.o
 
 .PHONY : src/corner_detection.o
@@ -399,6 +429,7 @@ src/utils.o: src/utils.c.o
 # target to build an object file
 src/utils.c.o:
 	$(MAKE) -f CMakeFiles/libmask.so.dir/build.make CMakeFiles/libmask.so.dir/src/utils.c.o
+	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/utils.c.o
 	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/utils.c.o
 .PHONY : src/utils.c.o
 
@@ -409,6 +440,7 @@ src/utils.i: src/utils.c.i
 # target to preprocess a source file
 src/utils.c.i:
 	$(MAKE) -f CMakeFiles/libmask.so.dir/build.make CMakeFiles/libmask.so.dir/src/utils.c.i
+	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/utils.c.i
 	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/utils.c.i
 .PHONY : src/utils.c.i
 
@@ -419,6 +451,7 @@ src/utils.s: src/utils.c.s
 # target to generate assembly for a file
 src/utils.c.s:
 	$(MAKE) -f CMakeFiles/libmask.so.dir/build.make CMakeFiles/libmask.so.dir/src/utils.c.s
+	$(MAKE) -f CMakeFiles/amss_corner.dir/build.make CMakeFiles/amss_corner.dir/src/utils.c.s
 	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/utils.c.s
 .PHONY : src/utils.c.s
 
@@ -445,6 +478,9 @@ help:
 	@echo "... src/amss/chain.o"
 	@echo "... src/amss/chain.i"
 	@echo "... src/amss/chain.s"
+	@echo "... src/amss/least_squares.o"
+	@echo "... src/amss/least_squares.i"
+	@echo "... src/amss/least_squares.s"
 	@echo "... src/corner_detection.o"
 	@echo "... src/corner_detection.i"
 	@echo "... src/corner_detection.s"

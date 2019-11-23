@@ -7,4 +7,8 @@ lib/
 .o
 .pyc
 cmake-build-debug/
-.vs/
+.vs
+CMakeFiles/
+.idea
+CMakeCache.txt
+cmake_install.cmake

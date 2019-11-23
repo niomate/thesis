@@ -1,6 +1,7 @@
 #include "corner_detection.h"
 #include "utils.h"
 #include <math.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -417,7 +418,7 @@ void corner_detection_quantile
         /* Foerstner-Harris: det(J)/trace(J) */
         for (i = 1; i <= nx; i++)
             for (j = 1; j <= ny; j++) {
-                trace = dxx[i][j] + dyy[i][j] + EPSILON;
+                trace = dxx[i][j] + dyy[i][j] + FLT_EPSILON;
                 det = dxx[i][j] * dyy[i][j] - dxy[i][j] * dxy[i][j];
                 w[i][j] = det / trace;
                 // if (trace > T) {
@@ -427,11 +428,20 @@ void corner_detection_quantile
                 // }
             }
 
-    // float T = quantile_2D (w, q, nx, ny);
-
     long qcount = 0;
 
-   
+    float T = quantile_2D(v, q, nx, ny);
+    printf("Threshold: %.3f\n", T);
+
+     for (i = 1; i <= nx; i++) {
+        for (j = 1; j <= ny; j++) {
+            if (v[i][j] <= T) {
+                v[i][j] = 0;
+            } else {
+                qcount++;
+            }
+        }
+    }
 
     printf ("Image size: %ldx%ld\n", nx, ny);
     printf ("Points of interest detected: %ld\n", qcount);
@@ -446,21 +456,6 @@ void corner_detection_quantile
                 v[i][j] = 255.0;
             else
                 v[i][j] = 0.0;
-
-    float T = quantile_2D(v, 0.95, nx, ny);
-    printf("Threshold: %.3f\n", T);
-
-     for (i = 1; i <= nx; i++) {
-        for (j = 1; j <= ny; j++) {
-            if (v[i][j] <= T) {
-                v[i][j] = 0;
-            } else {
-                qcount++;
-            }
-        }
-    }
-
-    
 
     /* free storage */
     disalloc_cubix (u, nc, nx + 2, ny + 2);

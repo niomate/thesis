@@ -1,14 +1,32 @@
 #include "utils.h"
-#include <assert.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
+#include <unistd.h>
 
 void alloc_vector (float **vector, long n) {
     *vector = (float *)malloc (n * sizeof (float));
     if (*vector == NULL) {
         printf ("alloc_vector: not enough storage available\n");
+        exit (1);
+    }
+    return;
+}
+
+
+void alloc_vector_long
+
+(long **vector, /* vector */
+ long n)        /* size */
+
+/* allocates storage for a vector of size n and type long */
+
+{
+    *vector = (long *)malloc (n * sizeof (long));
+    if (*vector == NULL) {
+        printf ("alloc_vector_long: not enough storage available\n");
         exit (1);
     }
     return;
@@ -82,84 +100,331 @@ void disalloc_cubix (float ***cubix, long nx, long ny, long nz) {
     return;
 }
 
-int cmpfunc (const void *a, const void *b) {
-    return (*(float *)a - *(float *)b);
+
+/*--------------------------------------------------------------------------*/
+
+void read_string
+
+(char *v) /* string to be read */
+
+/*
+ reads a long value v
+*/
+
+{
+    fgets (v, 80, stdin);
+    if (v[strlen (v) - 1] == '\n')
+        v[strlen (v) - 1] = 0;
+    return;
 }
 
-float quantile (float *arr, float q, long n) {
-    qsort (arr, n, sizeof (float), cmpfunc);
-    long qindex = (long)(q * n);
-    printf ("Quantile index is %ld.\n", qindex);
-    return arr[qindex];
+/*--------------------------------------------------------------------------*/
+
+void read_long
+
+(long *v) /* value to be read */
+
+/*
+ reads a long value v
+*/
+
+{
+    char row[80]; /* string for reading data */
+
+    fgets (row, 80, stdin);
+    if (row[strlen (row) - 1] == '\n')
+        row[strlen (row) - 1] = 0;
+    sscanf (row, "%ld", &*v);
+    return;
 }
 
-/* Calculates a threshold s.t. <q> percent of all pixels are below this threshold
-a.k.a. keep the top 1-q percent corners */
-float quantile_2D (float **u, float q, long nx, long ny) {
-    float *pixels = malloc (nx * ny * sizeof (float));
-    /* Flatten image for quantile computation */
-    for (long i = 0; i < nx; ++i) {
-        for (long j = 0; j < ny; ++j) {
-            pixels[i * ny + j] = u[i][j];
+/*--------------------------------------------------------------------------*/
+
+void read_float
+
+(float *v) /* value to be read */
+
+/*
+ reads a float value v
+*/
+
+{
+    char row[80]; /* string for reading data */
+
+    fgets (row, 80, stdin);
+    if (row[strlen (row) - 1] == '\n')
+        row[strlen (row) - 1] = 0;
+    sscanf (row, "%f", &*v);
+    return;
+}
+
+
+void read_pgm_and_allocate_memory
+
+(const char *file_name, /* name of pgm file */
+ long *nx,              /* image size in x direction, output */
+ long *ny,              /* image size in y direction, output */
+ float ***u)            /* image, output */
+
+/*
+  reads a greyscale image that has been encoded in pgm format P5;
+  allocates memory for the image u;
+  adds boundary layers of size 1 such that
+  - the relevant image pixels in x direction use the indices 1,...,nx
+  - the relevant image pixels in y direction use the indices 1,...,ny
+*/
+
+{
+    FILE *inimage; /* input file */
+    char row[80];  /* for reading data */
+    long i, j;     /* loop variables */
+
+    /* open file */
+    inimage = fopen (file_name, "rb");
+    if (NULL == inimage) {
+        printf ("could not open file '%s' for reading, aborting.\n", file_name);
+        exit (1);
+    }
+
+    /* read header */
+    fgets (row, 80, inimage); /* skip format definition */
+    fgets (row, 80, inimage);
+    while (row[0] == '#') /* skip comments */
+        fgets (row, 80, inimage);
+    sscanf (row, "%ld %ld", nx, ny); /* read image size */
+    fgets (row, 80, inimage);        /* read maximum grey value */
+
+    /* allocate memory */
+    alloc_matrix (u, (*nx) + 2, (*ny) + 2);
+
+    /* read image data row by row */
+    for (j = 1; j <= (*ny); j++)
+        for (i = 1; i <= (*nx); i++)
+            (*u)[i][j] = (float)getc (inimage);
+
+    /* close file */
+    fclose (inimage);
+
+    return;
+
+} /* read_pgm_and_allocate_memory */
+
+/*--------------------------------------------------------------------------*/
+
+void comment_line
+
+(char *comment,    /* comment string (output) */
+ char *lineformat, /* format string for comment line */
+ ...)              /* optional arguments */
+
+/*
+  Add a line to the comment string comment. The string line can contain plain
+  text and format characters that are compatible with sprintf.
+  Example call: print_comment_line(comment,"Text %f %d",float_var,int_var);
+  If no line break is supplied at the end of the input string, it is added
+  automatically.
+*/
+
+{
+    char line[80];
+    va_list arguments;
+
+    /* get list of optional function arguments */
+    va_start (arguments, lineformat);
+
+    /* convert format string and arguments to plain text line string */
+    vsprintf (line, lineformat, arguments);
+
+    /* add line to total commentary string */
+    strncat (comment, line, 80);
+
+    /* add line break if input string does not end with one */
+    if (line[strlen (line) - 1] != '\n')
+        sprintf (comment, "%s\n", comment);
+
+    /* close argument list */
+    va_end (arguments);
+
+    return;
+
+} /* comment_line */
+
+/*--------------------------------------------------------------------------*/
+
+void write_pgm
+
+(float **u,       /* image, unchanged */
+ long nx,         /* image size in x direction */
+ long ny,         /* image size in y direction */
+ char *file_name, /* name of pgm file */
+ char *comments)  /* comment string (set 0 for no comments) */
+
+/*
+  writes a greyscale image into a pgm P5 file;
+*/
+
+{
+    FILE *outimage;     /* output file */
+    long i, j;          /* loop variables */
+    float aux;          /* auxiliary variable */
+    unsigned char byte; /* for data conversion */
+
+    /* open file */
+    outimage = fopen (file_name, "wb");
+    if (NULL == outimage) {
+        printf ("Could not open file '%s' for writing, aborting\n", file_name);
+        exit (1);
+    }
+
+    /* write header */
+    fprintf (outimage, "P5\n"); /* format */
+    if (comments != 0)
+        fprintf (outimage, comments);        /* comments */
+    fprintf (outimage, "%ld %ld\n", nx, ny); /* image size */
+    fprintf (outimage, "255\n");             /* maximal value */
+
+    /* write image data */
+    for (j = 1; j <= ny; j++)
+        for (i = 1; i <= nx; i++) {
+            aux = u[i][j] + 0.499999; /* for correct rounding */
+            if (aux < 0.0)
+                byte = (unsigned char)(0.0);
+            else if (aux > 255.0)
+                byte = (unsigned char)(255.0);
+            else
+                byte = (unsigned char)(aux);
+            fwrite (&byte, sizeof (unsigned char), 1, outimage);
+        }
+
+    /* close file */
+    fclose (outimage);
+
+    return;
+
+} /* write_pgm */
+
+/*--------------------------------------------------------------------------*/
+
+void dummies
+
+(float **u, /* image matrix */
+ long nx,   /* size in x direction */
+ long ny)   /* size in y direction */
+
+/* creates dummy boundaries by mirroring */
+
+{
+    long i, j; /* loop variables */
+
+    for (i = 1; i <= nx; i++) {
+        u[i][0] = u[i][1];
+        u[i][ny + 1] = u[i][ny];
+    }
+
+    for (j = 0; j <= ny + 1; j++) {
+        u[0][j] = u[1][j];
+        u[nx + 1][j] = u[nx][j];
+    }
+
+    return;
+}
+
+/*--------------------------------------------------------------------------*/
+
+
+float sgn (float x)
+
+/*
+ sign function
+*/
+
+{
+    float sign;
+
+    if (x > 0.0)
+        sign = 1.0;
+    else if (x < 0)
+        sign = -1.0;
+    else
+        sign = 0.0;
+
+    return (sign);
+}
+
+/*--------------------------------------------------------------------------*/
+
+void analyse_grey
+
+(float **u,   /* image, unchanged */
+ long nx,     /* pixel number in x direction */
+ long ny,     /* pixel number in y direction */
+ float *min,  /* minimum, output */
+ float *max,  /* maximum, output */
+ float *mean, /* mean, output */
+ float *std)  /* standard deviation, output */
+
+/*
+ computes minimum, maximum, mean, and standard deviation of a greyscale
+ image u
+*/
+
+{
+    long i, j;    /* loop variables */
+    double help1; /* auxiliary variable */
+    float help2;  /* auxiliary variable */
+
+    *min = u[1][1];
+    *max = u[1][1];
+    help1 = 0.0;
+    for (i = 1; i <= nx; i++)
+        for (j = 1; j <= ny; j++) {
+            if (u[i][j] < *min)
+                *min = u[i][j];
+            if (u[i][j] > *max)
+                *max = u[i][j];
+            help1 = help1 + (double)u[i][j];
+        }
+    *mean = (float)help1 / (nx * ny);
+
+    *std = 0.0;
+    for (i = 1; i <= nx; i++)
+        for (j = 1; j <= ny; j++) {
+            help2 = u[i][j] - *mean;
+            *std = *std + help2 * help2;
+        }
+    *std = sqrt (*std / (nx * ny));
+
+    return;
+
+} /* analyse_grey */
+
+
+long clamp (long n, long hi, long lo) {
+    if (n > hi)
+        return hi;
+    if (n < lo)
+        return lo;
+    return n;
+}
+
+
+void mask (float **u, float **m, long nx, long ny, int r) {
+    long i, j, k, l, km, lm;
+    for (i = 1; i <= nx; i++) {
+        for (j = 1; j <= ny; j++) {
+            /* keep area around points of interest */
+            if (m[i][j] == 255.0) {
+                k = clamp (i - r, 0, nx);
+                km = clamp (i + r, 0, nx);
+                l = clamp (j - r, 0, ny);
+                lm = clamp (k + r, 0, ny);
+                for (; k <= km; k++) {
+                    for (; l <= lm; l++) {
+                        if ((k - i) * (k - i) + (l - j) * (l - j) <= r * r)
+                            u[k][l] = 255.0;
+                    }
+                }
+            }
         }
     }
-    return quantile (pixels, q, nx * ny);
-}
-
-
-void read_pgm_and_allocate_memory (char *filename, long *nx, long *ny, float ***u) {
-    /* open pgm file and read header */
-    char buf[80];
-
-    FILE *image = fopen (filename, "r");
-
-    if (image == NULL) {
-        fprintf (stderr, "Image %s not found!", filename);
-    }
-
-    fgets (buf, 300, image);
-    fgets (buf, 300, image);
-    while (buf[0] == '#')
-        fgets (buf, 300, image);
-    sscanf (buf, "%ld %ld", nx, ny);
-    fgets (buf, 300, image);
-
-    /* allocate storage */
-    alloc_matrix (u, *nx, *ny);
-
-    /* read image data */
-    for (long i = 0; i < *nx; i++)
-        for (long j = 0; j < *ny; j++)
-            (*u)[i][j] = (float)getc (image);
-
-    fclose (image);
-}
-
-
-float MSE (float **u, float **v, long nx, long ny) {
-    float acc = 0;
-    for (long i = 0; i < nx; ++i) {
-        for (long j = 0; j < ny; ++j) {
-            acc += powf (u[i][j] - v[i][j], 2.0);
-        }
-    }
-    return acc / (nx * ny);
-}
-
-float MSE_filenames (char *im1, char *im2) {
-    float **u;
-    float **v;
-    long unx, uny, vnx, vny;
-
-    read_pgm_and_allocate_memory (im1, &unx, &uny, &u);
-    read_pgm_and_allocate_memory (im2, &vnx, &vny, &v);
-
-    assert (unx == vnx && uny == vny);
-
-    float mse = MSE (u, v, unx, uny);
-
-    disalloc_matrix (u, unx, uny);
-    disalloc_matrix (v, vnx, vny);
-
-    return mse;
 }
