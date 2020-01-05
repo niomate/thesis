@@ -39,4 +39,6 @@ void analyse_grey (float **u, long nx, long ny, float *min, float *max, float *m
 
 void mask (float **u, float **m, long nx, long ny, int r);
 
+long clamp (long x, long lo, long hi);
+
 #endif // utils_h__

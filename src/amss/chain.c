@@ -83,7 +83,12 @@ void remove_chain (struct node **head, struct node *delete) {
 int cmpfunc (const void *a, const void *b) {
     float x = *(float *)a;
     float y = *(float *)b;
-    return x - y;
+    if (x > y)
+        return 1;
+    else if (x < y)
+        return -1;
+    else
+        return 0;
 }
 
 
@@ -96,23 +101,28 @@ void cornerness_quantile (struct node **head, long t, long n_corners, float q) {
 
     /* TODO: Figure out how to filter out faulty sequences! */
     for (struct node *current = *head; current != NULL; current = current->next) {
-        if (fabs (current->error) < FLT_EPSILON) {
-            continue;
-        } else {
-            cornerness[i++] = current->error;
-        }
+        // if (fabs (current->error) == 0) {
+        //     continue;
+        // } else {
+        cornerness[i++] = current->error;
+        // }
     }
 
     /* Sort cornerness in ascending order to compute quantile */
     qsort (cornerness, n_corners, sizeof (float), cmpfunc);
+    // for (int i = 0; i < n_corners; ++i) {
+    //     printf ("%f, ", cornerness[i]);
+    // }
+    // printf ("\n");
     long qindex = (long)(q * n_corners);
-    printf ("Quantile corner_index is %ld.\n", qindex);
+    // printf ("Quantile corner_index is %ld.\n", qindex);
     threshold = cornerness[qindex];
 
-    printf ("Threshold is %.2f\n", threshold);
+    // printf ("Threshold is %.2f\n", threshold);
     while (current != NULL) {
-        printf ("Error: %f, Slope: %f, Angle: %f\n", current->error, current->slope, current->angle);
-        if (current->error <= threshold) {
+        // printf ("Error: %f, Slope: %f, Angle: %f\n", current->error, current->slope, current->angle);
+        if (current->error > threshold) {
+            /* Error too large, remove node from list */
             if (previous != NULL) {
                 previous->next = current->next;
                 current = current->next;

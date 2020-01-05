@@ -1,11 +1,2 @@
--make binary test images for structure tensor
-	* square
-	* circle
-	* ellipses
-	* rings
-
 -implement amss corner detection
-	* how to find out which chains are bad ? 
-	* what to do about incomplete chains ? 
-
-
+	* Try to approximate hessian normal form instead 

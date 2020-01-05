@@ -399,7 +399,7 @@ void analyse_grey
 } /* analyse_grey */
 
 
-long clamp (long n, long hi, long lo) {
+long clamp (long n, long lo, long hi) {
     if (n > hi)
         return hi;
     if (n < lo)

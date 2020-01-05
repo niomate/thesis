@@ -1,24 +1,25 @@
 from PIL import Image
 from PIL import ImageDraw
-import random
 import os
-import sys
-
-NAME_TEMPLATE = os.path.join(os.path.dirname(__file__), '../images/binary/{}.pgm')
-
-
-def rand_coord():
-    return random.randint(1, 255), random.randint(1, 255)
-
+import numpy as np
 
 if __name__ == '__main__':
-    n_images = int(sys.argv[1])
-    for n in range(n_images):
-        name = NAME_TEMPLATE.format(f'test{n}')
-        im = Image.new('L', (255, 255), color=255)
-        points = [rand_coord() for _ in range(4)]
+    w, h = 512, 512
+    b = 1/2 * h  # Height of the triangle
+    A = (w / 2, b)  # Tip of the triangle
+    for angle in np.linspace(15, 160, 30):
+        angle_rad = np.deg2rad(angle / 2)
+        name = os.path.join(
+            os.path.dirname(__file__), f'../images/binary/angles/angle{angle:03.0f}-{{}}.pgm')
+        B = (w / 2 + b * np.tan(angle_rad), 0)
+        C = (w / 2 - b * np.tan(angle_rad), 0)
+        im = Image.new('L', (w, h), color=255)
         draw = ImageDraw.Draw(im)
-        draw.polygon(points, fill="black")
-        im.save(name)
-
-    
+        draw.polygon([C, B, A], fill='black')
+        im.save(name.format('0'))
+        # im = im.rotate(90)
+        # im.save(name.format('1'))
+        # im = im.rotate(90)
+        # im.save(name.format('2'))
+        # im = im.rotate(90)
+        # im.save(name.format('3'))
