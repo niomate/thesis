@@ -55,7 +55,7 @@ void run_all_tests (const char *dir) {
         ++total;
     }
 
-    char **failed_tests = calloc (total, sizeof (char *));
+    char **failed_tests = malloc (total * sizeof (char *));
     for (int i = 0; i < total; ++i) {
         failed_tests[i] = malloc (256 * sizeof (char));
     }
