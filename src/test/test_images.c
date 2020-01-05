@@ -1,5 +1,5 @@
-#include "amss/amss_corner_detection.h"
-#include "amss/chain.h"
+#include "../amss/amss_corner_detection.h"
+#include "../amss/chain.h"
 #include <assert.h>
 #include <dirent.h>
 #include <math.h>
@@ -16,7 +16,6 @@ static const int EXPECTED_Y = 256;
 extern int DEBUG = 0;
 
 const char *TEST_DIR = "/home/danielg/uni/thesis/images/binary/angles/";
-
 
 int run_single_test (char *);
 void run_all_tests ();
@@ -50,8 +49,22 @@ void run_all_tests (const char *dir) {
     }
 
     int total = 0;
-    int success = 0;
+    while ((entry = readdir (p_dir)) != NULL) {
+        if (strcmp (entry->d_name, ".") == 0 || strcmp (entry->d_name, "..") == 0)
+            continue;
+        ++total;
+    }
 
+    char **failed_tests = calloc (total, sizeof (char *));
+    for (int i = 0; i < total; ++i) {
+        failed_tests[i] = malloc (256 * sizeof (char));
+    }
+
+    int success = 0;
+    int failed = 0;
+
+    /* Reopen directory since it is mutated by the read operation */
+    p_dir = opendir (dir);
     while ((entry = readdir (p_dir)) != NULL) {
         if (strcmp (entry->d_name, ".") == 0 || strcmp (entry->d_name, "..") == 0)
             continue;
@@ -60,8 +73,8 @@ void run_all_tests (const char *dir) {
             ++success;
         } else {
             printf ("Failed!\n");
+            failed_tests[failed++] = entry->d_name;
         }
-        ++total;
     }
 
     if (success == total) {
@@ -69,6 +82,10 @@ void run_all_tests (const char *dir) {
     } else {
         printf ("Passed %d of %d tests.\n", success, total);
         printf ("Failed %d tests.\n", total - success);
+        printf ("Following tests did not pass: \n");
+        for (int i = 0; i < failed; ++i) {
+            printf ("\t%s\n", failed_tests[i]);
+        }
     }
 
     closedir (p_dir);

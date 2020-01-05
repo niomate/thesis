@@ -154,7 +154,6 @@ void corner_estimation (struct node **chains, float *t, float q, long n_iter, lo
         current->error = error;
 
         /* TODO: make it prettier */
-        /* TODO: Filter out chains with slope smaller than epsilon ? */
         float t0x, t0y, tmaxx, tmaxy;
 
         t0x = current->chain[0].x;
@@ -162,14 +161,17 @@ void corner_estimation (struct node **chains, float *t, float q, long n_iter, lo
         tmaxx = current->chain[n_iter - 1].x;
         tmaxy = current->chain[n_iter - 1].y;
 
+        float diffx = tmaxx - t0x;
+        float diffy = tmaxy - t0y;
+
         /* Reconstruct initial corner position by extrapolation using
         the corner bisector unit vector and slope */
 
-        float norm_inv = 1 / (sqrt (powf (tmaxx - t0x, 2.0f) + powf (tmaxy - t0y, 2.0f)) + FLT_EPSILON);
+        float norm_inv = 1 / (sqrt (diffx * diffx + diffy * diffy) + FLT_EPSILON);
         float helper = current->slope * powf (1.33333333f * t[0], 0.75f) * norm_inv;
 
-        long x0 = (long)(t0x - helper * (tmaxx - t0x));
-        long y0 = (long)(t0y - helper * (tmaxy - t0y));
+        long x0 = (long)round (t0x - helper * diffx);
+        long y0 = (long)round (t0y - helper * diffy);
 
         current->x0 = x0;
         current->y0 = y0;
@@ -177,14 +179,13 @@ void corner_estimation (struct node **chains, float *t, float q, long n_iter, lo
         ++n_corners_before;
     }
 
-    /* Only keep quantile of corner chains */
     if (DEBUG) {
         printf ("Found %ld corner sequences.\n", n_corners_before);
         printf ("Applying quantile to corner chains...\n");
     }
 
-    /* TODO: Figure out quantile parameter */
-    cornerness_quantile (chains, n_iter, n_corners_before, q);
+    /* Only keep quantile of corner chains */
+    // cornerness_quantile (chains, n_iter, n_corners_before, q);
 
     for (long i = 1; i <= nx; ++i) {
         for (long j = 1; j <= ny; ++j) {
