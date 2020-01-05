@@ -176,6 +176,8 @@ void corner_estimation (struct node **chains, float *t, float q, long n_iter, lo
         current->x0 = x0;
         current->y0 = y0;
 
+        
+
         ++n_corners_before;
     }
 

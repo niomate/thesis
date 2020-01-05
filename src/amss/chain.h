@@ -13,7 +13,7 @@ struct node {
     struct corner *chain;
     float error;
     float slope;
-    float angle; /* Maybe not even needed */
+    float angle;
     long x0;
     long y0;
     struct node *next;

@@ -5,7 +5,7 @@ import numpy as np
 
 if __name__ == '__main__':
     w, h = 512, 512
-    b = 1/2 * h  # Height of the triangle
+    b = h / 2  # Height of the triangle
     A = (w / 2, b)  # Tip of the triangle
     for angle in np.linspace(15, 160, 30):
         angle_rad = np.deg2rad(angle / 2)
@@ -17,9 +17,9 @@ if __name__ == '__main__':
         draw = ImageDraw.Draw(im)
         draw.polygon([C, B, A], fill='black')
         im.save(name.format('0'))
-        im = im.rotate(90)
-        im.save(name.format('1'))
-        im = im.rotate(90)
-        im.save(name.format('2'))
-        im = im.rotate(90)
-        im.save(name.format('3'))
+        # im = im.rotate(90)
+        # im.save(name.format('1'))
+        # im = im.rotate(90)
+        # im.save(name.format('2'))
+        # im = im.rotate(90)
+        # im.save(name.format('3'))
