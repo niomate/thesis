@@ -1,5 +1,5 @@
-#include "corner_detection.h"
-#include "mask_algo.h"
+#include "../structure_tensor/corner_detection.h"
+#include "main.h"
 #include "utils.h"
 #include <math.h>
 #include <stdio.h>

@@ -1,4 +1,4 @@
-#include "mask_algo.h"
+#include "../mask/main.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

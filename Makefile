@@ -363,63 +363,6 @@ src/amss/main.c.s:
 	$(MAKE) -f CMakeFiles/amss.dir/build.make CMakeFiles/amss.dir/src/amss/main.c.s
 .PHONY : src/amss/main.c.s
 
-src/corner_detection.o: src/corner_detection.c.o
-
-.PHONY : src/corner_detection.o
-
-# target to build an object file
-src/corner_detection.c.o:
-	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/corner_detection.c.o
-	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/corner_detection.c.o
-.PHONY : src/corner_detection.c.o
-
-src/corner_detection.i: src/corner_detection.c.i
-
-.PHONY : src/corner_detection.i
-
-# target to preprocess a source file
-src/corner_detection.c.i:
-	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/corner_detection.c.i
-	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/corner_detection.c.i
-.PHONY : src/corner_detection.c.i
-
-src/corner_detection.s: src/corner_detection.c.s
-
-.PHONY : src/corner_detection.s
-
-# target to generate assembly for a file
-src/corner_detection.c.s:
-	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/corner_detection.c.s
-	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/corner_detection.c.s
-.PHONY : src/corner_detection.c.s
-
-src/corner_detection_main.o: src/corner_detection_main.c.o
-
-.PHONY : src/corner_detection_main.o
-
-# target to build an object file
-src/corner_detection_main.c.o:
-	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/corner_detection_main.c.o
-.PHONY : src/corner_detection_main.c.o
-
-src/corner_detection_main.i: src/corner_detection_main.c.i
-
-.PHONY : src/corner_detection_main.i
-
-# target to preprocess a source file
-src/corner_detection_main.c.i:
-	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/corner_detection_main.c.i
-.PHONY : src/corner_detection_main.c.i
-
-src/corner_detection_main.s: src/corner_detection_main.c.s
-
-.PHONY : src/corner_detection_main.s
-
-# target to generate assembly for a file
-src/corner_detection_main.c.s:
-	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/corner_detection_main.c.s
-.PHONY : src/corner_detection_main.c.s
-
 src/inpainting/inpainting.o: src/inpainting/inpainting.c.o
 
 .PHONY : src/inpainting/inpainting.o
@@ -450,59 +393,116 @@ src/inpainting/inpainting.c.s:
 	$(MAKE) -f CMakeFiles/inpainting.dir/build.make CMakeFiles/inpainting.dir/src/inpainting/inpainting.c.s
 .PHONY : src/inpainting/inpainting.c.s
 
-src/mask_algo.o: src/mask_algo.c.o
+src/mask/main.o: src/mask/main.c.o
 
-.PHONY : src/mask_algo.o
-
-# target to build an object file
-src/mask_algo.c.o:
-	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/mask_algo.c.o
-.PHONY : src/mask_algo.c.o
-
-src/mask_algo.i: src/mask_algo.c.i
-
-.PHONY : src/mask_algo.i
-
-# target to preprocess a source file
-src/mask_algo.c.i:
-	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/mask_algo.c.i
-.PHONY : src/mask_algo.c.i
-
-src/mask_algo.s: src/mask_algo.c.s
-
-.PHONY : src/mask_algo.s
-
-# target to generate assembly for a file
-src/mask_algo.c.s:
-	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/mask_algo.c.s
-.PHONY : src/mask_algo.c.s
-
-src/test_images.o: src/test_images.c.o
-
-.PHONY : src/test_images.o
+.PHONY : src/mask/main.o
 
 # target to build an object file
-src/test_images.c.o:
-	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/test_images.c.o
-.PHONY : src/test_images.c.o
+src/mask/main.c.o:
+	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/mask/main.c.o
+.PHONY : src/mask/main.c.o
 
-src/test_images.i: src/test_images.c.i
+src/mask/main.i: src/mask/main.c.i
 
-.PHONY : src/test_images.i
+.PHONY : src/mask/main.i
 
 # target to preprocess a source file
-src/test_images.c.i:
-	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/test_images.c.i
-.PHONY : src/test_images.c.i
+src/mask/main.c.i:
+	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/mask/main.c.i
+.PHONY : src/mask/main.c.i
 
-src/test_images.s: src/test_images.c.s
+src/mask/main.s: src/mask/main.c.s
 
-.PHONY : src/test_images.s
+.PHONY : src/mask/main.s
 
 # target to generate assembly for a file
-src/test_images.c.s:
-	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/test_images.c.s
-.PHONY : src/test_images.c.s
+src/mask/main.c.s:
+	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/mask/main.c.s
+.PHONY : src/mask/main.c.s
+
+src/structure_tensor/corner_detection.o: src/structure_tensor/corner_detection.c.o
+
+.PHONY : src/structure_tensor/corner_detection.o
+
+# target to build an object file
+src/structure_tensor/corner_detection.c.o:
+	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/structure_tensor/corner_detection.c.o
+	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/structure_tensor/corner_detection.c.o
+.PHONY : src/structure_tensor/corner_detection.c.o
+
+src/structure_tensor/corner_detection.i: src/structure_tensor/corner_detection.c.i
+
+.PHONY : src/structure_tensor/corner_detection.i
+
+# target to preprocess a source file
+src/structure_tensor/corner_detection.c.i:
+	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/structure_tensor/corner_detection.c.i
+	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/structure_tensor/corner_detection.c.i
+.PHONY : src/structure_tensor/corner_detection.c.i
+
+src/structure_tensor/corner_detection.s: src/structure_tensor/corner_detection.c.s
+
+.PHONY : src/structure_tensor/corner_detection.s
+
+# target to generate assembly for a file
+src/structure_tensor/corner_detection.c.s:
+	$(MAKE) -f CMakeFiles/mask.dir/build.make CMakeFiles/mask.dir/src/structure_tensor/corner_detection.c.s
+	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/structure_tensor/corner_detection.c.s
+.PHONY : src/structure_tensor/corner_detection.c.s
+
+src/structure_tensor/main.o: src/structure_tensor/main.c.o
+
+.PHONY : src/structure_tensor/main.o
+
+# target to build an object file
+src/structure_tensor/main.c.o:
+	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/structure_tensor/main.c.o
+.PHONY : src/structure_tensor/main.c.o
+
+src/structure_tensor/main.i: src/structure_tensor/main.c.i
+
+.PHONY : src/structure_tensor/main.i
+
+# target to preprocess a source file
+src/structure_tensor/main.c.i:
+	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/structure_tensor/main.c.i
+.PHONY : src/structure_tensor/main.c.i
+
+src/structure_tensor/main.s: src/structure_tensor/main.c.s
+
+.PHONY : src/structure_tensor/main.s
+
+# target to generate assembly for a file
+src/structure_tensor/main.c.s:
+	$(MAKE) -f CMakeFiles/corner_detection.dir/build.make CMakeFiles/corner_detection.dir/src/structure_tensor/main.c.s
+.PHONY : src/structure_tensor/main.c.s
+
+src/test/test_images.o: src/test/test_images.c.o
+
+.PHONY : src/test/test_images.o
+
+# target to build an object file
+src/test/test_images.c.o:
+	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/test/test_images.c.o
+.PHONY : src/test/test_images.c.o
+
+src/test/test_images.i: src/test/test_images.c.i
+
+.PHONY : src/test/test_images.i
+
+# target to preprocess a source file
+src/test/test_images.c.i:
+	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/test/test_images.c.i
+.PHONY : src/test/test_images.c.i
+
+src/test/test_images.s: src/test/test_images.c.s
+
+.PHONY : src/test/test_images.s
+
+# target to generate assembly for a file
+src/test/test_images.c.s:
+	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/test/test_images.c.s
+.PHONY : src/test/test_images.c.s
 
 src/utils.o: src/utils.c.o
 
@@ -573,21 +573,21 @@ help:
 	@echo "... src/amss/main.o"
 	@echo "... src/amss/main.i"
 	@echo "... src/amss/main.s"
-	@echo "... src/corner_detection.o"
-	@echo "... src/corner_detection.i"
-	@echo "... src/corner_detection.s"
-	@echo "... src/corner_detection_main.o"
-	@echo "... src/corner_detection_main.i"
-	@echo "... src/corner_detection_main.s"
 	@echo "... src/inpainting/inpainting.o"
 	@echo "... src/inpainting/inpainting.i"
 	@echo "... src/inpainting/inpainting.s"
-	@echo "... src/mask_algo.o"
-	@echo "... src/mask_algo.i"
-	@echo "... src/mask_algo.s"
-	@echo "... src/test_images.o"
-	@echo "... src/test_images.i"
-	@echo "... src/test_images.s"
+	@echo "... src/mask/main.o"
+	@echo "... src/mask/main.i"
+	@echo "... src/mask/main.s"
+	@echo "... src/structure_tensor/corner_detection.o"
+	@echo "... src/structure_tensor/corner_detection.i"
+	@echo "... src/structure_tensor/corner_detection.s"
+	@echo "... src/structure_tensor/main.o"
+	@echo "... src/structure_tensor/main.i"
+	@echo "... src/structure_tensor/main.s"
+	@echo "... src/test/test_images.o"
+	@echo "... src/test/test_images.i"
+	@echo "... src/test/test_images.s"
 	@echo "... src/utils.o"
 	@echo "... src/utils.i"
 	@echo "... src/utils.s"
