@@ -108,13 +108,13 @@ void gauss
 
 /*--------------------------------------------------------------------------*/
 
+/* DISCLAIMER: Method was changed to assume that every equation has the same weight */
 void solve_normal_equations
 
 (long imax,  /* number of equations, input */
  long jmax,  /* number of unknowns, input */
  float **a,  /* system matrix of size imax * jmax, input */
  float *rhs, /* right hand side of size imax, input */
- float *w,   /* weight of each equation, input */
  float *x)   /* solution of normal equations, output */
 
 /*
@@ -133,22 +133,38 @@ void solve_normal_equations
     alloc_matrix (&b, jmax + 1, jmax + 1);
     alloc_vector (&d, jmax + 1);
 
+    // printf ("\nM = [");
+    // for (i = 1; i <= imax; ++i) {
+    //     printf ("[");
+    //     for (j = 1; j <= jmax; ++j) {
+    //         printf ("%f, ", a[i][j]);
+    //     }
+    //     printf ("]\n");
+    // }
+    // printf ("]\n");
+
+    // printf ("\nb = [");
+    // for (i = 1; i <= imax; ++i) {
+    //     printf ("%f\n", rhs[i]);
+    // }
+    // printf ("]\n");
+
 
     /* ---- construct normal equations B x = d ---- */
 
-    /* d = A^T W rhs */
+    /* d = A^T rhs */
     for (i = 1; i <= jmax; i++) {
         d[i] = 0.0;
         for (k = 1; k <= imax; k++)
-            d[i] = d[i] + a[k][i] * w[k] * rhs[k];
+            d[i] = d[i] + a[k][i] * rhs[k];
     }
 
-    /* B = A^T W A */
+    /* B = A^T A */
     for (i = 1; i <= jmax; i++)
         for (j = 1; j <= jmax; j++) {
             b[i][j] = 0.0;
             for (k = 1; k <= imax; k++)
-                b[i][j] = b[i][j] + a[k][i] * w[k] * a[k][j];
+                b[i][j] = b[i][j] + a[k][i] * a[k][j];
         }
 
 

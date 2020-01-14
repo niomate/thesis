@@ -14,7 +14,7 @@
 extern int DEBUG;
 
 /*
-    Compute the differential operator L(u) as stated in the paper ov Alvarez
+    Compute the differential operator L(u) as stated in Alvarez' paper
 */
 void curvature
 
@@ -91,103 +91,99 @@ void normalize_range
 
     for (i = 1; i <= nx; ++i) {
         for (j = 1; j <= ny; ++j) {
-            u[i][j] = (u[i][j] - min) * 255.0 / (max - min);
+            u[i][j] = (u[i][j] - min) * 255.0f / (max - min);
         }
     }
 }
 
-void corner_estimation (struct node **chains, float *t, float q, long n_iter, long nx, long ny, float **corners) {
-    /* Least squares approximation */
+
+void iter_amss (float **u, float target, long nx, long ny, long h, float ht) {
+    float kn = 0;
+    while (kn < target) {
+        amss (ht, nx, ny, h, h, u);
+        kn += ht;
+    }
+}
+
+
+/*
+    Find the solution to the linear system corresponding to the least squares approximation
+    for each corner.
+*/
+void least_squares_approx (list_ptr chains, float *t, float q, long nx, long ny, float **corners) {
     float **M; /* System matrix */
     float *b;  /* Value vector */
-    float *w;  /* Weight vector, basically just an array of ones */
     float *x;  /* Solution of linear system */
+
+    int n_iter = list_chain_length (chains);
 
     /* !!! CARE: Iteration in least squares starts with 1 !!! */
     alloc_matrix (&M, n_iter + 1, 3);
     alloc_vector (&b, n_iter + 1);
-    alloc_vector (&w, n_iter + 1);
     alloc_vector (&x, 3);
 
-    for (long k = 0; k < n_iter + 1; ++k) {
-        /* Equal weights for least squares computation */
-        w[k] = 1;
-
-        M[k][1] = 1;
-        M[k][2] = 1;
-    }
-
+    /* Initialise system matrix.
+    System matrix stays the same across all corners */
     for (long k = 0; k < n_iter; ++k) {
         M[k + 1][1] = powf (t[k], 0.75f) - powf (t[0], 0.75f);
+        M[k + 1][2] = 1;
     }
 
-    long n_corners_before = 0;
-    long n_corners_after = 0;
+    for (node_ptr current = list_head (chains); current != NULL; current = current->next) {
+        chain_ptr current_chain = current->chain;
+        if (DEBUG) {
+            printf ("Current chain: ");
+            print_chain (current_chain, n_iter);
+        }
 
-    for (struct node *current = *chains; current != NULL; current = current->next) {
-        struct corner *chain = current->chain;
         /* Initialise value vector */
         for (long k = 0; k < n_iter; ++k) {
             /* Distance to first point of corner chain */
-            b[k + 1] = sqrt (powf (chain[k].x - chain[0].x, 2.0) + powf (chain[k].y - chain[0].y, 2.0));
+            float diffx = current_chain[k].x - current_chain[0].x;
+            float diffy = current_chain[k].y - current_chain[0].y;
+            b[k + 1] = sqrt (diffx * diffx + diffy * diffy);
         }
 
         /* Approximate line using least squares approximation */
-        solve_normal_equations (n_iter, 2, M, b, w, x);
+        solve_normal_equations (n_iter, 2, M, b, x);
 
         /* Need to correct slope from estimation as stated in the paper */
         current->slope = 0.071917f + 1.029484f * x[1];
-        current->angle = 2 * atan2f (1, powf (current->slope, 2.0f));
+        current->angle = 2.f * atan (1.f / (current->slope * current->slope));
 
-        /* Calculate cornerness a.k.a approximation error */
+        if (DEBUG)
+            printf ("\nSlope: %f, angle: %f\n", current->slope, current->angle);
+
+        /* Calculate approximation error */
         float error = 0;
-        float acc;
-
         for (long k = 1; k < n_iter + 1; ++k) {
-            acc = b[k] - (current->slope * M[k][1] + x[2]);
-            error += pow (acc, 2.0f);
+            float acc = b[k] - (current->slope * M[k][1] + x[2]);
+            error += acc * acc;
         }
+        current->error = error / n_iter;
 
-        error /= n_iter;
+        if (DEBUG)
+            printf ("Current error: %f\n\n", current->error);
 
-        // printf ("Error with a=%f, b=%f: %f\n", x[1], x[2], error);
-        current->error = error;
-
-        /* TODO: make it prettier */
-        float t0x, t0y, tmaxx, tmaxy;
-
-        t0x = current->chain[0].x;
-        t0y = current->chain[0].y;
-        tmaxx = current->chain[n_iter - 1].x;
-        tmaxy = current->chain[n_iter - 1].y;
-
-        float diffx = tmaxx - t0x;
-        float diffy = tmaxy - t0y;
+        float diffx = current_chain[n_iter - 1].x - current_chain[0].x;
+        float diffy = current_chain[n_iter - 1].y - current_chain[0].y;
 
         /* Reconstruct initial corner position by extrapolation using
         the corner bisector unit vector and slope */
-
-        float norm_inv = 1 / (sqrt (diffx * diffx + diffy * diffy) + FLT_EPSILON);
+        float norm_inv = 1.f / (b[n_iter] + FLT_EPSILON); /* b[n_iter] == sqrt(diffx²-diffy²) */
         float helper = current->slope * powf (1.33333333f * t[0], 0.75f) * norm_inv;
 
-        long x0 = (long)round (t0x - helper * diffx);
-        long y0 = (long)round (t0y - helper * diffy);
-
-        current->x0 = x0;
-        current->y0 = y0;
-
-        
-
-        ++n_corners_before;
+        current->corner_tip = pixel_new (round (current_chain[0].x - helper * diffx),
+                                         round (current_chain[0].y - helper * diffy), NAN);
     }
 
     if (DEBUG) {
-        printf ("Found %ld corner sequences.\n", n_corners_before);
-        printf ("Applying quantile to corner chains...\n");
+        printf ("Found %d corner sequences.\n", list_size (chains));
+        printf ("Applying quantile %f to corner chains...\n", q);
     }
 
     /* Only keep quantile of corner chains */
-    // cornerness_quantile (chains, n_iter, n_corners_before, q);
+    // threshold_error_quantile (chains, n_iter, n_corners_before, q);
 
     for (long i = 1; i <= nx; ++i) {
         for (long j = 1; j <= ny; ++j) {
@@ -195,25 +191,25 @@ void corner_estimation (struct node **chains, float *t, float q, long n_iter, lo
         }
     }
 
-    for (struct node *current = *chains; current != NULL; current = current->next) {
-        ++n_corners_after;
-        corners[current->x0][current->y0] = 255.0;
+    for (node_ptr current = list_head (chains); current != NULL; current = node_next (current)) {
+        long x = current->corner_tip.x;
+        long y = current->corner_tip.y;
+        corners[x][y] = 255.0;
     }
 
     if (DEBUG) {
-        printf ("Corners left after quantile application: %ld .\n", n_corners_after);
+        printf ("Corners left after quantile application: %d .\n", list_size (chains));
     }
 
     disalloc_matrix (M, n_iter + 1, 3);
     disalloc_vector (b, n_iter + 1);
-    disalloc_vector (w, n_iter + 1);
     disalloc_vector (x, 3);
 }
 
 /*
     Detect corners in the given image using the AMSS.
 */
-struct node *amss_corner_detection
+list_ptr amss_corner_detection
 
 (float **u,  /* original image !! gets altered !! */
  long nx,    /* image dimension in x direction */
@@ -232,18 +228,10 @@ struct node *amss_corner_detection
 
     float h = 1.0;                       /* grid size; assuming we have a quadratic grid !*/
     float two_h_inv = 1.0f / (2.0f * h); /* Helper variable for faster computation */
-    long i, j, k, l, m;                  /* loop variables */
     long n_iter = t_max / step + 1;      /* number of total iterations */
 
-    /* variables for corner tracking */
-    long imax, jmax;
-    float cmax;
-    float dx, dy, norm_inv;
-    long idx, jdy;
-    int n_corners = 0;
-
     /* Linked list to store corner chains in */
-    struct node *chains = NULL;
+    list_ptr chains = list_new (n_iter);
 
     if (DEBUG)
         printf ("Number of iterations: %ld\n", n_iter);
@@ -256,81 +244,91 @@ struct node *amss_corner_detection
 
     t[0] = t_0;
 
-    for (float t = 0; t < t_0; t += ht) {
-        amss (ht, nx, ny, h, h, u);
-    }
+    iter_amss (u, t_0, nx, ny, h, ht);
+
+    if (DEBUG)
+        write_pgm (u, nx, ny, "/home/danielg/uni/thesis/.tmp/curv_init.pgm", NULL);
 
     curvature (u, nx, ny, h, curv);
     dummies (curv, nx, ny);
 
     /* Find initial set of corners */
-    for (i = 1; i <= nx; i++) {
-        for (j = 1; j <= ny; j++) {
+    for (long i = 1; i <= nx; i++) {
+        for (long j = 1; j <= ny; j++) {
             /* if u[i][j] is bigger (or smaller) than all of its 8 neighbours
-            then it is considered a local extremum */
-            if ((fabs (curv[i][j]) > fabs (curv[i + 1][j])) && (fabs (curv[i][j]) > fabs (curv[i - 1][j])) &&
-                (fabs (curv[i][j]) > fabs (curv[i][j + 1])) && (fabs (curv[i][j]) > fabs (curv[i][j - 1])) &&
-                (curv[i + 1][j] * curv[i - 1][j] * curv[i][j + 1] * curv[i][j - 1] != 0.0)) {
-                ++n_corners;
-                push_chain (&chains, i, j, curv[i][j], n_iter);
+            then it is considered a local extremum (currently only comparing it to
+            the 4 neighbours up, down, left and right */
+            int extremum = 1;
+            float zero_acc = 1;
+            /* FIXME: This is super ugly */
+            for (long k = -1; k <= 1; ++k) {
+                for (long l = -1; l <= 1; ++l) {
+                    if (!k && !l) // k == l == 0
+                        continue;
+                    if (fabs (curv[i][j]) < fabs (curv[i + k][j + l])) {
+                        extremum = 0;
+                    }
+                    zero_acc *= curv[i + k][j + l];
+                }
+            }
+            if (extremum && zero_acc != 0) {
+                node_ptr new = list_insert (chains, NULL);
+                node_add_to_chain (new, 0, i, j, curv[i][j]);
             }
         }
     }
 
     if (DEBUG)
-        printf ("Found %d extrema at the initial scale\n", n_corners);
+        printf ("Found %d extrema at the initial scale\n", list_size (chains));
 
     /* Track corners across time scales */
-    for (k = 1; k < n_iter; ++k) {
+    for (long k = 1; k < n_iter; ++k) {
         if (DEBUG)
             printf ("Iteration %ld\n", k);
-        n_corners = 0;
         t[k] = t[k - 1] + step;
 
         /* First: calculate amss at time level t[k] in-place */
-        for (float t = 0; t < step; t += ht) {
-            amss (ht, nx, ny, h, h, u);
-        }
+        iter_amss (u, step, nx, ny, h, ht);
         curvature (u, nx, ny, h, curv);
         dummies (curv, nx, ny);
 
         /* Find new maximum for each chain at new timescale */
-        for (struct node *current = chains; current != NULL; current = current->next) {
-            n_corners++;
-
+        for (node_ptr current = list_head (chains); current != NULL; current = node_next (current)) {
             /* Position of corner at last scale */
-            i = current->chain[k - 1].x;
-            j = current->chain[k - 1].y;
+            pixel_t last = current->chain[k - 1];
+            long i = last.x;
+            long j = last.y;
 
-            /* TODO: This is sometimes not true.. Figure out why and how to fix it!  */
             assert (i >= 1);
             assert (j >= 1);
 
             /* Compute first order derivatives by means of central differences */
-            dx = (u[i - 1][j] - u[i + 1][j]) * two_h_inv;
-            dy = (u[i][j - 1] - u[i][j + 1]) * two_h_inv;
+            float dx = (u[i - 1][j] - u[i + 1][j]) * two_h_inv;
+            float dy = (u[i][j - 1] - u[i][j + 1]) * two_h_inv;
 
             /* Norm gradient to 1 */
-            norm_inv = 1 / (sqrt (dx * dx + dy * dy) + FLT_EPSILON);
+            float norm_inv = 1 / (sqrt (dx * dx + dy * dy) + FLT_EPSILON);
             dx *= norm_inv;
             dy *= norm_inv;
 
             /* New locations for extrema search */
-            idx = (long)round (i + dx);
-            jdy = (long)round (j + dy);
+            long idx = (long)round (i + dx);
+            long jdy = (long)round (j + dy);
 
-            imax = jmax = -1;
-            cmax = -1;
+            long imax = -1;
+            long jmax = -1;
+            long cmax = -1;
 
+            /* Might have to have a look and see if this is actually correct */
             /* Search for new curvature extremum in 8-neighbourhood around pixel (idx, jdy) */
-            for (l = clamp (idx - 1, 1, nx); l <= clamp (idx + 1, 1, nx); ++l) {
-                for (m = clamp (jdy - 1, 1, ny); m <= clamp (jdy + 1, 1, ny); ++m) {
-                    // printf ("Searching new extremum: %ld, %ld\n", l, m);
-                    if (abs (curv[l][m]) > cmax) {
-                        cmax = abs (curv[l][m]);
+            /* FIXME: This is super ugly as well */
+            for (long l = clamp (idx - 1, 1, nx); l <= clamp (idx + 1, 1, nx); ++l) {
+                for (long m = clamp (jdy - 1, 1, ny); m <= clamp (jdy + 1, 1, ny); ++m) {
+                    float cabs = fabs (curv[l][m]);
+                    if (cabs > cmax) {
+                        cmax = cabs;
                         imax = l;
                         jmax = m;
-                        // printf ("New extremum at %ld, %ld\n", l, m);
                     }
                 }
             }
@@ -339,44 +337,40 @@ struct node *amss_corner_detection
             and add non-spurious corners to the chain */
             if (cmax > -1 && fabs (curv[imax][jmax]) > 0.001 &&
                 sgn (current->chain[k - 1].curv) == sgn (curv[imax][jmax])) {
-                /* Add to chain */
-                current->chain[k] = (struct corner){ imax, jmax, curv[imax][jmax] };
+                node_add_to_chain (current, k, imax, jmax, curv[imax][jmax]);
             } else {
                 /* Delete chain */
-                remove_chain (&chains, current);
+                list_delete (chains, current);
             }
         }
-        // printf ("Found %d corners in iteration %ld.\n", n_corners, k);
-        // char name[256];
-        // sprintf (name, "/home/danielg/uni/thesis/.tmp/curv%ld.pgm", k);
-        // normalize_range (curv, nx, ny);
-        // write_pgm (curv, nx, ny, name, NULL);
     }
+    /* Remove chains that consists only of one position
+    FIXME: Is this necessary ? */
+    // filter_spurious_chains (&chains, n_iter);
 
-    corner_estimation (&chains, t, q, n_iter, nx, ny, v);
-
+    /* FIXME: Don't know if it really works as intented... */
+    least_squares_approx (chains, t, q, nx, ny, v);
 
     if (DEBUG) {
+        /* TODO: visualize the corner angles usign Lemma 1 from the paper */
         write_pgm (v, nx, ny, "/home/danielg/uni/thesis/.tmp/corners.pgm", NULL);
         /* Print chains to image for better visualisation*/
         float **chain_vis;
         alloc_matrix (&chain_vis, nx + 2, ny + 2);
 
-        struct node *current = chains;
-
-        for (i = 0; i < nx; ++i) {
-            for (j = 0; j < ny; ++j) {
+        for (long i = 0; i < nx; ++i) {
+            for (long j = 0; j < ny; ++j) {
                 chain_vis[i][j] = 0;
             }
         }
 
+        node_ptr current = list_head (chains);
         while (current != NULL) {
-            struct corner *c = current->chain;
-            for (k = 0; k < n_iter; ++k) {
-                printf ("%ld, %ld\n", c[k].x, c[k].y);
+            chain_ptr c = node_chain (current);
+            for (long k = 0; k < n_iter; ++k) {
                 chain_vis[c[k].x][c[k].y] = 255;
             }
-            current = current->next;
+            current = node_next (current);
         }
 
         write_pgm (chain_vis, nx, ny, "/home/danielg/uni/thesis/.tmp/chains.pgm", NULL);
@@ -389,12 +383,12 @@ struct node *amss_corner_detection
 }
 
 
-struct node *test_detection (char *in, char *out) {
+list_ptr test_detection (char *in, char *out) {
     float **u, **f;
     long nx, ny;
     read_pgm_and_allocate_memory (in, &nx, &ny, &u);
     alloc_matrix (&f, nx + 2, ny + 2);
-    struct node *chains = amss_corner_detection (u, nx, ny, 0.1, 1, 20, 1, 0.05f, f);
+    list_ptr chains = amss_corner_detection (u, nx, ny, 0.1, 1, 20, 1, 0.05f, f);
     if (out != NULL)
         write_pgm (f, nx, ny, out, NULL);
     return chains;

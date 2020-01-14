@@ -1,2 +1,0 @@
--implement amss corner detection
-	* Try to approximate hessian normal form instead 

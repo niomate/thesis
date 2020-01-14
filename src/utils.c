@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+
 void alloc_vector (float **vector, long n) {
     *vector = (float *)malloc (n * sizeof (float));
     if (*vector == NULL) {
@@ -426,5 +427,29 @@ void mask (float **u, float **m, long nx, long ny, int r) {
                 }
             }
         }
+    }
+}
+
+/* Draw a line to u using bresenham's algoorithm */
+void draw_line (float **u, long nx, long ny, long from_x, long from_y, long to_x, long to_y, float color) {
+    int dx, dy, p, x, y;
+
+    dx = to_x - from_x;
+    dy = to_y - from_y;
+
+    x = from_x;
+    y = from_y;
+
+    p = 2 * dy - dx;
+
+    while (x < to_x) {
+        u[x][y] = color;
+        if (p >= 0) {
+            y = y + 1;
+            p = p + 2 * dy - 2 * dx;
+        } else {
+            p = p + 2 * dy;
+        }
+        x = x + 1;
     }
 }
