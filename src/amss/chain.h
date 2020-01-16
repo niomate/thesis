@@ -2,7 +2,6 @@
 #define chain_h__
 
 #include <math.h>
-#include <stdbool.h>
 
 struct pixel;
 struct node;
@@ -42,29 +41,21 @@ struct list {
     int chain_length;
 };
 
+/* Constructor functions */
+list_ptr new_list (int);
+node_ptr new_node (int);
+chain_ptr new_chain (int);
+pixel_t new_pixel (long, long, float);
+
+/* Desctructor functions */
+void list_destroy (list_ptr); 
+
 /* Functions for list interaction */
-list_ptr list_new (int);
-node_ptr list_insert (list_ptr, node_ptr);
+node_ptr list_append_new (list_ptr);
 node_ptr list_get (list_ptr, int);
 node_ptr list_head (list_ptr);
-bool list_end (node_ptr);
 void list_delete (list_ptr, node_ptr);
-void list_foreach (list_ptr, iterator_func);
 int list_size (list_ptr);
-int list_chain_length (list_ptr);
-
-/* Functions for node interaction */
-node_ptr node_new (int);
-node_ptr node_next (node_ptr);
-chain_ptr node_chain (node_ptr);
-pixel_t node_chain_get_pixel (node_ptr, long);
-void node_add_to_chain (node_ptr, long, long, long, float);
-
-/* Functions for chain type */
-chain_ptr chain_new (int);
-
-/* Functions for pixel type */
-pixel_t pixel_new (long, long, float);
 
 /* Print utilities */
 void print_list (list_ptr);
@@ -72,5 +63,4 @@ void print_node (node_ptr, int);
 void print_chain (chain_ptr, int);
 void print_pixel (pixel_t);
 
-void list_destroy (list_ptr); 
 #endif

@@ -3,8 +3,8 @@
 
 #include "chain.h"
 
-list_ptr amss_corner_detection (float **u, long nx, long ny, float ht, long t_0, long t_max, long step, float q, float **v);
+list_ptr amss_corner_detection (float **, long, long, float, long, long, long, float, float);
 
-list_ptr test_detection (char *in, char *out);
+list_ptr test_detection (char *, char *);
 
 #endif // amss_corner_detection_h__

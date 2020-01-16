@@ -1,6 +1,6 @@
 #ifndef mask_algo_h__
 #define mask_algo_h__
 
-float calc_compression_mask (char *in, char *out, long type, float T, float sigma, float rho, long size);
+float calc_compression_mask (char *, char *, long, float, float, float, long);
 
 #endif // mask_algo_h__
