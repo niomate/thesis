@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 if __name__ == '__main__':
-    w, h = 512, 512
+    w, h = 128, 128 
     b = h / 2  # Height of the triangle
     A = (w / 2, b)  # Tip of the triangle
     for angle in np.linspace(15, 160, 30):

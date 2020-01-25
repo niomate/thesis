@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+int DEBUG = 0;
 
 int main ()
 

@@ -1,9 +1,12 @@
 #include "least_squares.h"
 #include "../utils.h"
+#include "chain.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+
 
 void pivot
 
@@ -133,23 +136,6 @@ void solve_normal_equations
     alloc_matrix (&b, jmax + 1, jmax + 1);
     alloc_vector (&d, jmax + 1);
 
-    // printf ("\nM = [");
-    // for (i = 1; i <= imax; ++i) {
-    //     printf ("[");
-    //     for (j = 1; j <= jmax; ++j) {
-    //         printf ("%f, ", a[i][j]);
-    //     }
-    //     printf ("]\n");
-    // }
-    // printf ("]\n");
-
-    // printf ("\nb = [");
-    // for (i = 1; i <= imax; ++i) {
-    //     printf ("%f\n", rhs[i]);
-    // }
-    // printf ("]\n");
-
-
     /* ---- construct normal equations B x = d ---- */
 
     /* d = A^T rhs */
@@ -182,3 +168,31 @@ void solve_normal_equations
 } /* solve_normal_equations */
 
 /*--------------------------------------------------------------------------*/
+
+int cmpfunc (const void * a, const void * b) {
+   return ( *(float *)a - *(float *)b );
+}
+
+
+void error_percentile (list_ptr chains, float percentile) {
+   assert(percentile >= 0);
+   assert(percentile <= 1);
+   if (chains->size < 5) { return; }
+   float error[chains->size];
+   int i = 0;
+    for (node_ptr current = list_head (chains); current != NULL; current = current->next) {
+       error[i++] = current->error;
+    }
+
+   qsort (error, chains->size, sizeof(float), cmpfunc);
+
+
+   long index = (long) (percentile * chains->size + 0.5);
+   float threshold = error[index];
+
+    for (node_ptr current = list_head (chains); current != NULL; current = current->next) {
+       if (current->error >= threshold) {
+         list_delete(chains, current);
+       }
+    }
+}

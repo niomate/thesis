@@ -6,17 +6,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/* Used in amss_corner_detection to toggle debug messages */
-int DEBUG = 1;
-
 /* To get M_PI from math.h */
 #define _USE_MATH_DEFINES
 
 /* Expected the detected corner to be around the centre of the image
 because of the way the test images were generated */
-static const int EXPECTED_X = 256;
-static const int EXPECTED_Y = 256;
+static const int EXPECTED_X = 64;
+static const int EXPECTED_Y = 64;
 static const float ANGLE_EPSILON = 0.01;
 static const long POS_EPSILON = 2;
 static const float ERROR_EPSILON = 0.01;
@@ -115,7 +111,9 @@ int run_single_test_case (char *image_name) {
 
     /* Extract angle xxx from test image name "anglexxx-y.pgm" */
     char angle_c[3] = { image_name[5], image_name[6], image_name[7] };
-    float expected_angle = atof (angle_c) * M_PI / 180;
+    float expected_angle = atof (angle_c);
+    float expected_slope = 1.0f / sqrt (tan (expected_angle * (M_PI / 180) * 0.5));
+    printf ("Expecting a slope of %f\n", expected_slope);
 
     /* TODO: Insecure! */
     strcpy (path, TEST_DIR);
@@ -149,7 +147,7 @@ void run_all_tests () {
         ++total;
     }
 
-    char **failed_tests = malloc (total * sizeof (* failed_tests));
+    char **failed_tests = malloc (total * sizeof (*failed_tests));
     for (int i = 0; i < total; ++i) {
         failed_tests[i] = malloc (256 * sizeof (char));
     }
@@ -159,6 +157,10 @@ void run_all_tests () {
     while ((entry = readdir (p_dir)) != NULL) {
         if (strcmp (entry->d_name, ".") == 0 || strcmp (entry->d_name, "..") == 0)
             continue;
+
+        //if (strcmp (entry->d_name, "angle090-0.pgm") != 0) {
+            //continue;
+        //}
         printf ("[%s]: ", entry->d_name);
         int n = 0;
         if ((n = run_single_test_case (entry->d_name)) == 3) {

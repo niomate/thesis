@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#define _USE_MATH_DEFINES
 
 void alloc_vector (float **vector, long n) {
     *vector = (float *)malloc (n * sizeof (float));
@@ -409,6 +410,15 @@ long clamp (long n, long lo, long hi) {
 }
 
 
+void imgcpy (float ** src, float ** dest, size_t nx, size_t ny) {
+   for (size_t i = 0; i < nx; ++i) {
+      for (size_t j = 0; j < ny; ++j) {
+         dest[i][j] = src[i][j];
+      }
+   } 
+}
+
+
 void mask (float **u, float **m, long nx, long ny, int r) {
     long i, j, k, l, km, lm;
     for (i = 1; i <= nx; i++) {
@@ -452,4 +462,9 @@ void draw_line (float **u, long nx, long ny, long from_x, long from_y, long to_x
         }
         x = x + 1;
     }
+}
+
+
+float degrees (float rad) {
+   return (180.0f / M_PI) * rad;
 }

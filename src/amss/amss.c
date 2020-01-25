@@ -40,13 +40,13 @@ void amss
 {
     long i, j;                   /* loop variables */
     float **f;                   /* u at old time level */
-    float fx, fy, fxx, fxy, fyy; /* derivatives */
-    float two_hx;                /* 2.0 * hx, time saver */
-    float two_hy;                /* 2.0 * hx, time saver */
-    float hx_sqr;                /* hx * hx, time saver */
-    float hy_sqr;                /* hy * hy, time saver */
-    float two_hx_hy;             /* 2.0 * hx * hy, time saver */
-    float help;                  /* time saver */
+    float fx, fy, fxx, fxy, fyy; // derivatives
+    float two_hx;                // 2.0 * hx, time saver
+    float two_hy;                // 2.0 * hx, time saver
+    float hx_sqr;                // hx * hx, time saver
+    float hy_sqr;                // hy * hy, time saver
+    float two_hx_hy;             // 2.0 * hx * hy, time saver
+    float help;                  // time saver
 
 
     /* ---- allocate memory for f ---- */
@@ -76,7 +76,7 @@ void amss
     two_hx_hy = 2.0 * hx * hy;
 
     /* loop */
-    for (i = 1; i <= nx; i++)
+    for (i = 1; i <= nx; i++) {
         for (j = 1; j <= ny; j++) {
             /* central spatial derivatives */
             fx = (f[i + 1][j] - f[i - 1][j]) / two_hx;
@@ -92,10 +92,43 @@ void amss
                        f[i][j - 1] + f[i - 1][j] - f[i][j]) /
                       two_hx_hy;
 
-            /* evolution */
+            // evolution
             help = fx * fx * fyy + fy * fy * fxx - 2.0 * fx * fy * fxy;
             u[i][j] = f[i][j] + ht * sgn (help) * pow (fabs (help), 0.33333333333);
+
+            // Compute differential operator as proposed in Alvarez 1994
+            // float dx = 2.f * (f[i + 1][j] - f[i - 1][j]) + f[i + 1][j + 1] - f[i - 1][j + 1] +
+            // f[i + 1][j - 1] - f[i - 1][j - 1];
+
+            // float dy = 2.f * (f[i][j + 1] - f[i][j - 1]) + f[i + 1][j + 1] - f[i + 1][j - 1] +
+            // f[i - 1][j + 1] - f[i - 1][j - 1];
+
+            // float dx_sqr = dx * dx;
+            // float dy_sqr = dy * dy;
+
+            // float grad = 0.125f * sqrt (dx_sqr * dy_sqr);
+
+            // if (grad < threshold_grad) {
+            // float laplace = -4.0f * f[i][j] + f[i - 1][j] + f[i + 1][j] + f[i][j - 1] + f[i][j -
+            // 1]; laplace = laplace / hx * hy;
+
+            // u[i][j] = f[i][j] + ht * laplace;
+            //} else {
+            // float l0, l1, l2, l3, l4;
+            // l0 = 0.5f * (dx_sqr + dy_sqr) - (dx_sqr * dy_sqr) / (dx_sqr + dy_sqr);
+            // l1 = 2.f * l0 - dy_sqr;
+            // l2 = 2.f * l0 - dx_sqr;
+            // l3 = -l0 + 0.5f * (dx_sqr + dy_sqr + dx * dy);
+            // l4 = -l0 + 0.5f * (dx_sqr + dy_sqr - dx * dy);
+
+            // float help = -4.0f * l0 * f[i][j] + l1 * (f[i][j + 1] + f[i][j - 1]) +
+            // l2 * (f[i + 1][j] + f[i - 1][j]) + l3 * (f[i + 1][j - 1] + f[i - 1][j + 1]) +
+            // l4 * (f[i + 1][j + 1] + f[i - 1][j - 1]);
+
+            // u[i][j] = f[i][j] + ht * sgn (help) * powf (fabs (help), 0.3333333);
+            //        }
         }
+    }
 
 
     /* ---- free memory for f ---- */
