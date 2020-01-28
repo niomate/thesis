@@ -1,7 +1,6 @@
+build/
 .tmp
 .vscode
-bin/
-lib/
 .envrc
 .clang-format
 .o

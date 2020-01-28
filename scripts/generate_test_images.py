@@ -1,16 +1,25 @@
 from PIL import Image
 from PIL import ImageDraw
 import os
+import sys
 import numpy as np
 
 if __name__ == '__main__':
-    w, h = 128, 128 
+    here = os.path.dirname(__file__)
+    angle_folder = os.path.join(here, '../images/binary/angles/')
+    if not os.path.exists(angle_folder):
+        os.mkdir(angle_folder)
+    try:
+        size = int(sys.argv[1])
+    except (IndexError, ValueError):
+        size = 512
+
+    w = h = size
     b = h / 2  # Height of the triangle
     A = (w / 2, b)  # Tip of the triangle
     for angle in np.linspace(15, 160, 30):
         angle_rad = np.deg2rad(angle / 2)
-        name = os.path.join(
-            os.path.dirname(__file__), f'../images/binary/angles/angle{angle:03.0f}-{{}}.pgm')
+        name = os.path.join(angle_folder, f'angle{angle:03.0f}-{{}}.pgm')
         B = (w / 2 + b * np.tan(angle_rad), 0)
         C = (w / 2 - b * np.tan(angle_rad), 0)
         im = Image.new('L', (w, h), color=255)

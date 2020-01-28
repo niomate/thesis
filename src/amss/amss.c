@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 /*--------------------------------------------------------------------------*/
 /*                                                                          */
 /*                    AFFINE MORPHOLOGICAL SCALE-SPACE                      */
@@ -14,7 +13,6 @@
 /*                  (Copyright Joachim Weickert, 1/2015)                    */
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
-
 
 /*
  Explicit scheme with central spatial differences.
@@ -26,12 +24,12 @@
 
 void amss
 
-(float ht,  /* time step size, 0 < ht <= 0.1 */
- long nx,   /* image dimension in x direction */
- long ny,   /* image dimension in y direction */
- float hx,  /* pixel size in x direction */
- float hy,  /* pixel size in y direction */
- float **u) /* input: original image ;  output: smoothed */
+    (float ht,     /* time step size, 0 < ht <= 0.1 */
+        long nx,   /* image dimension in x direction */
+        long ny,   /* image dimension in y direction */
+        float hx,  /* pixel size in x direction */
+        float hy,  /* pixel size in y direction */
+        float** u) /* input: original image ;  output: smoothed */
 
 /*
  affine morphological scale-space, explicit scheme
@@ -39,7 +37,7 @@ void amss
 
 {
     long i, j;                   /* loop variables */
-    float **f;                   /* u at old time level */
+    float** f;                   /* u at old time level */
     float fx, fy, fxx, fxy, fyy; // derivatives
     float two_hx;                // 2.0 * hx, time saver
     float two_hy;                // 2.0 * hx, time saver
@@ -48,11 +46,9 @@ void amss
     float two_hx_hy;             // 2.0 * hx * hy, time saver
     float help;                  // time saver
 
-
     /* ---- allocate memory for f ---- */
 
-    alloc_matrix (&f, nx + 2, ny + 2);
-
+    alloc_matrix(&f, nx + 2, ny + 2);
 
     /* ---- copy u into f ---- */
 
@@ -60,11 +56,9 @@ void amss
         for (j = 1; j <= ny; j++)
             f[i][j] = u[i][j];
 
-
     /* ---- create reflecting dummy boundaries for f ---- */
 
-    dummies (f, nx, ny);
-
+    dummies(f, nx, ny);
 
     /* ---- loop ---- */
 
@@ -78,62 +72,56 @@ void amss
     /* loop */
     for (i = 1; i <= nx; i++) {
         for (j = 1; j <= ny; j++) {
-            /* central spatial derivatives */
-            fx = (f[i + 1][j] - f[i - 1][j]) / two_hx;
-            fy = (f[i][j + 1] - f[i][j - 1]) / two_hy;
-            fxx = (f[i + 1][j] - 2.0 * f[i][j] + f[i - 1][j]) / hx_sqr;
-            fyy = (f[i][j + 1] - 2.0 * f[i][j] + f[i][j - 1]) / hy_sqr;
-            if (fx * fy < 0.0)
-                fxy = (f[i + 1][j + 1] - f[i][j + 1] - f[i + 1][j] + f[i][j] + f[i - 1][j - 1] -
-                       f[i][j - 1] - f[i - 1][j] + f[i][j]) /
-                      two_hx_hy;
-            else
-                fxy = (-f[i - 1][j + 1] + f[i][j + 1] + f[i + 1][j] - f[i][j] - f[i + 1][j - 1] +
-                       f[i][j - 1] + f[i - 1][j] - f[i][j]) /
-                      two_hx_hy;
+            //        //Differential operator as proposed in "Finite Difference Schemes for MCM and AMSS"
+            //        float dx = 2.f * (f[i + 1][j] - f[i - 1][j]) + f[i + 1][j + 1] - f[i - 1][j + 1] + f[i + 1][j - 1] - f[i - 1][j - 1];
 
-            // evolution
-            help = fx * fx * fyy + fy * fy * fxx - 2.0 * fx * fy * fxy;
-            u[i][j] = f[i][j] + ht * sgn (help) * pow (fabs (help), 0.33333333333);
+            //        float dy = 2.f * (f[i][j + 1] - f[i][j - 1]) + f[i + 1][j + 1] - f[i + 1][j - 1] + f[i - 1][j + 1] - f[i - 1][j - 1];
 
-            // Compute differential operator as proposed in Alvarez 1994
-            // float dx = 2.f * (f[i + 1][j] - f[i - 1][j]) + f[i + 1][j + 1] - f[i - 1][j + 1] +
-            // f[i + 1][j - 1] - f[i - 1][j - 1];
+            //        float dx_sqr = dx * dx;
+            //        float dy_sqr = dy * dy;
 
-            // float dy = 2.f * (f[i][j + 1] - f[i][j - 1]) + f[i + 1][j + 1] - f[i + 1][j - 1] +
-            // f[i - 1][j + 1] - f[i - 1][j - 1];
+            //        float grad = 0.125f * sqrt(dx_sqr * dy_sqr);
 
-            // float dx_sqr = dx * dx;
-            // float dy_sqr = dy * dy;
+            //        if (grad < 1) {
+            //            float laplace = -4.0f * f[i][j] + f[i - 1][j] + f[i + 1][j] + f[i][j - 1] + f[i][j - 1];
+            //            u[i][j] = f[i][j] + ht * laplace;
+            //        } else {
+            //            float l0, l1, l2, l3, l4;
+            //            l0 = 0.5f * (dx_sqr + dy_sqr) - (dx_sqr * dy_sqr) / (dx_sqr + dy_sqr);
+            //            l1 = 2.f * l0 - dy_sqr;
+            //            l2 = 2.f * l0 - dx_sqr;
+            //            l3 = -l0 + 0.5f * (dx_sqr + dy_sqr + dx * dy);
+            //            l4 = -l0 + 0.5f * (dx_sqr + dy_sqr - dx * dy);
 
-            // float grad = 0.125f * sqrt (dx_sqr * dy_sqr);
+            //            float help = -4.0f * l0 * f[i][j] + l1 * (f[i][j + 1] + f[i][j - 1]) + l2 * (f[i + 1][j] + f[i - 1][j]) + l3 * (f[i + 1][j - 1] + f[i - 1][j + 1]) + l4 * (f[i + 1][j + 1] + f[i - 1][j - 1]);
 
-            // if (grad < threshold_grad) {
-            // float laplace = -4.0f * f[i][j] + f[i - 1][j] + f[i + 1][j] + f[i][j - 1] + f[i][j -
-            // 1]; laplace = laplace / hx * hy;
-
-            // u[i][j] = f[i][j] + ht * laplace;
-            //} else {
-            // float l0, l1, l2, l3, l4;
-            // l0 = 0.5f * (dx_sqr + dy_sqr) - (dx_sqr * dy_sqr) / (dx_sqr + dy_sqr);
-            // l1 = 2.f * l0 - dy_sqr;
-            // l2 = 2.f * l0 - dx_sqr;
-            // l3 = -l0 + 0.5f * (dx_sqr + dy_sqr + dx * dy);
-            // l4 = -l0 + 0.5f * (dx_sqr + dy_sqr - dx * dy);
-
-            // float help = -4.0f * l0 * f[i][j] + l1 * (f[i][j + 1] + f[i][j - 1]) +
-            // l2 * (f[i + 1][j] + f[i - 1][j]) + l3 * (f[i + 1][j - 1] + f[i - 1][j + 1]) +
-            // l4 * (f[i + 1][j + 1] + f[i - 1][j - 1]);
-
-            // u[i][j] = f[i][j] + ht * sgn (help) * powf (fabs (help), 0.3333333);
+            //            u[i][j] = f[i][j] + ht * sgn(help) * powf(fabs(help), 0.3333333);
             //        }
+            float dx = 2.f * (f[i + 1][j] - f[i - 1][j]) + f[i + 1][j + 1] - f[i - 1][j + 1] + f[i + 1][j - 1] - f[i - 1][j - 1];
+
+            float dy = 2.f * (f[i][j + 1] - f[i][j - 1]) + f[i + 1][j + 1] - f[i + 1][j - 1] + f[i - 1][j + 1] - f[i - 1][j - 1];
+
+            float l0, l1, l2, l3, l4;
+            if (fabs(dx) >= fabs(dy)) {
+                l0 = 0.25f * (2.f * dx * dx + dy * dy - fabs(dx * dy));
+            } else {
+                l0 = 0.25f * (2.f * dy * dy + dx * dx - fabs(dx * dy));
+            }
+
+            l1 = 2.f * l0 - dy * dy;
+            l2 = 2.f * l0 - dx * dx;
+            l3 = -l0 + 0.5f * (dx * dy + dx * dx + dy * dy);
+            l4 = -l0 + 0.5f * (-dx * dy + dx * dx + dy * dy);
+
+            float help = -4.0f * l0 * f[i][j] + l1 * (f[i][j + 1] + f[i][j - 1]) + l2 * (f[i + 1][j] + f[i - 1][j]) + l3 * (f[i + 1][j - 1] + f[i - 1][j + 1]) + l4 * (f[i + 1][j + 1] + f[i - 1][j - 1]);
+
+            u[i][j] = f[i][j] + ht * sgn(help) * powf(fabs(help), 0.33333333f);
         }
     }
 
-
     /* ---- free memory for f ---- */
 
-    disalloc_matrix (f, nx + 2, ny + 2);
+    disalloc_matrix(f, nx + 2, ny + 2);
 
     return;
 

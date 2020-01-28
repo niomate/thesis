@@ -14,10 +14,10 @@ because of the way the test images were generated */
 static const int EXPECTED_X = 64;
 static const int EXPECTED_Y = 64;
 static const float ANGLE_EPSILON = 0.01;
-static const long POS_EPSILON = 2;
+static const long POS_EPSILON = 3;
 static const float ERROR_EPSILON = 0.01;
-static const char *TEST_DIR = "/home/danielg/uni/thesis/images/binary/angles/";
-static const char *TEST_LOG = "/home/danielg/uni/thesis/test.log";
+static const char *TEST_DIR = "/home/daniel/Uni/Thesis/images/binary/angles/";
+static const char *TEST_LOG = "/home/daniel/Uni/Thesis/test.log";
 
 int run_single_test_case (char *);
 void run_all_tests ();
@@ -107,7 +107,7 @@ int run_single_test_case (char *image_name) {
     fprintf (log, "[Running tests for %s...]\n", image_name);
     fclose (log);
     char path[256];
-    char outpath[256] = "/home/danielg/uni/thesis/output/";
+    char outpath[256] = "/home/daniel/Uni/Thesis/output/";
 
     /* Extract angle xxx from test image name "anglexxx-y.pgm" */
     char angle_c[3] = { image_name[5], image_name[6], image_name[7] };
@@ -158,7 +158,7 @@ void run_all_tests () {
         if (strcmp (entry->d_name, ".") == 0 || strcmp (entry->d_name, "..") == 0)
             continue;
 
-        //if (strcmp (entry->d_name, "angle090-0.pgm") != 0) {
+        //if (strcmp (entry->d_name, "angle015-0.pgm") != 0) {
             //continue;
         //}
         printf ("[%s]: ", entry->d_name);

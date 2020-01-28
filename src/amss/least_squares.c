@@ -177,6 +177,7 @@ int cmpfunc (const void * a, const void * b) {
 void error_percentile (list_ptr chains, float percentile) {
    assert(percentile >= 0);
    assert(percentile <= 1);
+
    if (chains->size < 5) { return; }
    float error[chains->size];
    int i = 0;
