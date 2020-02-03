@@ -428,24 +428,24 @@ void corner_detection_quantile
                 // }
             }
 
-    long qcount = 0;
+    /*long qcount = 0;*/
 
-    float T = quantile_2D(v, q, nx, ny);
-    printf("Threshold: %.3f\n", T);
+    /*float T = quantile_2D(v, q, nx, ny);*/
+    /*printf("Threshold: %.3f\n", T);*/
 
-     for (i = 1; i <= nx; i++) {
-        for (j = 1; j <= ny; j++) {
-            if (v[i][j] <= T) {
-                v[i][j] = 0;
-            } else {
-                qcount++;
-            }
-        }
-    }
+     /*for (i = 1; i <= nx; i++) {*/
+        /*for (j = 1; j <= ny; j++) {*/
+            /*if (v[i][j] <= T) {*/
+                /*v[i][j] = 0;*/
+            /*} else {*/
+                /*qcount++;*/
+            /*}*/
+        /*}*/
+    /*}*/
 
-    printf ("Image size: %ldx%ld\n", nx, ny);
-    printf ("Points of interest detected: %ld\n", qcount);
-    printf ("Percentage: %f\n", (float)(100 * qcount) / (float)(nx * ny));
+    /*printf ("Image size: %ldx%ld\n", nx, ny);*/
+    /*printf ("Points of interest detected: %ld\n", qcount);*/
+    /*printf ("Percentage: %f\n", (float)(100 * qcount) / (float)(nx * ny));*/
 
     /* search for maximum */
     dummies_mirror (w, nx, ny);

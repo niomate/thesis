@@ -1,6 +1,6 @@
 #include "../structure_tensor/corner_detection.h"
 #include "main.h"
-#include "utils.h"
+#include "../utils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

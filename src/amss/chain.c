@@ -123,6 +123,16 @@ int list_size (list_ptr list) {
 
 /****************************** Print functions **********************************/
 
+void print_list_minimal (list_ptr list) {
+    printf ("List[");
+    printf ("chain_length: %d, \n", list->chain_length);
+    printf ("size: %d, \n", list->size);
+    for (node_ptr current = list_head(list); current != NULL; current=current->next) {
+      print_node_minimal(current, list->chain_length);
+    }
+    printf ("]\n");
+}
+
 void print_list (list_ptr list) {
     printf ("List[");
     printf ("chain_length: %d, \n", list->chain_length);
@@ -130,6 +140,13 @@ void print_list (list_ptr list) {
     for (node_ptr current = list_head(list); current != NULL; current=current->next) {
       print_node(current, list->chain_length);
     }
+    printf ("]\n");
+}
+
+void print_node_minimal (node_ptr node, int chain_length) {
+    printf ("Node [");
+    print_pixel (node->corner_tip);
+    printf ("error: %f, slope: %f, angle: %f]->", node->error, node->slope, node->angle);
     printf ("]\n");
 }
 

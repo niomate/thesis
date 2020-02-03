@@ -159,7 +159,7 @@ void run_all_tests () {
             continue;
 
         //if (strcmp (entry->d_name, "angle015-0.pgm") != 0) {
-            //continue;
+        //    continue;
         //}
         printf ("[%s]: ", entry->d_name);
         int n = 0;

@@ -1,199 +1,92 @@
 #include "least_squares.h"
 #include "../utils.h"
 #include "chain.h"
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
+#define sqr(x) (x * x)
 
-void pivot
-
-(long n,    /* number of equations and unknowns, input */
- long j,    /* column for which we seach the pivot element */
- float **b, /* system matrix of size n * n, changed */
- float *d)  /* right hand side of size n, changed */
-
-/*
- column pivot strategy:
- - searches the pivot element p in column j:
-   |b[p][j]| >= |b[i][j]| for i=j,...,n
- - if j<>p, exchange the equations j and p
-*/
-
+// http://mathworld.wolfram.com/LeastSquaresFitting.html
+int linear_regression(float* tau, float* d, float* slope, float* intercept, float* r_sqr, size_t n)
 {
-    long i, k; /* loop variables */
-    long p;    /* index of pivot element */
-    float aux; /* auxiliary variable */
+    float sum_d = 0;  /* Sum of dn */
+    float sum_t = 0;  /* Sum of tn */
+    float sum_d2 = 0; /* Sum of dn^2 */
+    float sum_t2 = 0; /* Sum of tn^2 */
+    float sum_dt = 0; /* Sum of tn*dn */
 
-
-    /* ---- search pivot element ---- */
-
-    p = j;
-    for (i = j + 1; i <= n; i++)
-        if (fabs (b[p][j]) >= fabs (b[i][j]))
-            p = i;
-
-
-    /* ---- exchange equations j and p  ---- */
-
-    if (j != p) {
-        /* exchange rows b[j][*] and b[p][*] */
-        for (k = j; k <= n; k++) {
-            aux = b[p][k];
-            b[p][k] = b[j][k];
-            b[j][k] = aux;
-        }
-
-        /* exchange right hand side entries d[j] and d[p] */
-        aux = d[p];
-        d[p] = d[j];
-        d[j] = aux;
+    for (size_t i = 0; i < n; ++i) {
+        sum_d += d[i];
+        sum_t += tau[i];
+        sum_d2 += sqr(d[i]);
+        sum_t2 += sqr(tau[i]);
+        sum_dt += d[i] * tau[i];
     }
 
-    return;
+    /* Mean values of d and tau */
+    float mean_d = sum_d / n;
+    float mean_t = sum_t / n;
 
-} /* pivot */
+    /* Compute sums of squares */
+    float ssdd, sstt, ssdt;
+    ssdd = sum_d2 - n * sqr(mean_d);
+    sstt = sum_t2 - n * sqr(mean_t);
+    ssdt = sum_dt - n * mean_d * mean_t;
 
-/*--------------------------------------------------------------------------*/
-
-void gauss
-
-(long n,    /* number of equations, input */
- float **b, /* system matrix of size n * n, input */
- float *d,  /* right hand side of size n, input */
- float *x)  /* solution vector, output */
-
-/*
- Gauss algorithm for solving a linear system of equations with pivoting
-*/
-
-{
-    long i, j, k; /* loop variables */
-    float sum;    /* for summing up */
-    float factor; /* time saver */
-
-
-    /* ---- bring linear system of size n * n in echelon form ---- */
-
-    /* make sure that |b(1,1)| >= |b(k,1)| for k=2,...,n */
-    pivot (n, 1, b, d);
-
-    for (i = 1; i <= n - 1; i++) {
-        /* make sure that |b(i,i)| >= |b(k,i)| for k=i+1,...,n */
-        pivot (n, i, b, d);
-
-        for (k = i + 1; k <= n; k++) {
-            /* subtract b[k][i] / b[i][i] times equation i from equation k */
-            factor = b[k][i] / b[i][i];
-            for (j = i; j <= n; j++)
-                b[k][j] = b[k][j] - factor * b[i][j];
-            d[k] = d[k] - factor * d[i];
-        }
+    /* Singular matrix ? */
+    if (sstt == 0) {
+        return 0;
     }
 
-    /* ---- backward substitution ---- */
+    /* Compute the slope from sums of squares */
+    *slope = ssdt / sstt;
+    *intercept = mean_d - (*slope) * mean_t;
 
-    for (i = n; i >= 1; i--) {
-        sum = d[i];
-        for (j = i + 1; j <= n; j++)
-            sum = sum - b[i][j] * x[j];
-        if (b[i][i] != 0.0)
-            x[i] = sum / b[i][i];
-        else
-            printf ("singular linear system of equations\n");
-    }
-
-    return;
-
-} /* gauss */
-
-/*--------------------------------------------------------------------------*/
-
-/* DISCLAIMER: Method was changed to assume that every equation has the same weight */
-void solve_normal_equations
-
-(long imax,  /* number of equations, input */
- long jmax,  /* number of unknowns, input */
- float **a,  /* system matrix of size imax * jmax, input */
- float *rhs, /* right hand side of size imax, input */
- float *x)   /* solution of normal equations, output */
-
-/*
- solves the normal equations that arise from a linear system of imax
- equations with jmax unknowns, where equation i has the weight w[i]
-*/
-
-{
-    long i, j, k; /* loop variables */
-    float **b;    /* system matrix of normal system */
-    float *d;     /* right hand side of normal system */
-
-
-    /* ---- allocate storage ---- */
-
-    alloc_matrix (&b, jmax + 1, jmax + 1);
-    alloc_vector (&d, jmax + 1);
-
-    /* ---- construct normal equations B x = d ---- */
-
-    /* d = A^T rhs */
-    for (i = 1; i <= jmax; i++) {
-        d[i] = 0.0;
-        for (k = 1; k <= imax; k++)
-            d[i] = d[i] + a[k][i] * rhs[k];
-    }
-
-    /* B = A^T A */
-    for (i = 1; i <= jmax; i++)
-        for (j = 1; j <= jmax; j++) {
-            b[i][j] = 0.0;
-            for (k = 1; k <= imax; k++)
-                b[i][j] = b[i][j] + a[k][i] * a[k][j];
-        }
-
-
-    /* ---- solve normal equations with Gauss algorithm ---- */
-
-    gauss (jmax, b, d, x);
-
-
-    /* ---- disallocate storage ---- */
-
-    disalloc_matrix (b, jmax + 1, jmax + 1);
-    disalloc_vector (d, jmax + 1);
-    return;
-
-} /* solve_normal_equations */
-
-/*--------------------------------------------------------------------------*/
-
-int cmpfunc (const void * a, const void * b) {
-   return ( *(float *)a - *(float *)b );
+    *r_sqr = sqr(ssdt) / (ssdd * sstt);
+    return 1;
 }
 
+/*--------------------------------------------------------------------------*/
 
-void error_percentile (list_ptr chains, float percentile) {
-   assert(percentile >= 0);
-   assert(percentile <= 1);
+int floatcomp_asc(const void* a, const void* b)
+{
+    if (*(const float*)a < *(const float*)b) {
+        return -1;
+    }
+    return *(const float*)a > *(const float*)b;
+}
 
-   if (chains->size < 5) { return; }
-   float error[chains->size];
-   int i = 0;
-    for (node_ptr current = list_head (chains); current != NULL; current = current->next) {
-       error[i++] = current->error;
+int floatcomp_desc(const void* a, const void* b)
+{
+    return -floatcomp_asc(a, b);
+}
+
+void error_percentile(list_ptr chains, float percentile)
+{
+    assert(percentile >= 0);
+    assert(percentile <= 1);
+
+    if (chains->size <= 5 || percentile == 1) {
+        return;
     }
 
-   qsort (error, chains->size, sizeof(float), cmpfunc);
+    float error[chains->size];
+    int i = 0;
+    for (node_ptr current = list_head(chains); current != NULL; current = current->next) {
+        error[i++] = current->error;
+    }
 
+    qsort(error, chains->size, sizeof(float), floatcomp_desc);
 
-   long index = (long) (percentile * chains->size + 0.5);
-   float threshold = error[index];
+    long index = (long)(percentile * chains->size);
+    float threshold = error[index];
 
-    for (node_ptr current = list_head (chains); current != NULL; current = current->next) {
-       if (current->error >= threshold) {
-         list_delete(chains, current);
-       }
+    for (node_ptr current = list_head(chains); current != NULL; current = current->next) {
+        if (current->error < threshold) {
+            list_delete(chains, current);
+        }
     }
 }
