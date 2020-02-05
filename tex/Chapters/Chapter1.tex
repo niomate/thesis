@@ -16,48 +16,5 @@
 
 %----------------------------------------------------------------------------------------
 
-\section{Available Methods for Corner detection}
-
-
-To find the points of interest we want to keep, I tried different corner detectors:
-\begin{itemize}
-    \item Tomasi-Kanade
-    \item Rohr
-    \item Foerstner-Harris
-\end{itemize}
-
-
-All of the above methods have in common that they make use of the \textit{structure tensor}
-defined as
-\[
-    J_\rho(\nabla u) := K_\rho(\nabla u\nabla u^T) =
-    \begin{pmatrix}
-        K_\rho * (u_x^2)  & K_\rho * (u_xu_y) \\
-        K_\rho * (u_xu_y) & K_\rho * (u_y^2)    \\
-    \end{pmatrix}
-\]
-where $K_\rho$ is a gaussian convolution kernel with standard deviation $\rho$ and $u$ is a gaussian smoothed version of the original image $f$, i.e.
-\[
-    u = K_\sigma * f
-\]
-
-While being fairly accurate (insert examples here), the above methods don't really succeed in finding the most relevant corners. \\
-That's the reason I chose an algorithm proposed by Luis Alvarez (reference here) that is based on the so called Affine Morphological Scale Space (or short \textbf{AMSS}).
-He proposes a multiscale algorithm that tracks corners across the evolution of an image in this scale space.\\
-The special property of this scale space is, that the shape of a corner evolves in such a way that the the actual tip of the corner moves linearly along the corner bisector. \\
-Using this property, one can extract the exact location of a corner.
-
-
-\subsection{AMSS corner detection}
-
-\subsubsection{The affine morphological scale space}
-
-The aforementioned AMSS is produced by the partial differential equation
-\[
-    u_t = t^\frac{1}{3}(u_{xx}u_y^2 + u_{yy}u_x^2 - 2u_xu_yu_{xy})^\frac{1}{3}
-\]
-
-
-
 
 

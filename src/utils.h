@@ -7,9 +7,11 @@
 void alloc_vector (float **, long);
 void alloc_vector_long (long **, long);
 void alloc_matrix (float ***, long, long);
+void alloc_matrix_int (int ***, long, long);
 void alloc_cubix (float ****, long, long, long);
 void disalloc_vector (float *, long);
 void disalloc_matrix (float **, long, long);
+void disalloc_matrix_int (int **, long, long);
 void disalloc_cubix (float ***, long, long, long);
 
 /* Read utilities */
@@ -27,8 +29,6 @@ void imgcpy (float**, float**, size_t, size_t);
 /* Math utilities */
 float sgn (float);
 void analyse_grey (float **, long, long, float *, float *, float *, float *);
-void mask (float **, float **, long, long, int);
 long clamp (long, long, long);
-float degrees(float);
 
 #endif // utils_h__
