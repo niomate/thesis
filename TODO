@@ -1,5 +1,9 @@
-[] Command line arguments for inpainting
-[] Script to automate corner_detection + inpainting
+[x] Command line arguments for inpainting
+[x] Script to automate corner_detection + inpainting
+[] Stopping criterion for inpainting ?
+[x] Multiprocessing for python script to improve runtime
+[x] Quantile selection for corners
+[] Documentation for command line arguments
 [] Email Weickert 
     [] meeting for thesis registration
     [] latex template for thesis
