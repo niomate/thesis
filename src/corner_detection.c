@@ -690,7 +690,9 @@ int main(int argc, char** argv)
     printf("\nNumber of corners:   %3ld\n", count);
 
     /* ---- write output image ---- */
-/*
+/*   // Comments don't work for some reason, comment_line apparently inserts some weird character
+ *   // that is not readable.
+ * 
  *    comment_line(comments, "# structure tensor analysis\n");
  *    if (type == 0) {
  *        comment_line(comments, "# Rohr corner detector \n");
