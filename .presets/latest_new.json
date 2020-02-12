@@ -1,0 +1,1 @@
+{"corner": {"detector": "Foerstner", "thresh": 0.95, "sigma": 1.0, "rho": 2.5, "mask": 5}, "inpaint": {"sigma": 3.0, "lambda": 0.03, "alpha": 0.5, "gamma": 1.0, "outer": "100", "inner": "200"}}

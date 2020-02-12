@@ -2,66 +2,38 @@
 import json
 import shutil
 import tkinter as tk
-from ctypes import *
 from os import listdir, remove
 from os.path import abspath, dirname, exists, join
 from time import time
 from tkinter import filedialog, messagebox, ttk
 
-from PIL import Image
-import numpy as np
-
-
-def name_from_path(path):
-    return path.rsplit('/', 1)[1].split('.')[0]
-
-
-def MSE(im1, im2):
-    u = np.array(Image.open(im1))
-    v = np.array(Image.open(im2))
-    assert u.shape == v.shape
-    nx, ny = u.shape
-    return np.sum(np.square(u - v)) / (nx * ny)
-
+from scripts.run import corners, inpaint, name_from_path
 
 # Directories
 here = dirname(__file__)
-DETECTOR_TYPES = ['Rohr', 'Tomasi', 'Foerstner']
+DETECTOR_TYPES = ['Rohr', 'Tomasi', 'Foerstner', 'Harris']
 OUTPUT_FOLDER = abspath(join(here, 'output/'))
 IMAGE_FOLDER = abspath(join(here, 'images/'))
-LIB_FOLDER = abspath(join(here, 'lib/'))
 TEMP_FOLDER = abspath(join(here, '.tmp/'))
 PRESET_FOLDER = abspath(join(here, '.presets'))
 DEFAULT_PRESET_FILE = abspath(join(here, '.default'))
 
 
 # Name templates for caching
-temp = join(TEMP_FOLDER, ('{}-' * 6)[:-1] + '.pgm').format
-temp_mask = join(TEMP_FOLDER, '{}-' * 6 + 'mask.pgm').format
-temp_inpaint = join(TEMP_FOLDER, '{}-' * 12 + 'inpaint.pgm').format
+def temp(img_name, *params):
+    filename = img_name + '-'.join([str(x) for x in params[1::2]]) + '.pgm'
+    return join(TEMP_FOLDER, filename)
 
 
-# -------------------- Load C library functions --------------------------
-libmask = cdll.LoadLibrary(join(LIB_FOLDER, 'libmask.so'))
-libinpaint = cdll.LoadLibrary(join(LIB_FOLDER, 'libinpaint.so'))
+def temp_mask(img_name, *params):
+    filename = img_name + '-'.join([str(x) for x in params[1::2]]) + 'mask.pgm'
+    return join(TEMP_FOLDER, filename)
 
 
-compression_mask = libmask.calc_compression_mask
-compression_mask.argtypes = [c_char_p, c_char_p,
-                             c_long, c_float, c_float, c_float]
-compression_mask.restype = c_float
+def temp_inpaint(img_name, *params):
+    filename = img_name + '-'.join([str(x) for x in params[1::2]]) + 'inpaint.pgm'
+    return join(TEMP_FOLDER, filename)
 
-
-corner_detection = libmask.detect_and_draw_corners
-corner_detection.argtypes = [c_char_p, c_char_p,
-                             c_long, c_float, c_float, c_float]
-corner_detection.restype = c_int
-
-corner_inpainting = libinpaint.inpainting_compression
-corner_inpainting.argtypes = [c_char_p, c_char_p,
-                              c_char_p, c_double, c_double, c_double, c_double]
-
-# ------------------------------------------------------------------------------
 
 # Make GUI
 root = tk.Tk()
@@ -100,7 +72,7 @@ base_img_name.initialize('')
 # Different parameter fields
 # Limits : (start, end, step, default)
 fields_corner = {'detector': {'label': 'Corner detector'},
-                 'thresh': {'label': 'Threshold', 'limits': (0, 200, 1, 5)},
+                 'thresh': {'label': 'Percentile', 'limits': (0, 1, 0.01, 0.9)},
                  'sigma': {'label': 'Noisescale (sigma)', 'limits': (0, 10, 0.1, 0.5)},
                  'rho': {'label': 'Integration scale (rho)', 'limits': (0, 10, 0.1, 0.5)},
                  'mask': {'label': 'Size of area kept', 'limits': (0, 40, 1, 0)}, }
@@ -152,33 +124,35 @@ for field, conf in fields_inpaint.items():
     entries_inpaint[field] = ent
 
 
-def corners():
+def read_header(img):
+    with open(img, 'r', errors='replace') as f:
+        lines = [l.replace('#', '').replace('\n', '') for l in f.readlines() if '#' in l]
+    lines = [l.split(':') for l in lines if ':' in l]
+    header = {x.strip(): y.strip() for x, y in lines}
+    return header
+
+
+def corners_action():
     global corner_photo
-    params = get_params_corner()
+    params = get_params_corner(radius=False)
     img_name = name_from_path(base_img_name.get())
     out = temp(img_name, *params)
 
     if not exists(out):
-        num = corner_detection(base_img_name.get().encode(
-            'utf-8'), out.encode('utf-8'), *params)
-
-        statusmsg.set(f'Number of corners found: {num}')
+        corners(base_img_name.get(), *params, outim=out)
 
     corner_photo = tk.PhotoImage(file=out)
     corner_canvas.create_image(256, 256, image=corner_photo)
 
 
-def mask():
+def mask_action():
     global corner_photo
     params = get_params_corner()
     img_name = name_from_path(base_img_name.get())
     out = temp_mask(img_name, *params)
 
     if not exists(out):
-        perc = compression_mask(base_img_name.get().encode(
-            'utf-8'), out.encode('utf-8'), *params)
-
-        statusmsg.set(f'Percentage of pixels kept: {perc:2.2f}')
+        corners(base_img_name.get(), *params, outim=out)
 
     corner_photo = tk.PhotoImage(file=out)
     corner_canvas.create_image(256, 256, image=corner_photo)
@@ -186,7 +160,7 @@ def mask():
     mask_displayed.set(True)
 
 
-def inpaint():
+def inpaint_action():
     global inpaint_photo, corner_photo, root
     params_corner = get_params_corner()
     params_in = get_params_inpaint()
@@ -201,52 +175,46 @@ def inpaint():
             return
 
         if not exists(mask_name):
-            perc = compression_mask(base_img_name.get().encode(
-                'utf-8'), mask_name.encode('utf-8'), *params_corner)
-
-            statusmsg.set(f'Percentage of pixels kept: {perc:2.2f}')
+            corners(base_img_name.get(), *params_corner, outim=mask_name)
 
         corner_photo = tk.PhotoImage(file=mask_name)
         corner_canvas.create_image(256, 256, image=corner_photo)
         root.update()
 
+        print('Inpaint now')
         start = time()
-        corner_inpainting(
-            base_img_name.get().encode('utf-8'),
-            mask_name.encode('utf-8'),
-            out.encode('utf-8'),
-            *params_in)
-
+        inpaint(base_img_name.get(), mask_name, *params_in, outim=out)
         runtime = time() - start
 
-        m = MSE(base_img_name.get(), out)
-
-        statusmsg.set(
-            f'Took {runtime:.2f} seconds to process the image! MSE is {m:.2f}')
+        statusmsg.set(f'Took {runtime:.2f} seconds to process the image!')
 
     inpaint_photo = tk.PhotoImage(file=out)
     inpaint_canvas.create_image(256, 256, image=inpaint_photo)
 
 
-def get_params_corner():
+def get_params_corner(radius=True):
     detector = DETECTOR_TYPES.index(entries_corner['detector'].get())
-    thresh = float(entries_corner['thresh'].get())
-    sigma = float(entries_corner['sigma'].get())
-    rho = float(entries_corner['rho'].get())
-    size = int(entries_corner['mask'].get())
+    thresh = entries_corner['thresh'].get()
+    sigma = entries_corner['sigma'].get()
+    rho = entries_corner['rho'].get()
+    size = entries_corner['mask'].get()
 
-    return detector, thresh, sigma, rho, size
+    params = ['-c', detector, '-q', thresh, '-s', sigma, '-r', rho]
+    if radius:
+        params.extend(['-m', size])
+
+    return list(map(str, params))
 
 
 def get_params_inpaint():
-    lbda = float(entries_inpaint['lambda'].get())
-    sigma = float(entries_inpaint['sigma'].get())
-    alpha = float(entries_inpaint['alpha'].get())
-    gamma = float(entries_inpaint['gamma'].get())
-    outer = int(entries_inpaint['outer'].get())
-    inner = int(entries_inpaint['inner'].get())
+    lbda = entries_inpaint['lambda'].get()
+    sigma = entries_inpaint['sigma'].get()
+    alpha = entries_inpaint['alpha'].get()
+    gamma = entries_inpaint['gamma'].get()
+    outer = entries_inpaint['outer'].get()
+    inner = entries_inpaint['inner'].get()
 
-    return lbda, sigma, alpha, gamma, outer, inner
+    return list(map(str, ['-l', lbda, '-s', sigma, '-a', alpha, '-g', gamma, '-n', outer, '-N', inner]))
 
 
 def file_dialog():
@@ -403,7 +371,7 @@ def display_original():
     corner_canvas.create_image(256, 256, image=corner_photo)
 
 
-default_preset_file = open(DEFAULT_PRESET_FILE, 'r+').read()
+default_preset_file = open(DEFAULT_PRESET_FILE, 'r+').read().strip()
 if len(default_preset_file) > 0:
     set_preset_values(json.load(open(default_preset_file, 'r+')))
 
@@ -414,11 +382,11 @@ original_button = tk.Button(
     command=display_original,
     state=tk.DISABLED)
 corner_button = tk.Button(buttonframe, text='Show corners',
-                          command=corners, state=tk.DISABLED)
+                          command=corners_action, state=tk.DISABLED)
 mask_button = tk.Button(buttonframe, text='Compute mask',
-                        command=mask, state=tk.DISABLED)
+                        command=mask_action, state=tk.DISABLED)
 inpaint_button = tk.Button(
-    buttonframe, text='Inpaint from mask', command=inpaint, state=tk.DISABLED)
+    buttonframe, text='Inpaint from mask', command=inpaint_action, state=tk.DISABLED)
 quit_button = tk.Button(buttonframe, text='Quit', command=root.quit)
 
 
@@ -436,7 +404,8 @@ presetmenu = tk.Menu(menubar, tearoff=0)
 presetmenu.add_command(label='Save preset', command=save_preset)
 presetmenu.add_command(label='Load preset', command=load_preset)
 presetmenu.add_command(label='Set default preset', command=set_default_preset)
-presetmenu.add_command(label='Unset default preset', command=lambda *args: open(DEFAULT_PRESET_FILE, 'w+'))
+presetmenu.add_command(label='Unset default preset',
+                       command=lambda *args: open(DEFAULT_PRESET_FILE, 'w+'))
 presetmenu.add_command(label='Clear presets', command=clear_presets)
 
 

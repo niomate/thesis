@@ -9,19 +9,23 @@ from subprocess import DEVNULL, run
 def log_thread(*args):
     print(f'[{current_process().name}]', *args)
 
-def inpaint(inim, mask):
+def inpaint(inim, mask, *args, outim=None):
     log_thread(f'Inpainting {inim}')
-    mask = mask_name(inim)
-    outim = inpaint_name(inim)
-    run(['build/inpainting', inim, mask, '-o', outim], stdout=DEVNULL)
+    if outim is None:
+        outim = inpaint_name(inim)
+    cmd = ['build/inpainting', inim, mask, '-o', outim]
+    print(' '.join(cmd))
+    run(cmd)
 
 
-def corners(inim, *args):
+def corners(inim, *args, outim=None):
     ''' Pass all arguments that build/corners accepts '''
     log_thread(f'Corner detection {inim}')
-    outim = mask_name(inim)
+    if outim is None:
+        outim = mask_name(inim)
     cmd = ['build/corners', inim, '-o', outim, *args]
-    run(cmd, stdout=DEVNULL)
+    print(' '.join(cmd))
+    run(cmd) #stdout=DEVNULL)
     return outim
 
 
@@ -57,22 +61,24 @@ def worker(todo, mode):
             continue
 
 
-if len(sys.argv) == 1:
-    mode = 'full'
-else:
-    mode = sys.argv[1]
+if __name__ == '__main__':
 
-inimages = glob.iglob('images/binary/**/*.pgm', recursive=True)
-todo = Queue()
+    if len(sys.argv) == 1:
+        mode = 'full'
+    else:
+        mode = sys.argv[1]
 
-for im in inimages:
-    todo.put(im)
+    inimages = glob.iglob('images/binary/**/*.pgm', recursive=True)
+    todo = Queue()
 
-jobs = []
-for i in range(6):
-    p = Process(target=worker, args=(todo, mode))
-    p.name = f'Worker-{i}'
-    p.start()
+    for im in inimages:
+        todo.put(im)
 
-for p in jobs:
-    p.join()
+    jobs = []
+    for i in range(6):
+        p = Process(target=worker, args=(todo, mode))
+        p.name = f'Worker-{i}'
+        p.start()
+
+    for p in jobs:
+        p.join()

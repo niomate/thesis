@@ -1818,7 +1818,7 @@ int main(int argc, char** argv)
 
     /* ---- process image ---- */
 
-    while (k < kmax) {
+    while (res >= 0.000001 && k < kmax) {
         /* perform one inpainting iteration */
         k = k + 1;
         if (timediscr == 0)
@@ -1887,6 +1887,8 @@ int main(int argc, char** argv)
     fprintf(outimage, "# std. dev.:      %8.2lf\n", stdev);
     fprintf(outimage, "# 2-norm:         %8.2lf\n", norm);
     fprintf(outimage, "# residue:        %8.6lf\n", res);
+    fprintf(outimage, "# MSE:            %8.6lf\n", mse);
+    fprintf(outimage, "# PSNR:           %8.6lf\n", psnr);
     fprintf(outimage, "%ld %ld \n255\n", nx, ny);
 
     /* write image data and close file */

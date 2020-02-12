@@ -22,12 +22,6 @@
  - presmoothing at integration scale: convolution-based, Dirichlet b.c.
 */
 
-typedef struct pixel {
-    long x;
-    long y;
-    float val;
-} pixel_t;
-
 int float_cmp(const void* a, const void* b)
 {
     const float v1 = *((const float*)a);
@@ -553,12 +547,11 @@ void mask
             }
             for (k = i - r; k <= i + r; k++) {
                 for (l = j - r; l <= j + r; l++) {
+                    if (k < 1 || k > nx || l < 1 || l > ny) continue;
                     float dist = powf(k - i, 2) + powf(l - j, 2);
                     if (dist > radius * radius) {
                         continue;
                     }
-                    k = clamp(k, 1, nx);
-                    l = clamp(l, 1, ny);
                     u[k][l] = 255.0;
                 }
             }
@@ -595,7 +588,7 @@ int main(int argc, char** argv)
     while ((c = getopt(argc, argv, "q:c:s:r:k:o:m:")) != -1) {
         switch (c) {
         case 'q':
-            q = atoi(optarg);
+            q = atof(optarg);
             if (q < 0 || q > 1) {
                 fprintf(stderr, "Percentile has to be between 0 and 1!\n");
                 abort();
@@ -623,6 +616,8 @@ int main(int argc, char** argv)
             abort();
         }
     }
+
+    printf("q is %f\n", q);
 
     if (optind == argc) {
         fprintf(stderr, "No input file specified. Aborting...\n");
