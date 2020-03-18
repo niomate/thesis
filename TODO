@@ -4,9 +4,10 @@
 [x] Multiprocessing for python script to improve runtime
 [x] Quantile selection for corners
 [x] Documentation for command line arguments
-[] Email Weickert 
-    [] meeting for thesis registration
-    [] latex template for thesis
-    [] questions about thesis content
+[x] Email Weickert 
+    [x] meeting for thesis registration
+    [x] latex template for thesis
+    [x] questions about thesis content
 [] Bachelor's seminar presentation
-[] Thesis outline
+[x] Thesis outline
+[] Meaningful test images

@@ -6,14 +6,16 @@ from multiprocessing import Pool, Process, Queue, cpu_count, current_process
 from os.path import abspath, dirname, join
 from subprocess import DEVNULL, run
 
+
 def log_thread(*args):
     print(f'[{current_process().name}]', *args)
+
 
 def inpaint(inim, mask, *args, outim=None):
     log_thread(f'Inpainting {inim}')
     if outim is None:
         outim = inpaint_name(inim)
-    cmd = ['build/inpainting', inim, mask, '-o', outim]
+    cmd = ['build/inpainting', inim, mask, *args, '-o', outim]
     print(' '.join(cmd))
     run(cmd)
 
@@ -25,7 +27,7 @@ def corners(inim, *args, outim=None):
         outim = mask_name(inim)
     cmd = ['build/corners', inim, '-o', outim, *args]
     print(' '.join(cmd))
-    run(cmd) #stdout=DEVNULL)
+    run(cmd)  # stdout=DEVNULL)
     return outim
 
 

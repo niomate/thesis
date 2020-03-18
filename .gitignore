@@ -1,5 +1,8 @@
 build/
+corners.pgm
+w.pgm
 .tmp
+.ccls-cache*
 .vscode
 .envrc
 .clang-format
@@ -14,6 +17,8 @@ cmake_install.cmake
 images/binary/angles
 output
 tags
+
+**/__pycache__
 
 tex/*.latexmain
 tex/Chapters/*.aux

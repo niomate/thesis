@@ -1,0 +1,178 @@
+\chapter{Fundamentals} 
+
+\label{Fundamentals}
+
+In this chapter I will go over the fundamental mathematical concepts fom image processing used in
+my thesis. We will see the basic ideas of diffusion based inpainting as well as take a somewhat
+deeper look at the most relevant methods of corner/feature detection.
+
+\section{Mathematical concepts}
+
+Talking about corner detection and inpainting requires some basic knowledge of multivariable calcus
+so I am going to introduce the fundamental and most important concepts here.
+
+First, we have to define what an image is mathematically. Most of the time in image processing, a (grey value) image
+is defined as a continuous function
+$f:\Omega\rightarrow\lbrack0,255\rbrack$ where the \textit{image domain} $[0, n_x] \times
+[0, n_y] =: \Omega \subset \mathbb{R}^2$ is a 2-dimensional cuboid in $\mathbb{R}^2$.
+In reality however, images are not really continuous functions but rather discrete sets of pixels.
+These pixels are normally assumed to lie on a rectangular equidistant grid, where the distance
+between each pixel is $h_x$ in x-direction and $h_y$ in y-direction. 
+In our case, the distances in both directions are equal, making it a quadratic equidistant grid
+with grid size $h := h_x = h_y$.
+We define points on the grid as
+\begin{equation}
+    \mathbf{x}_{i, j} = (x_i, y_j) = (ih, jh)\qquad \forall (i, j) \in [0, n_x-1] \times [0, n_y-1] 
+\end{equation}
+The pixels that are known are then defined as
+\begin{equation}\label{eq:Disc}
+    f_{i, j} := f(\mathbf{x}_{i, j}) = f(x_i, y_j)\qquad \forall (i, j) \in [0, n_x-1] \times [0, n_y-1] 
+\end{equation}
+
+\subsection*{Partial derivatives and the Gradient}
+NEEDS WORKING ON !!!!\\
+The partial derivative of a continuous function in multiple variables is roughly defined as differentiating 
+this function in one variable while keeping the remaining variables constant. Geometrically, this
+can be seen as finding the slope of a surface in a certain direction. More formally, the partial
+derivative of a continuous function $f:\mathbb{R}^2\rightarrow\mathbb{R}$ is given by
+\begin{equation}
+    \frac{\partial f}{\partial x} (x, y) = f_x(x, y) := \lim_{h\rightarrow0}\frac{f(x+h,y) -
+        f(x,y)}{h}
+\end{equation}
+The partial derivative in y-direction is defined analogously.
+Using these definitions, one can define the so called \textit{gradient} of f as
+
+\begin{equation}
+    \text{grad} f(x, y)= \nabla f(x, y):= \left( \frac{\partial f}{\partial x}(x,y),\ \frac{\partial
+            f}{\partial x}(x,y)\right)^\top
+\end{equation}
+
+As we will see later, the gradient plays a very important role in corner detection algorithms. 
+How ever, as we recall, images typically do not have an infinite amount of pixels, meaning that 
+they
+can not be differentiated using the existing data. To
+still be able to compute the gradient we have to resort to approximating it numerically.
+
+\subsection*{Numerical differentiation}
+
+Schemes for numerical differentiation are derived from the \textit{Taylor polynomial} of the
+respective function. For the sake of simplicity and readability, I'm going to derive such a scheme for a
+one-dimensional function as it is basically the same for a multivariable function. 
+
+Let $f: (a, b) \rightarrow \mathbb{R}$ be a $n+1$ times continuously differentiable function, i.e.
+$f \in C^{n+1}$ and $x_0 \in (a, b)$. The Taylor polynomial of degree $n$ for $f$ is then defined as
+\begin{equation}\label{eq:Taylor}
+    T_n(x, x_0) := \sum\limits_{k = 0}^{m} \frac{(x-x_0)^k}{k!}f^{(k)}(x_0)
+\end{equation}
+
+Recalling Taylor's theorem, $f(x)$ can be approximated using this polynomial, leaving an error of
+\begin{equation}
+    R_n(x, x_0) := \frac{(x-x_0)^{n+1}}{(n+1)!}f^{(n+1)}(x_0 + \Theta(x-x_0))\qquad \Theta \in(0,1)
+\end{equation}
+
+Now, let $u$ be a function from which we only know some points on a grid with grid size $h$ as 
+defined in \ref{eq:Disc}. To approximate the first derivative of $u$ at position $i$ we want to
+find some coefficients $\alpha, \beta, \gamma$ such that
+\begin{equation}\label{eq:Coeff}
+    u_i' \approx \alpha u_{i-1} + \beta u_i + \gamma u_{i+1}
+\end{equation}
+
+
+% TODO: More in detail ? 
+Using \ref{eq:Disc} and \ref{eq:Taylor} we can derive an approximation for $u_{i-1}$ and $u_{i+1}$:
+\begin{gather}
+    u_{i-1} \approx u_i - hu_i' + \frac{1}{2}h^2u_i''\label{eq:Approx1}\\
+    u_{i+1} \approx u_i + hu_i' + \frac{1}{2}h^2u_i''\label{eq:Approx2}
+\end{gather}
+
+Inserting \ref{eq:Approx1} and \ref{eq:Approx2} in \ref{eq:Coeff}, we get the following term after sorting the
+coefficients:
+\begin{equation}
+    u_i' \approx (\alpha + \beta + \gamma) u_i -h (\alpha - \gamma)u_i' + \frac{h^2}{2}(\alpha +
+    \gamma)u_i''
+\end{equation}
+
+Solving the arising linear system gives us the following coefficients:
+\begin{gather}
+    \alpha = \frac{1}{2h} = -\gamma\\
+    \beta = 0
+\end{gather}
+And therefore the approximation
+\begin{equation}
+    u_i' \approx \frac{u_{i+1} - u_{i-1}}{2h}
+\end{equation}
+
+which is called a \textit{central difference scheme}
+
+
+\subsection*{Convolution}
+
+\subsection*{The Structure Tensor}
+Another very important piece of mathematics is the so called \textit{structure tensor}. It serves as an
+operator that yields information about the surroundings of a certain location. One can for example
+by just looking at the eigenvalues of this tensor figure out whether the current location belongs
+to a corner or not. Hence it is used in a large quantity of corner detection algorithms. More on
+the exact nature of the algorithms can be found in the next section.\\
+Since differentiation is inherently unstable, it is good practice to first smooth the image before
+% TODO: Definiition
+computing the derivatives to get rid of high frequencies and noise. That means, replacing the
+original image $f$ by a smoothed version $u$ given by a convolution with a gaussian kernel $K_\sigma$
+where $\sigma$ denotes the standard deviation of the Gaussian.
+\begin{equation}
+    u := (K_\sigma * f)
+\end{equation}
+
+Putting it all together, the structure tensor for the smoothed image $u$ looks like this:
+\begin{equation}
+    J_\rho = K_\rho * \left(\nabla u \nabla u^\top\right)= \begin{pmatrix}
+        K_\rho * u_x^2 & K_\rho * u_xu_y \\
+        K_\rho * u_xu_y & K_\rho * u_y^2
+    \end{pmatrix} 
+\end{equation}
+
+% TODO: Research this part again!!
+The second gaussian convolution with the so called \textit{integration scale} $\rho$ is added so
+that the structure tensor incorporates more information about the surrounding region. \\
+The eigenvalues of the structure tensor have some very interesting and unique properties that help
+greatly in distinguishing corners from non-corners.
+\subsection*{Diffusion}
+
+The easiest way to explain diffusion (in this case \textit{homogeneous} or \textit{linear} 
+diffusion) is to say that it describes the way a drop of ink propagates in a glass of water. 
+More generally, diffusion describes how the concentration of some substance (?) changes over time.
+In a mathematical way, a simple form of diffusion is given by the \textit{partial differential
+equation} (PDE)
+\begin{equation}\label{eq:LinDiff}
+    u_t = u_{xx}
+\end{equation}
+in the one dimensional case and 
+\begin{equation}\label{eq:2dDiff}
+    u_t =  \Delta u := u_{xx} + u_{yy}
+\end{equation}
+in the higher dimensional case. $\Delta u$ is called the \textit{Laplace operator}.
+
+\section{Corner detection methods}
+
+% TODO: Explanation of eigenvalues in structure tensor and why the smallest eigenvalue is important
+
+There are many different ways to find corners in an image. The approach I chose 
+computes the components of the structure tensor at each position in the image and then uses some kind
+of measure to evaluate the \textit{cornerness} at each location.
+Two measures I used to find relevant features are the \textit{Foerstner-Harris} (\ref{eq:Harris}) and the \textit{Tomasi-Kanade} (\ref{eq:Tomasi}) measures
+% Reference to paper by Harris and Tomasi-Kanade
+\begin{equation}\label{eq:Harris}
+    \text{Harris}(J) = \frac{det(J)}{tr(J)} = \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2}
+\end{equation}
+\begin{equation}\label{eq:Tomasi}
+    \text{Tomasi}(J) = min(\lambda_1, \lambda_2)
+\end{equation}
+
+where $\lambda_1$ and $\lambda_2$ are the eigenvalues of the structure tensor.
+While the Tomasi measure explicitly computes the eigenvalues to find the smallest one, which can be
+pretty expensive, especially since it has to be done for each pixel, the Harris measure only
+approximates the smallest eigenvalue. 
+
+
+\section{Inpainting}
+
+Cries in painting.

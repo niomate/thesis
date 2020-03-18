@@ -1858,6 +1858,7 @@ int main(int argc, char** argv)
     outimage = fopen(out, "w");
     fprintf(outimage, "P5 \n");
     fprintf(outimage, "# inpainting with EED\n");
+    fprintf(outimage, "# kmax:             %1ld\n", kmax);
     if (timediscr == 0)
         fprintf(outimage, "# explicit scheme\n");
     else if (timediscr == 1) {

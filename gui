@@ -2,6 +2,7 @@
 import json
 import shutil
 import tkinter as tk
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from os import listdir, remove
 from os.path import abspath, dirname, exists, join
 from time import time
@@ -11,28 +12,34 @@ from scripts.run import corners, inpaint, name_from_path
 
 # Directories
 here = dirname(__file__)
+
 DETECTOR_TYPES = ['Rohr', 'Tomasi', 'Foerstner', 'Harris']
+
 OUTPUT_FOLDER = abspath(join(here, 'output/'))
 IMAGE_FOLDER = abspath(join(here, 'images/'))
-TEMP_FOLDER = abspath(join(here, '.tmp/'))
 PRESET_FOLDER = abspath(join(here, '.presets'))
 DEFAULT_PRESET_FILE = abspath(join(here, '.default'))
+
+TEMP_FOLDER = TemporaryDirectory()
+
+fields = json.load(open(join(here, 'conf.json'), 'r'))
 
 
 # Name templates for caching
 def temp(img_name, *params):
     filename = img_name + '-'.join([str(x) for x in params[1::2]]) + '.pgm'
-    return join(TEMP_FOLDER, filename)
+    return join(TEMP_FOLDER.name, filename)
 
 
 def temp_mask(img_name, *params):
     filename = img_name + '-'.join([str(x) for x in params[1::2]]) + 'mask.pgm'
-    return join(TEMP_FOLDER, filename)
+    return join(TEMP_FOLDER.name, filename)
 
 
 def temp_inpaint(img_name, *params):
-    filename = img_name + '-'.join([str(x) for x in params[1::2]]) + 'inpaint.pgm'
-    return join(TEMP_FOLDER, filename)
+    filename = img_name + '-'.join([str(x)
+                                    for x in params[1::2]]) + 'inpaint.pgm'
+    return join(TEMP_FOLDER.name, filename)
 
 
 # Make GUI
@@ -46,6 +53,7 @@ buttonframe = tk.Frame(root)
 
 entryframe_left = tk.LabelFrame(inputframe, text='Corner detection')
 entryframe_right = tk.LabelFrame(inputframe, text='Inpainting')
+entryframes = {'corner': entryframe_left, 'inpaint': entryframe_right}
 
 # Canvas for image display
 corner_canvas = tk.Canvas(displayframe, width=512, height=512)
@@ -69,64 +77,44 @@ mask_displayed.initialize(False)
 base_img_name = tk.StringVar()
 base_img_name.initialize('')
 
-# Different parameter fields
-# Limits : (start, end, step, default)
-fields_corner = {'detector': {'label': 'Corner detector'},
-                 'thresh': {'label': 'Percentile', 'limits': (0, 1, 0.01, 0.9)},
-                 'sigma': {'label': 'Noisescale (sigma)', 'limits': (0, 10, 0.1, 0.5)},
-                 'rho': {'label': 'Integration scale (rho)', 'limits': (0, 10, 0.1, 0.5)},
-                 'mask': {'label': 'Size of area kept', 'limits': (0, 40, 1, 0)}, }
+entries = {'corner': {}, 'inpaint': {}}
 
 # Initialise parameter fields
-entries_corner = {}
-for field, conf in fields_corner.items():
-    frame = tk.Frame(entryframe_left)
-    lab = tk.Label(frame, width=22,
-                   text=conf['label'] + ': ', anchor=tk.W)
-    if field != 'detector':
-        bot, top, step, default = conf['limits']
-        ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
-                       length=200, orient=tk.HORIZONTAL)
-        ent.set(default)
-    else:
-        ent = ttk.Combobox(frame, values=DETECTOR_TYPES)
-        ent.current(0)
-    lab.pack(side=tk.LEFT, pady=5)
-    ent.pack(side=tk.LEFT, fill=tk.X, pady=5)
-    frame.pack(fill=tk.X, padx=20, pady=5)
-    entries_corner[field] = ent
+for key in fields.keys():
+    for field, conf in fields[key].items():
+        frame = tk.Frame(entryframes[key])
+        lab = tk.Label(frame, width=22,
+                       text=conf['label'] + ': ', anchor=tk.W)
 
-fields_inpaint = {'sigma': {'style': 'slider', 'label': 'Noisescale (sigma)', 'limits': (0, 10, 0.1, 1)},
-                  'lambda': {'style': 'slider', 'label': 'Contrast (lambda)', 'limits': (0, 1, 0.01, .8)},
-                  'alpha': {'style': 'slider', 'label': 'Dissipativity (alpha)', 'limits': (0, 0.5, 0.01, 0.49)},
-                  'gamma': {'style': 'slider', 'label': 'Nonnegativity (gamma)', 'limits': (0, 1, 0.01, 1)},
-                  'outer': {'style': 'textbox', 'label': 'Number of outer iterations', 'default': 100},
-                  'inner': {'style': 'textbox', 'label': 'Number of solver (inner) iterations', 'default': 200}}
+        if 'style' in conf:
+            if conf['style'] == 'slider':
+                bot, top, step, default = conf['limits']
+                ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
+                               length=200, orient=tk.HORIZONTAL)
+                ent.set(default)
+            elif conf['style'] == 'textbox':
+                ent = tk.Entry(frame)
+                ent.insert(0, conf['default'])
+        else:
+            if field != 'detector':
+                bot, top, step, default = conf['limits']
+                ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
+                               length=200, orient=tk.HORIZONTAL)
+                ent.set(default)
+            else:
+                ent = ttk.Combobox(frame, values=DETECTOR_TYPES)
+                ent.current(0)
 
-# Initialise parameter fields
-entries_inpaint = {}
-for field, conf in fields_inpaint.items():
-    frame = tk.Frame(entryframe_right)
-    lab = tk.Label(frame, width=30,
-                   text=conf['label'] + ': ', anchor='w')
-    if conf['style'] == 'slider':
-        bot, top, step, default = conf['limits']
-        ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
-                       length=200, orient=tk.HORIZONTAL)
-        ent.set(default)
-    elif conf['style'] == 'textbox':
-        ent = tk.Entry(frame)
-        ent.insert(0, conf['default'])
-
-    lab.pack(side=tk.LEFT, pady=5)
-    ent.pack(side=tk.LEFT, fill='x', pady=5)
-    frame.pack(fill='x', padx=10, pady=5)
-    entries_inpaint[field] = ent
+        lab.pack(side=tk.LEFT, pady=5)
+        ent.pack(side=tk.LEFT, fill=tk.X, pady=5)
+        frame.pack(fill=tk.X, padx=20, pady=5)
+        entries[key][field] = ent
 
 
 def read_header(img):
     with open(img, 'r', errors='replace') as f:
-        lines = [l.replace('#', '').replace('\n', '') for l in f.readlines() if '#' in l]
+        lines = [l.replace('#', '').replace('\n', '')
+                 for l in f.readlines() if '#' in l]
     lines = [l.split(':') for l in lines if ':' in l]
     header = {x.strip(): y.strip() for x, y in lines}
     return header
@@ -193,11 +181,11 @@ def inpaint_action():
 
 
 def get_params_corner(radius=True):
-    detector = DETECTOR_TYPES.index(entries_corner['detector'].get())
-    thresh = entries_corner['thresh'].get()
-    sigma = entries_corner['sigma'].get()
-    rho = entries_corner['rho'].get()
-    size = entries_corner['mask'].get()
+    detector = DETECTOR_TYPES.index(entries['corner']['detector'].get())
+    thresh = entries['corner']['thresh'].get()
+    sigma = entries['corner']['sigma'].get()
+    rho = entries['corner']['rho'].get()
+    size = entries['corner']['mask'].get()
 
     params = ['-c', detector, '-q', thresh, '-s', sigma, '-r', rho]
     if radius:
@@ -207,12 +195,12 @@ def get_params_corner(radius=True):
 
 
 def get_params_inpaint():
-    lbda = entries_inpaint['lambda'].get()
-    sigma = entries_inpaint['sigma'].get()
-    alpha = entries_inpaint['alpha'].get()
-    gamma = entries_inpaint['gamma'].get()
-    outer = entries_inpaint['outer'].get()
-    inner = entries_inpaint['inner'].get()
+    lbda = entries['inpaint']['lambda'].get()
+    sigma = entries['inpaint']['sigma'].get()
+    alpha = entries['inpaint']['alpha'].get()
+    gamma = entries['inpaint']['gamma'].get()
+    outer = entries['inpaint']['outer'].get()
+    inner = entries['inpaint']['inner'].get()
 
     return list(map(str, ['-l', lbda, '-s', sigma, '-a', alpha, '-g', gamma, '-n', outer, '-N', inner]))
 
@@ -242,21 +230,21 @@ def save_preset():
         title='Save preset as...',
         defaultextension='.json',
         initialfile='preset1.json')
-    vals = {'corner': {x: y.get() for x, y in entries_corner.items()}, 'inpaint': {
-        x: y.get() for x, y in entries_inpaint.items()}}
+    vals = {'corner': {x: y.get() for x, y in entries['corner'].items()}, 'inpaint': {
+        x: y.get() for x, y in entries['inpaint'].items()}}
     if len(filename) != 0:
         json.dump(vals, open(filename, 'w+'))
 
 
 def set_preset_values(vals):
     for k, v in vals['corner'].items():
-        entries_corner[k].set(v)
+        entries['corner'][k].set(v)
     for k, v in vals['inpaint'].items():
         if k in ['outer', 'inner']:
-            entries_inpaint[k].delete(0, tk.END)
-            entries_inpaint[k].insert(tk.END, v)
+            entries['inpaint'][k].delete(0, tk.END)
+            entries['inpaint'][k].insert(tk.END, v)
         else:
-            entries_inpaint[k].set(v)
+            entries['inpaint'][k].set(v)
 
 
 def load_preset():
@@ -290,15 +278,15 @@ def clear_presets():
 def reset_to_default():
     # for k, v in fields_corner.items():
     #     if k == 'detector':
-    #         entries_corner[k].set(DETECTOR_TYPES[0])
+    #         entries['corner'][k].set(DETECTOR_TYPES[0])
     #     else:
-    #         entries_corner[k].set(v['limits'][-1])
+    #         entries['corner'][k].set(v['limits'][-1])
     # for k, v in fields_inpaint.items():
     #     if v['style'] == 'textbox':
-    #         entries_inpaint[k].delete(0, tk.END)
-    #         entries_inpaint[k].insert(tk.END, v['default'])
+    #         entries['inpaint'][k].delete(0, tk.END)
+    #         entries['inpaint'][k].insert(tk.END, v['default'])
     #     else:
-    #         entries_inpaint[k].set(v['limits'][-1])
+    #         entries['inpaint'][k].set(v['limits'][-1])
     pass
 
 

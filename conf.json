@@ -1,0 +1,95 @@
+{
+    "corner": {
+        "detector": {
+            "label": "Corner detector"
+        },
+        "thresh": {
+            "label": "Percentile",
+            "limits": [
+                0,
+                1,
+                0.01,
+                0.9
+            ]
+        },
+        "sigma": {
+            "label": "Noisescale [sigma]",
+            "limits": [
+                0,
+                10,
+                0.1,
+                0.5
+            ]
+        },
+        "rho": {
+            "label": "Integration scale [rho]",
+            "limits": [
+                0,
+                10,
+                0.1,
+                0.5
+            ]
+        },
+        "mask": {
+            "label": "Mask radius",
+            "limits": [
+                0,
+                40,
+                1,
+                0
+            ]
+        }
+    },
+    "inpaint": {
+        "sigma": {
+            "style": "slider",
+            "label": "Noisescale [sigma]",
+            "limits": [
+                0,
+                10,
+                0.1,
+                1
+            ]
+        },
+        "lambda": {
+            "style": "slider",
+            "label": "Contrast [lambda]",
+            "limits": [
+                0,
+                10,
+                0.01,
+                0.8
+            ]
+        },
+        "alpha": {
+            "style": "slider",
+            "label": "Dissipativity [alpha]",
+            "limits": [
+                0,
+                0.5,
+                0.01,
+                0.49
+            ]
+        },
+        "gamma": {
+            "style": "slider",
+            "label": "Nonnegativity [gamma]",
+            "limits": [
+                0,
+                1,
+                0.01,
+                1
+            ]
+        },
+        "outer": {
+            "style": "textbox",
+            "label": "Outer iterations",
+            "default": 100
+        },
+        "inner": {
+            "style": "textbox",
+            "label": "Solver iterations",
+            "default": 200
+        }
+    }
+}
