@@ -57,41 +57,34 @@ still be able to compute the gradient we have to resort to approximating it nume
 
 Schemes for numerical differentiation are derived from the \textit{Taylor polynomial} of the
 respective function. For the sake of simplicity and readability, I'm going to derive such a scheme for a
-one-dimensional function as it is basically the same for a multivariable function. 
-
+one-dimensional function as it is basically the same for a multivariable function. \\
 Let $f: (a, b) \rightarrow \mathbb{R}$ be a $n+1$ times continuously differentiable function, i.e.
 $f \in C^{n+1}$ and $x_0 \in (a, b)$. The Taylor polynomial of degree $n$ for $f$ is then defined as
 \begin{equation}\label{eq:Taylor}
     T_n(x, x_0) := \sum\limits_{k = 0}^{m} \frac{(x-x_0)^k}{k!}f^{(k)}(x_0)
 \end{equation}
-
 Recalling Taylor's theorem, $f(x)$ can be approximated using this polynomial, leaving an error of
 \begin{equation}
     R_n(x, x_0) := \frac{(x-x_0)^{n+1}}{(n+1)!}f^{(n+1)}(x_0 + \Theta(x-x_0))\qquad \Theta \in(0,1)
 \end{equation}
-
 Now, let $u$ be a function from which we only know some points on a grid with grid size $h$ as 
 defined in \ref{eq:Disc}. To approximate the first derivative of $u$ at position $i$ we want to
 find some coefficients $\alpha, \beta, \gamma$ such that
 \begin{equation}\label{eq:Coeff}
     u_i' \approx \alpha u_{i-1} + \beta u_i + \gamma u_{i+1}
 \end{equation}
-
-
 % TODO: More in detail ? 
 Using \ref{eq:Disc} and \ref{eq:Taylor} we can derive an approximation for $u_{i-1}$ and $u_{i+1}$:
 \begin{gather}
     u_{i-1} \approx u_i - hu_i' + \frac{1}{2}h^2u_i''\label{eq:Approx1}\\
     u_{i+1} \approx u_i + hu_i' + \frac{1}{2}h^2u_i''\label{eq:Approx2}
 \end{gather}
-
 Inserting \ref{eq:Approx1} and \ref{eq:Approx2} in \ref{eq:Coeff}, we get the following term after sorting the
 coefficients:
 \begin{equation}
     u_i' \approx (\alpha + \beta + \gamma) u_i -h (\alpha - \gamma)u_i' + \frac{h^2}{2}(\alpha +
     \gamma)u_i''
 \end{equation}
-
 Solving the arising linear system gives us the following coefficients:
 \begin{gather}
     \alpha = \frac{1}{2h} = -\gamma\\
@@ -101,9 +94,36 @@ And therefore the approximation
 \begin{equation}
     u_i' \approx \frac{u_{i+1} - u_{i-1}}{2h}
 \end{equation}
+which is called a \textit{central difference scheme}.\\
+In most cases, the first derivative is computed using this scheme. In some scenarios however, it
+is more convenient to approximate the derivative using so called \textit{forward} or
+\textit{backward differences}.
+The error of the approximation can be calculated by inserting the respective formula back into the
+Taylor polynomial and finding the leading error term.
+The verification of the order of consistency is left as an exercise for the reader.
+One will notice that the central difference scheme has a higher order of consistency than the
+forward/backward difference which is why this is the preferred discretisation for computing the
+first order derivative of an image.
 
-which is called a \textit{central difference scheme}
+\begin{figure}[h!]
+    \begin{align*}
+        u_i' &= \frac{u_{i+1} - u_i}{h} + \mathcal{O}(h)  & \text{Forward differences}\\
+        u_i' &= \frac{u_{i} - u_{i-1}}{h} + \mathcal{O}(h) & \text{Backward differences}\\
+        u_i' &= \frac{u_{i+1} - u_{i-1}}{2h} + \mathcal{O}(h^2) & \text{Central differences}
+    \end{align*}
+    \caption*{Important finite difference schemes}
+\end{figure}
 
+
+As we will see later in some cases, it is more reasonable (?) to use forward or backward differences as a
+discretisation scheme despite the smaller order of consistency.
+In the two dimensional case, we essentially use the same schemes, but have to account for the
+partial derivative in each direction:
+
+\begin{align*}
+    (u_x)_{i, j} &= \frac{u_{i+1, j} - u_{i-1, j}}{h} + \mathcal{O}(h^2)\\
+    (u_y)_{i, j} &= \frac{u_{i, j+1} - u_{i, j-1}}{h} + \mathcal{O}(h^2)
+\end{align*}
 
 \subsection*{Convolution}
 
