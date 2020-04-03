@@ -1,3 +1,4 @@
+\newcommand{\TODO}[1]{\\ \textbf{\textcolor{red}{!! #1 !!}}\\}
 \chapter{Theory}\label{ch:Theory}
 
 \section{Basics}\label{sec:Basics}
@@ -27,9 +28,9 @@ variable.
 \begin{equation}
     \textbf{grad}(f) = \boldsymbol\nabla f := \left(f_x, f_y\right)^\top
 \end{equation}
+The gradient always points in the direction of the steepest ascend/descend, it is the tangent
+vector to the surface at the given location\cite{mfi3}.
 Note that the gradient of a function is a vector-valued function and not a vector.
-More intuitively, the gradient determines the direction and value of the fastest decrease of the
-given function.
 
 \subsection{Convolution}
 Another operation from calculus that we will need is the \textit{convolution operator}.\\
@@ -59,60 +60,80 @@ For some applications only the gradient of an image does not give us enough info
 gradient on its own is mostly just used as an edge detector, hence we need to come up with
 something else for e.g.\ corner detection\cite{ipcv19-13}. One option is the so called \textit{structure tensor}, a
 matrix that contains information about the surrounding region at a specific position. With the
-structure tensor, or rather its eigenvalues (cf. section \ref{sec:Corner}), one is able to
+structure tensor, or rather its eigenvalues (cf.~\ref{sub:Corner}), one is able to
 distinguish between flat regions, edges and corners.
 \subsection{Definition}
+\TODO{Reconsider the definition, maybe rewrite this paragraph later}
 The structure tensor is defined as a matrix whose eigenvectors tell us the direction of
 both the largest and smallest grey value change. Mathematically, we can model this
 as an optimisation problem:\\
 Let $u$ be a grey value image.
 We want to find a unit vector $\mathbf{n} \in \mathbb{R}^2$ that is `most parallel' or `most orthogonal' to the
 gradient $\boldsymbol\nabla u$ within a circle of radius $\rho > 0$, i.e. one wants to optimise the
-energy function\cite{harris88,ipcv19-13}.
+function
 \begin{align}
     E(\mathbf{n}) &= \int\limits_{B_\rho(x, y)} \left(\mathbf{n}^\top\boldsymbol\nabla u\right)^2dx'dy'\\
     &= \mathbf{n}^\top \left(\int\limits_{B_\rho(x, y)} \boldsymbol\nabla u \boldsymbol\nabla
-        u^\top dx'dy' \right) \mathbf{n}
+        u^\top dx'dy' \right) \mathbf{n}\label{eq:QuadForm}
 \end{align}
-This unit vector is one of the eigenvectors of the matrix 
+This function is also called the \textit{local autocorrelation function/local average
+    contrast}\cite{harris88, ipcv19-13}.
+Since~\eqref{eq:QuadForm} is a quadratic form of the matrix
 \[M_\rho(\boldsymbol\nabla u) := \int\limits_{B_\rho(x, y)} \boldsymbol\nabla u \boldsymbol\nabla
-    u^\top dx'dy = b_\rho * (\boldsymbol\nabla u\boldsymbol\nabla u^\top)\]
-where
+    u^\top dx'dy\]
+such an optimal unit vector is by definition also the eigenvector to the smallest/largest
+eigenvalue of $M_\rho(\boldsymbol\nabla u)$\cite{ipcv19-13}.
+The matrix $M_\rho(\boldsymbol\nabla u)$ can also be seen as a component-wise convolution with the indicator
+function
 \[b_\rho(x, y) = \begin{cases} 1 & x^2 + y^2 \leq \rho^2\\ 0 & \text{else} \end{cases}\]
-is the indicator function of the circle $B_\rho$\cite{ipcv19-13} (in this case, the convolution is
-applied componentwise). One can easily prove that $\mathbf{n}$ is indeed an
-eigenvector of $M_\rho(\boldsymbol\nabla u)$. 
-Let $\lambda = E(\mathbf{n})$, then
-\begin{align}
-    \mathbf{n}^\top M_\rho(\boldsymbol\nabla u) \mathbf{n} &= \lambda
-    \intertext{Multiplication with $\mathbf{n}$ on both sides yields}
-    M_\rho(\boldsymbol\nabla u)\mathbf{n} &= \lambda\mathbf{n}
-\end{align}
-And as long as $\mathbf{n}$ is non-zero, $\mathbf{n}$ is thus by definition an eigenvector of
-$M_\rho(\boldsymbol\nabla u)$.\hfill$\blacksquare$\\
-However, one should always use a gaussian window function with standard deviation $\rho$ instead of
-the aforementioned indicator function simply for smoothness reasons\cite{harris88,ipcv19-13}. $\rho$ is also
+However, as the author stated in \cite{harris88}, using this \textit{binary window function} leads
+to a noisy response and they therefore suggest using a \textit{Gaussian window function} with standard
+deviation $\rho$. This parameter is also
 called the \textit{integration scale} and determines how localised the structure information
 is\cite{ipcv19-13}.
-The lower the integration scale, the more it is focussed on the central point.
-This leads to the definition
+This ultimately leads to the definition
 \begin{equation}
     \mathbf{J}_\rho(\boldsymbol\nabla u) := K_\rho * (\boldsymbol\nabla u\boldsymbol\nabla u^\top)
 \end{equation}
-To keep equations simpler, I will omit the brackets and just simply use $\mathbf{J}_\rho$ as the
+To keep things simpler, I will omit the brackets and just simply use $\mathbf{J}_\rho$ as the
 structure tensor.
-\subsection{Properties}
+\subsection{Usage in Corner Detection}\label{sub:Corner}
 The structure tensor is a symmetric matrix and thus possesses orthonormal eigenvectors $\bold v_1,
 \bold v_2$ with real-valued eigenvalues $\lambda_1, \lambda_2 \geq 0$. \cite{ipcv19-13} As
 mentioned in the preface to this section, we can use these eigenvalues to distinguish between
 corners, edges and flat regions as seen in figure \ref{fig:Structure}.
-\begin{figure}
+In total, we have to deal with 3 different cases:
+\begin{enumerate}
+    \item $\lambda_1, \lambda_2$ are both small
+    \item one of the eigenvalues is significantly larger then the other one
+    \item both eigenvalues are significantly larger than 0
+\end{enumerate}
+\TODO{Better explanation}
+In the first case, the region inside the Gaussian window is flat, in the second case there is a
+prominent edge and in the last one, there is a corner. 
+\begin{figure}[h]
     \centering
     \includegraphics[height=0.25\pdfpageheight]{../Images/structure_tensor.png}
     \caption{Visualisation of distinction of image features using the eigenvalues of the structure
-        tensor.\cite{harris88}}\label{fig:Structure}
+        tensor. $\alpha, \beta$ are equivalent to the eigenvalues $\lambda_1, \lambda_2$. Source: \cite{harris88}}\label{fig:Structure}
 \end{figure}
-\subsection{Usage in Corner Detection}
+There are different approaches to finding out whether the current location is a corner or an edge. The
+simplest looking approach simply thresholds the smaller eigenvalue against some artificial
+threshold. The set of local maxima is then the set of corners for the image\cite{shitomasi94}.
+\TODO{Find sources for Rohr and Förstner}
+However, this approach requires to compute both eigenvalues and can thus be fairly expensive.\\
+A cheaper approach would be to either threshold the trace \[tr(\mathbf{J}_\rho) := j_{1, 1} + j_{2,
+        2} = \lambda_1 + \lambda_2\] as proposed by Rohr, 1987 or the determinant \[det(\mathbf{J}_\rho) := j_{1, 1}j_{2, 2} -
+    j_{1, 2}^2 = \lambda_1\lambda_2\] as proposed by Harris and F\"orstner, 1988 and 1986
+respectively\cite{harris88}. Both of these approaches do not need to explicitly compute the eigenvalues of
+the structure tensor and are thus not as computationally invested. The differences between the
+approaches is that the first one requires the trace by itself to be a local maximum whereas in the
+second approach, $\frac{det(\mathbf{J}_\rho)}{tr(\mathbf{J}_\rho)}$ needs to be a local maximum.\\
+
+For the detection of relevant corners in the data selection phase, I mainly used the approach of F\"orstner/Harris as well as
+the approach of Rohr even though the Tomasi-Kanade approach was an option and has also been
+tested as we will see later in chapter \ref{ch:Results}. However, it has not proven as successful
+as the other two methods during the initial testing phase.
 \section{Diffusion}\label{sec:Diffusion}
 \subsection{What is Diffusion?}
 \subsection{Linear Diffusion}
