@@ -2,7 +2,7 @@
 
 Usage for run.py:
 
-python run.py [ corners | mask | full ] [corners command line options]
+python run.py [ inpaint | corners | mask | full ] [corners command line options]
 
 run.py essentially runs the corner method for all .pgm images found in images/binary concurrently.
 
@@ -35,6 +35,9 @@ OPTIONS:
 
     -m mask radius
         If specified, creates a mask image for corner inpainting with the given radius
+
+    -C flag, if specified, non maximum suppression is performed in a circle of radius specified
+        with -m instead of 8-neighbourhood
 
 
 ############################################ INPAINTING ##################################################

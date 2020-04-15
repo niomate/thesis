@@ -1,10 +1,8 @@
 import glob
 import queue
 import sys
-import time
-from multiprocessing import Pool, Process, Queue, cpu_count, current_process
-from os.path import abspath, dirname, join
-from subprocess import DEVNULL, run
+from multiprocessing import Process, Queue, current_process
+from subprocess import run
 
 
 def log_thread(*args):
@@ -20,6 +18,17 @@ def inpaint(inim, mask, *args, outim=None):
     run(cmd)
 
 
+def mask(inim, *args, outim=None):
+    ''' Pass all arguments that build/corners accepts '''
+    log_thread(f'Mask computation {inim}')
+    if outim is None:
+        outim = mask_name(inim)
+    cmd = ['build/corners', inim, '-M', '-o', outim, *args]
+    print(' '.join(cmd))
+    run(cmd)
+    return outim
+
+
 def corners(inim, *args, outim=None):
     ''' Pass all arguments that build/corners accepts '''
     log_thread(f'Corner detection {inim}')
@@ -27,7 +36,7 @@ def corners(inim, *args, outim=None):
         outim = mask_name(inim)
     cmd = ['build/corners', inim, '-o', outim, *args]
     print(' '.join(cmd))
-    run(cmd)  # stdout=DEVNULL)
+    run(cmd)
     return outim
 
 
@@ -58,7 +67,7 @@ def worker(todo, mode):
             elif mode == 'corners':
                 corners(image, *sys.argv[2:])
             elif mode == 'mask':
-                corners(image, *sys.argv[2:])
+                mask(image, *sys.argv[2:])
         except queue.Empty:
             continue
 

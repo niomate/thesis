@@ -35,13 +35,31 @@ how keeping larger regions of data around corners plays out in this process.
 Next up, we are going to discuss some work related to this thesis to see what advances have been done
 in the last years and what our work is built upon.
 
-%TODO: Switch PDE-based Image Compression and Inpainting ? 
-\subsection{PDE-based Image Compression}
+\subsection{Inpainting}
+
+Inpainting as a technique is nothing new, it existed since a long time in the form of e.g.
+restoration of old images and film. In 2000, Bertalmio et al first proposed an algorithm to digitally
+inpaint images without user intervention. After consulting actual experts in image restoration they
+came up with a method imitating human restorators.\\
+The main idea behind their method is to continue the structure
+surrounding the gap into it and simultaneously fill in the different regions in each gap with the colour at its
+boundaries\cite{bertalmio00}.\\
+\textbf{TODO:} Explaing inpainting\\
+Although it produces good looking images without obvious artifacts, it lacks the ability to
+reproduce texture. Furthermore, they proposed to use second order PDEs instead of the high order
+PDEs they used to solve the inpainting problem. Galić et al touched on this issue in 2008,
+proposing to use EED because of its inpainting capabilities as a replacement for the higher order
+PDE\cite{galic08}.
+However, they only used EED for inpainting instead of interleaving a PDE based inpainting approach
+with a mean curvature motion model as proposed in \cite{bertalmio00}. This was featured in another
+work that I will cover in the next section.
+
+\subsection{PDE-based image compression}
 In 2005, Galić et al.\ first introduced an alternative image compression method using PDE-based inpainting as
 a serious alternative to more classical approaches like JPEG and JPEG 2000~\cite{galic05}. In this
 work, the authors showed the inpainting capabilities of nonlinear anisotropic diffusion, specifically of
 a diffusion process called \textit{edge-enhancing diffusion}, or short EED.\@
-The specifics of this process will be covered in~\ref{sub:NonlinearDiff}.\\
+The specifics of this process will be covered in~\ref{sec:Diffusion}.\\
 For data selection they used an
 \textit{adaptive sparsification scheme relying on B-tree triangular coding (BTTC)}, hence the name
 \textit{BTTC-EED}~\cite{galic05}, as an easy to implement and fast compression method
@@ -73,24 +91,6 @@ As a last step, the authors invert the inpainting mask and perform the inpaintin
 level where the proposed codec is able to outperform JPEG 2000 for compression rates higher than
 $\mathbf{43:1}$.
 
-\subsection{Inpainting}
-
-Inpainting as a technique is nothing new, it existed since a long time in the form of e.g.
-restoration of old images and film. In 2000, Bertalmio et al first proposed an algorithm to digitally
-inpaint images without user intervention. After consulting actual experts in image restoration they
-came up with a method imitating human restorators.\\
-The main idea behind their method is to continue the structure
-surrounding the gap into it and simultaneously fill in the different regions in each gap with the colour at its
-boundaries\cite{bertalmio00}.
-Although it produces good looking images without obvious artifacts, it lacks the ability to
-reproduce texture. Furthermore, they proposed to use second order PDEs instead of the high order
-PDEs they used to solve the inpainting problem. Galić et al touched on this issue in 2008,
-proposing to use EED because of its inpainting capabilities as a replacement for the higher order
-PDE\cite{galic08}.
-However, they only used EED for inpainting instead of interleaving a PDE based inpainting approach
-with a mean curvature motion model as proposed in \cite{bertalmio00}. This was featured in another
-work that I will cover in the next section.
-
 \subsection{Image features in Inpainting}
 
 Semantically, edges and corners are the most important features of an image. Because of this, there
@@ -107,12 +107,12 @@ understood inpainting approaches}(\cite{mainberger10}) as well as, because of it
 computationally the least challenging out of all PDE-based approaches.
 
 Another approach by Zimmer that I already mentioned in \ref{sec:Motivation} proved the importance of corners
-for image inpainting in image compression\cite{zimmer07}. Even though they could not beat the quality of JPEG, it
+for image inpainting in image compression\cite{zimmer07}. It is the Even though they could not beat the quality of JPEG, it
 still serves as a valuable foundation for future work. Their approach was to create a sparse image
 from a set of what they called \textit{corner regions} which essentially is the set of pixels
 directly neighbouring a cornerd detected by the F\"orstner-Harris corner
 detector\cite{harris88}. For the inpainting in the decompression phase, they came up with a more
-complex version of EED-based inpainting by interleaving it with \textit{Mean Curvature Motion
+sophisticated version of EED-based inpainting by interleaving it with \textit{Mean Curvature Motion
     (MCM)} which, in the past, has proven itself valuable especially for inpainting larger regions
 \cite{bertalmio00}.
 

@@ -2,18 +2,15 @@
 import json
 import shutil
 import tkinter as tk
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
 from os import listdir, remove
 from os.path import abspath, dirname, exists, join
 from time import time
 from tkinter import filedialog, messagebox, ttk
-
-from scripts.run import corners, inpaint, name_from_path
+from scripts.run_all import mask, corners, inpaint, name_from_path
 
 # Directories
 here = dirname(__file__)
-
-DETECTOR_TYPES = ['Rohr', 'Tomasi', 'Foerstner', 'Harris']
 
 OUTPUT_FOLDER = abspath(join(here, 'output/'))
 IMAGE_FOLDER = abspath(join(here, 'images/'))
@@ -25,21 +22,15 @@ TEMP_FOLDER = TemporaryDirectory()
 fields = json.load(open(join(here, 'conf.json'), 'r'))
 
 
-# Name templates for caching
-def temp(img_name, *params):
-    filename = img_name + '-'.join([str(x) for x in params[1::2]]) + '.pgm'
-    return join(TEMP_FOLDER.name, filename)
+def param_str(*params, suffix=True):
+    base = ''.join([str(x) for x in params])
+    base = base.replace('-', '').replace('.', '')
+    return base + '{}.pgm'
 
 
-def temp_mask(img_name, *params):
-    filename = img_name + '-'.join([str(x) for x in params[1::2]]) + 'mask.pgm'
-    return join(TEMP_FOLDER.name, filename)
-
-
-def temp_inpaint(img_name, *params):
-    filename = img_name + '-'.join([str(x)
-                                    for x in params[1::2]]) + 'inpaint.pgm'
-    return join(TEMP_FOLDER.name, filename)
+def temp(img_name, *params, suffix=''):
+    filename = img_name + param_str(*params, suffix=False)
+    return join(TEMP_FOLDER.name, filename.format(suffix))
 
 
 # Make GUI
@@ -83,29 +74,26 @@ entries = {'corner': {}, 'inpaint': {}}
 for key in fields.keys():
     for field, conf in fields[key].items():
         frame = tk.Frame(entryframes[key])
-        lab = tk.Label(frame, width=22,
-                       text=conf['label'] + ': ', anchor=tk.W)
+        if conf['style'] != 'checkbox':
+            lab = tk.Label(frame, width=22,
+                           text=conf['label'] + ': ', anchor=tk.W)
+            lab.pack(side=tk.LEFT, pady=5)
 
-        if 'style' in conf:
-            if conf['style'] == 'slider':
-                bot, top, step, default = conf['limits']
-                ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
-                               length=200, orient=tk.HORIZONTAL)
-                ent.set(default)
-            elif conf['style'] == 'textbox':
-                ent = tk.Entry(frame)
-                ent.insert(0, conf['default'])
-        else:
-            if field != 'detector':
-                bot, top, step, default = conf['limits']
-                ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
-                               length=200, orient=tk.HORIZONTAL)
-                ent.set(default)
-            else:
-                ent = ttk.Combobox(frame, values=DETECTOR_TYPES)
-                ent.current(0)
+        if conf['style'] == 'slider':
+            bot, top, step, default = conf['limits']
+            ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
+                           length=200, orient=tk.HORIZONTAL)
+            ent.set(default)
+        elif conf['style'] == 'textbox':
+            ent = tk.Entry(frame)
+            ent.insert(0, conf['default'])
+        elif conf['style'] == 'checkbox':
+            ent = ttk.Checkbutton(frame, text=conf['label'])
+            ent.state(['selected' if conf['default'] else ['!selected']])
+        elif conf['style'] == 'combobox':
+            ent = ttk.Combobox(frame, values=conf['entries'])
+            ent.current(0)
 
-        lab.pack(side=tk.LEFT, pady=5)
         ent.pack(side=tk.LEFT, fill=tk.X, pady=5)
         frame.pack(fill=tk.X, padx=20, pady=5)
         entries[key][field] = ent
@@ -122,7 +110,7 @@ def read_header(img):
 
 def corners_action():
     global corner_photo
-    params = get_params_corner(radius=False)
+    params = get_params_corner()
     img_name = name_from_path(base_img_name.get())
     out = temp(img_name, *params)
 
@@ -137,10 +125,10 @@ def mask_action():
     global corner_photo
     params = get_params_corner()
     img_name = name_from_path(base_img_name.get())
-    out = temp_mask(img_name, *params)
+    out = temp(img_name, *params, suffix='mask')
 
     if not exists(out):
-        corners(base_img_name.get(), *params, outim=out)
+        mask(base_img_name.get(), *params, outim=out)
 
     corner_photo = tk.PhotoImage(file=out)
     corner_canvas.create_image(256, 256, image=corner_photo)
@@ -153,8 +141,8 @@ def inpaint_action():
     params_corner = get_params_corner()
     params_in = get_params_inpaint()
     img_name = name_from_path(base_img_name.get())
-    mask_name = temp_mask(img_name, *params_corner)
-    out = temp_inpaint(img_name, *[*params_corner, *params_in])
+    mask_name = temp(img_name, *params_corner, suffix='mask')
+    out = temp(img_name, *[*params_corner, *params_in], suffix='inpaint')
 
     if not exists(out):
         if not messagebox.askyesno(
@@ -163,13 +151,12 @@ def inpaint_action():
             return
 
         if not exists(mask_name):
-            corners(base_img_name.get(), *params_corner, outim=mask_name)
+            mask(base_img_name.get(), *params_corner, outim=mask_name)
 
         corner_photo = tk.PhotoImage(file=mask_name)
         corner_canvas.create_image(256, 256, image=corner_photo)
         root.update()
 
-        print('Inpaint now')
         start = time()
         inpaint(base_img_name.get(), mask_name, *params_in, outim=out)
         runtime = time() - start
@@ -180,16 +167,18 @@ def inpaint_action():
     inpaint_canvas.create_image(256, 256, image=inpaint_photo)
 
 
-def get_params_corner(radius=True):
-    detector = DETECTOR_TYPES.index(entries['corner']['detector'].get())
+def get_params_corner():
+    detector = fields['corner']['detector']['entries'].index(
+        entries['corner']['detector'].get())
     thresh = entries['corner']['thresh'].get()
     sigma = entries['corner']['sigma'].get()
     rho = entries['corner']['rho'].get()
     size = entries['corner']['mask'].get()
+    circ_supp = 'selected' in entries['corner']['circ_supp'].state()
 
-    params = ['-c', detector, '-q', thresh, '-s', sigma, '-r', rho]
-    if radius:
-        params.extend(['-m', size])
+    params = ['-c', detector, '-q', thresh, '-s', sigma, '-r', rho, '-m', size]
+    if circ_supp:
+        params.append('-C')
 
     return list(map(str, params))
 
@@ -215,7 +204,7 @@ def file_dialog():
         image_displayed.set(True)
 
         img_name = name_from_path(base_img_name.get())
-        mask_name = temp_mask(img_name, *get_params_corner())
+        mask_name = temp(img_name, *get_params_corner(), suffix='mask')
 
         if not exists(mask_name):
             mask_displayed.set(False)
@@ -230,15 +219,19 @@ def save_preset():
         title='Save preset as...',
         defaultextension='.json',
         initialfile='preset1.json')
-    vals = {'corner': {x: y.get() for x, y in entries['corner'].items()}, 'inpaint': {
+    vals = {'corner': {x: y.get() for x, y in entries['corner'].items() if x != 'circ_supp'}, 'inpaint': {
         x: y.get() for x, y in entries['inpaint'].items()}}
+    vals['corner']['circ_supp'] = entries['corner']['circ_supp'].state()
     if len(filename) != 0:
         json.dump(vals, open(filename, 'w+'))
 
 
 def set_preset_values(vals):
     for k, v in vals['corner'].items():
-        entries['corner'][k].set(v)
+        if k == 'circ_supp':
+            entries['corner'][k].state(v)
+        else:
+            entries['corner'][k].set(v)
     for k, v in vals['inpaint'].items():
         if k in ['outer', 'inner']:
             entries['inpaint'][k].delete(0, tk.END)
@@ -291,7 +284,7 @@ def reset_to_default():
 
 
 def clear_cache():
-    cache = listdir(TEMP_FOLDER)
+    cache = listdir(TEMP_FOLDER.name)
     num_cache = len(cache)
     if messagebox.askyesno('Clear cache?', f'Do you want to remove all {num_cache} files in the cache ?'):
         for file in cache:
@@ -315,7 +308,7 @@ def save_image():
             defaultextension='.pgm',
             initialfile=f'{img_name}-mask.pgm')
 
-        imgpath = temp_mask(img_name, *get_params_corner())
+        imgpath = temp(img_name, *get_params_corner(), suffix='mask')
 
         if not exists(imgpath):
             messagebox.showerror(
@@ -340,8 +333,8 @@ def save_image():
             defaultextension='.pgm',
             initialfile=f'{img_name}-inpaint.pgm')
 
-        imgpath = temp_inpaint(
-            img_name, *[*get_params_corner(), *get_params_inpaint()])
+        imgpath = temp(
+            img_name, *[*get_params_corner(), *get_params_inpaint()], suffix='inpaint')
 
         if not exists(imgpath):
             messagebox.showerror(
@@ -403,9 +396,9 @@ root.config(menu=menubar)
 root.bind('<Control-q>', func=lambda *args: root.quit())
 root.bind('<Control-o>', func=lambda *args: file_dialog())
 root.bind('<Control-c>', func=lambda *args: clear_cache())
-root.bind('<Control-d>', func=lambda *args: corners())
-root.bind('<Control-m>', func=lambda *args: mask())
-root.bind('<Control-i>', func=lambda *args: inpaint())
+root.bind('<Control-d>', func=lambda *args: corners_action())
+root.bind('<Control-m>', func=lambda *args: mask_action())
+root.bind('<Control-i>', func=lambda *args: inpaint_action())
 
 
 def button_state(*args):

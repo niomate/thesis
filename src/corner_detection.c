@@ -1,3 +1,4 @@
+#include "mask.h"
 #include "utils.h"
 #include <math.h>
 #include <stdio.h>
@@ -329,6 +330,123 @@ void PA_trans
 
 /*--------------------------------------------------------------------------*/
 
+float non_maximum_suppression(float **w, long nx, long ny, float **v) {
+  for (long i = 1; i <= nx; i++) {
+    for (long j = 1; j <= ny; j++) {
+      int max, zero;
+      max = zero = 1;
+      /* Check if current pixel is maximum in 3x3 neighbourhood */
+      for (long k = i - 1; k <= i + 1; ++k) {
+        for (long l = j - 1; l <= j + 1; ++l) {
+          if (k == i && l == j) {
+            continue;
+          }
+          if (w[k][l] > w[i][j]) {
+            max = 0;
+          }
+          if (fabs(w[k][l]) >= 0.001) {
+            zero = 0;
+          }
+        }
+      }
+      if (max && !zero) {
+        v[i][j] = 255.0f;
+      } else {
+        v[i][j] = 0.0f;
+      }
+    }
+  }
+}
+
+void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
+                                    float **v) {
+  long i, j, k, l; /* Loop variables */
+  int max;         /* Variables for non maximum suppression */
+  float dist;      /* From centre of circle */
+
+  for (i = 1; i <= nx; i++) {
+    for (j = 1; j <= ny; j++) {
+      max = 1;
+      /* To speed up the process, weed out outliers by first comparing them to
+       * an epsilon */
+      if (w[i][j] <= 0.001) {
+        v[i][j] = 0;
+        continue;
+      }
+      /* Check if current pixel is maximum in circular neighbourhood of given
+       * radius */
+      for (k = i - radius; k <= i + radius; k++) {
+        for (l = j - radius; l <= j + radius; l++) {
+          if (k < 1 || k > nx || l < 1 || l > ny) {
+            continue;
+          }
+          /* Squared distance from centre of circle to current pixel */
+          dist = powf(k - i, 2) + powf(l - j, 2);
+          if (dist > radius * radius) {
+            continue;
+          }
+          if (w[k][l] > w[i][j]) {
+            max = 0;
+          }
+        }
+      }
+      if (max) {
+        for (k = i - radius; k < i + radius; k++) {
+          for (l = j - radius; l < j + radius; l++) {
+            if (k < 1 || k > nx || l < 1 || l > ny) {
+              continue;
+            }
+            /* Squared distance from centre of circle to current pixel */
+            dist = powf(k - i, 2) + powf(l - j, 2);
+            if (dist > radius * radius) {
+              continue;
+            }
+            v[k][l] = 0;
+          }
+        }
+        v[i][j] = w[i][j];
+      } else {
+        v[i][j] = 0.0f; 
+      }
+    }
+  }
+}
+
+void percentile_thresholding(float **w, long nx, long ny, float perc) {
+  long i, j;
+  float vals[nx * ny];
+  long n_vals = 0;
+
+  /* Flatten array and prepare for sorting */
+  for (i = 1; i <= nx; ++i) {
+    for (j = 1; j <= ny; ++j) {
+      /* Preliminary thresholding to weed out outliers */
+      if (w[i][j] < 0.01) {
+        continue;
+      } else {
+        vals[n_vals++] = w[i][j];
+      }
+    }
+  }
+
+  qsort(vals, n_vals, sizeof(float), float_cmp);
+
+  long index = (long)(n_vals * perc);
+
+  /* Percentile given by index at perc * n_pixels */
+  float thresh = vals[index];
+
+  /* Apply percentile threshold */
+  for (i = 1; i <= nx; i++) {
+    for (j = 1; j <= ny; j++) {
+      if (w[i][j] <= thresh) {
+        w[i][j] = 0;
+      }
+    }
+  }
+}
+/*--------------------------------------------------------------------------*/
+
 void corner_detection
 
     (float **f,   /* image, unaltered */
@@ -338,6 +456,7 @@ void corner_detection
      float hy,    /* pixel size in y direction */
      long type,   /* type of corner detector */
      float perc,  /* percentile */
+     long radius, /* radius for non maximum suppression */
      float sigma, /* noise scale */
      float rho,   /* integration scale */
      float kappa, /* kappa for Harrison measure */
@@ -393,9 +512,10 @@ void corner_detection
      * -> Harmonic mean */
     for (i = 1; i <= nx; i++) {
       for (j = 1; j <= ny; j++) {
-        trace = dxx[i][j] + dyy[i][j];
+        /* Adding a small epsilon to prevent division through zero */
+        trace = dxx[i][j] + dyy[i][j] + 0.000001;
         det = dxx[i][j] * dyy[i][j] - dxy[i][j] * dxy[i][j];
-        w[i][j] = 2 * det / (trace + 0.0001);
+        w[i][j] = 2 * det / trace;
       }
     }
 
@@ -411,60 +531,17 @@ void corner_detection
   }
   dummies(w, nx, ny);
 
-  float vals[nx * ny];
-  long n_vals = 0;
-
-  for (i = 1; i <= nx; ++i) {
-    for (j = 1; j <= ny; ++j) {
-      /* Preliminary thresholding to weed out outliers */
-      if (w[i][j] < 0.01) {
-        continue;
-      } else {
-        vals[n_vals++] = w[i][j];
-      }
-    }
+  if (radius <= 0) {
+    non_maximum_suppression(w, nx, ny, v);
+  } else {
+    non_maximum_suppression_circle(w, nx, ny, radius, v);
   }
+  percentile_thresholding(v, nx, ny, perc);
 
-  qsort(vals, n_vals, sizeof(float), float_cmp);
-
-  long index = (long)(n_vals * perc);
-
-  float thresh = vals[index];
-
-  /* Apply percentile threshold */
   for (i = 1; i <= nx; i++) {
     for (j = 1; j <= ny; j++) {
-      /* exclude too small values */
-      if (w[i][j] <= thresh) {
-        w[i][j] = 0;
-      }
-    }
-  }
-
-  /* Percentile non maximum suppression */
-  for (i = 1; i <= nx; i++) {
-    for (j = 1; j <= ny; j++) {
-      /* exclude too small values */
-      int max, zero;
-      max = zero = 1;
-      /* Check if current pixel is maximum in 3x3 neighbourhood */
-      for (long k = i - 1; k <= i + 1; ++k) {
-        for (long l = j - 1; l <= j + 1; ++l) {
-          if (k == i && l == j) {
-            continue;
-          }
-          if (w[k][l] > w[i][j]) {
-            max = 0;
-          }
-          if (fabs(w[k][l]) >= 0.001) {
-            zero = 0;
-          }
-        }
-      }
-      if (max && !zero) {
+      if (v[i][j] > 0.0f) {
         v[i][j] = 255.0f;
-      } else {
-        v[i][j] = 0.0f;
       }
     }
   }
@@ -517,50 +594,6 @@ void draw_corners
   }
 } /* draw_corners */
 
-void mask
-
-    (float **u,  /* image, altered ! */
-     long nx,    /* image dimension in x direction */
-     long ny,    /* image dimension in y direction */
-     int radius, /* Radius of mask */
-     float **v)  /* image with corner locations */
-
-/*
- * draws circles of radius r at each corner location.
- */
-
-{
-  long i, j; /* loop variables */
-  long k, l; /* loop variables */
-  dummies(u, nx, ny);
-
-  int r = 2 * radius;
-  for (i = 1; i <= nx; ++i) {
-    for (j = 1; j <= ny; j++) {
-      u[i][j] = 0;
-    }
-  }
-
-  for (i = 1; i <= nx; ++i) {
-    for (j = 1; j <= ny; j++) {
-      if (v[i][j] != 255.0) {
-        continue;
-      }
-      for (k = i - r; k <= i + r; k++) {
-        for (l = j - r; l <= j + r; l++) {
-          if (k < 1 || k > nx || l < 1 || l > ny)
-            continue;
-          float dist = powf(k - i, 2) + powf(l - j, 2);
-          if (dist > radius * radius) {
-            continue;
-          }
-          u[k][l] = 255.0;
-        }
-      }
-    }
-  }
-} /* draw_corners */
-
 /*--------------------------------------------------------------------------*/
 
 int main(int argc, char **argv)
@@ -583,12 +616,14 @@ int main(int argc, char **argv)
   float kappa = 0.06;        /* parameter for harris measure */
   int mask_radius = -1;      /* Output mask with given radius instead of drawing
                                 corners onto image*/
+  int suppression_radius = -1;
+  int display_mask = 0;
 
   printf("\n");
   printf("CORNER DETECTION WITH THE STRUCTURE TENSOR\n\n");
 
   int c;
-  while ((c = getopt(argc, argv, "q:c:s:r:k:o:m:")) != -1) {
+  while ((c = getopt(argc, argv, "q:c:s:r:k:o:m:CM")) != -1) {
     switch (c) {
     case 'q':
       q = atof(optarg);
@@ -615,12 +650,16 @@ int main(int argc, char **argv)
     case 'm':
       mask_radius = atoi(optarg);
       break;
+    case 'C':
+      suppression_radius = mask_radius;
+      break;
+    case 'M':
+      display_mask = 1;
+      break;
     default:
       abort();
     }
   }
-
-  printf("q is %f\n", q);
 
   if (optind == argc) {
     fprintf(stderr, "No input file specified. Aborting...\n");
@@ -667,13 +706,14 @@ int main(int argc, char **argv)
   }
 
   /* corner detection */
-  corner_detection(u, nx, ny, 1.0, 1.0, type, q, sigma, rho, kappa, v);
+  corner_detection(u, nx, ny, 1.0, 1.0, type, q, suppression_radius, sigma, rho,
+                   kappa, v);
 
-  if (mask_radius == -1) {
+  if (display_mask && mask_radius > 0) {
+    mask(u, nx, ny, mask_radius, v);
+  } else {
     /* insert corner marks into the image */
     draw_corners(u, nx, ny, v);
-  } else {
-    mask(u, nx, ny, mask_radius, v);
   }
 
   /* count corners */
@@ -686,30 +726,6 @@ int main(int argc, char **argv)
     }
   }
   printf("\nNumber of corners:   %3ld\n", count);
-
-  /* ---- write output image ---- */
-  /*   // Comments don't work for some reason, comment_line apparently inserts
-   * some weird character
-   *   // that is not readable.
-   *
-   *    comment_line(comments, "# structure tensor analysis\n");
-   *    if (type == 0) {
-   *        comment_line(comments, "# Rohr corner detector \n");
-   *    } else if (type == 1) {
-   *        comment_line(comments, "# Tomasi-Kanade corner detector \n");
-   *    } else if (type == 2) {
-   *        comment_line(comments, "# Foerstner-Harris corner detector (Harmonic
-   * mean)\n"); } else if (type == 3) { comment_line(comments, "# Harris
-   * measure\n");
-   *    }
-   *    comment_line(comments, "# initial image:  %s\n", in);
-   *    comment_line(comments, "# sigma:          %8.4f\n", sigma);
-   *    comment_line(comments, "# rho:            %8.4f\n", rho);
-   *    comment_line(comments, "# Percentile:              %8.4f\n", q);
-   *    comment_line(comments, "# corners:        %8ld\n", count);
-   *    comment_line(comments, "%ld %ld \n255\n", nx, ny);
-   *
-   */
   write_pgm(u, nx, ny, out, NULL);
 
   /* ---- disallocate storage ---- */

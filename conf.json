@@ -1,10 +1,13 @@
 {
     "corner": {
         "detector": {
-            "label": "Corner detector"
+            "label": "Corner detector",
+            "style": "combobox",
+            "entries": ["Rohr", "Tomasi", "Foerstner", "Harris"]
         },
         "thresh": {
             "label": "Percentile",
+            "style": "slider",
             "limits": [
                 0,
                 1,
@@ -14,6 +17,7 @@
         },
         "sigma": {
             "label": "Noisescale [sigma]",
+            "style": "slider",
             "limits": [
                 0,
                 10,
@@ -23,6 +27,7 @@
         },
         "rho": {
             "label": "Integration scale [rho]",
+            "style": "slider",
             "limits": [
                 0,
                 10,
@@ -32,13 +37,19 @@
         },
         "mask": {
             "label": "Mask radius",
+            "style": "slider",
             "limits": [
                 0,
                 40,
                 1,
                 0
             ]
-        }
+        },
+        "circ_supp": {
+            "label": "Circular suppression",
+            "style": "checkbox",
+            "default": true
+        } 
     },
     "inpaint": {
         "sigma": {
