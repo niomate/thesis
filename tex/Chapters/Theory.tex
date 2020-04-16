@@ -129,7 +129,7 @@ are large, there is a large grey value shift in either direction, therefore ther
 corner.\\
 \begin{figure}[h]
     \centering
-    \includegraphics[height=0.25\pdfpageheight]{../Images/structure_tensor.png}
+    \includegraphics[width=0.6\linewidth]{../Images/structure_tensor.png}
     \caption{Visualisation of distinction of image features using the eigenvalues of the structure
         tensor. $\alpha, \beta$ are equivalent to the eigenvalues $\lambda_1, \lambda_2$. Source: \cite{harris88}}\label{fig:Structure}
 \end{figure}
@@ -155,16 +155,18 @@ tested as we will see later in chapter \ref{ch:Results}. However, it has not pro
 as the other two methods during the initial testing phase.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Diffusion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Diffusion}\label{sec:Diffusion}
-Diffusion as a concept can be found basically everywhere ranging from an ink droplet in water to
-distribution of heat from heating elements in a common living room but also in image processing.
-The premise is fairly simple: create an equilibrium of concentration of some sorts without the violation of the principle of
-mass conservation.
-This equilibrium is usually achieved via the so called \textit{flux}. The flux is proportional to
-the inverse direction of the highest increase in concentration, i.e. it determines the direction in
-which the concentration has to ``travel'' in order equilibriate the change in
-concentration\cite{weickert96}.
-As a metaphor, imagine wind flowing from high to low pressure regions to balance out the difference
-in air pressure. In this example, the flux describes the direction and strength of the wind flow.
+The concept of diffusion is omnipresent in the physical world. It describes, in the broadest sense
+possible, how particles distribute in a certain medium. This could be anything from heat in air to
+ink in water. But this is not its only use. It is applicable in many more fields ranging from
+natural sciences to finance and economics. In this chapter, we will see how diffusion applies to
+image processing and what benefits we gain from it. Furthermore, I will go over some basic ideas to
+introduce diffusion mathematically and subsequently explain different types of diffusion commonly
+found and used in image processing.
+\subsection{A short note on scale spaces}
+Before we begin to talk about diffusion, I will use this opportunity to shortly introduce scale
+spaces and explain how they are useful to diffusion processes in image processing and image
+processing in general.\\
+
 \subsection{Mathematical background}
 To derive the diffusion equation, we first need Fick's law \eqref{eq:Fick} that introduces the
 flux
@@ -181,24 +183,24 @@ where $u: [0, \infty) \times \Omega \rightarrow \mathbb{R}$ is a function of tim
 is the \textit{divergence operator}
 \[\textnormal{div}(j) := \partial_x j_1 + \partial_y j_2\]
 and $j$ the flux defined in~\eqref{eq:Fick}.\\
-To see why this models the conservation of mass quite nicely, we have to understand what the
-meaning of the divergence operator is.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{../Images/divergence2.png}
+    \caption{Visualisation of the divergence operator. Original image \cite{img-divergence}
+    edited with GIMP}\label{fig:Divergence}
+\end{figure}
 In simple terms, div($u$) tells us how much the value of $u$ at a certain position changes
 depending on the sign.
 If we take the example from the introduction, the divergence of a region with high air pressure 
 would be a positive value, since wind flows from high to low pressure regions, thus `leaving' an 
-area with high pressure.
+area with high pressure (cf. Figure~\ref{fig:Divergence}).
 Analogously, a region with low air pressure would have a negative divergence value since it 
 `takes in' wind from high pressure regions.\\
-\TODO{Explain flux+divergence and conservation of mass}
-
-
-\eqref{eq:Fick} and \eqref{eq:Conservation} together then form the general \textit{diffusion
-    equation} or \textit{heat equation}\cite{dic18-02, weickert96}
+Together, equations~\eqref{eq:Fick} and \eqref{eq:Conservation} then form the general \textit{diffusion
+    equation}\cite{dic18-02, weickert96}
 \begin{equation}
     \partial_t u = \textnormal{div}(\boldsymbol D\cdot\boldsymbol\nabla u)\label{eq:Diffusion}
 \end{equation}
-
 Depending on the diffusion tensor we can distinguish between different types of diffusion
 processes:
 \subsubsection*{Linear isotropic diffusion}
@@ -225,9 +227,92 @@ one by Perona and Malik \cite{perona-malik}.
     \partial_t u = \textnormal{div}(g(\lVert\boldsymbol\nabla u\rVert_2^2)\boldsymbol\nabla u)
 \end{equation}
 where
-\[g(s^2) = \frac{1}{1 + s^2/\lambda^2}\]
-\subsubsection{Nonlinear anisotropic diffusion}
+\begin{equation}
+    g(s^2) = \frac{1}{1 + s^2/\lambda^2}\label{def:Diffusivity}
+\end{equation}
+The interesting part about this diffusivity function is that it distinguishes between edges and
+non-edges or flat areas according to the \textit{contrast parameter} $\lambda$ using the gradient
+magnitude $\lVert\boldsymbol\nabla u\rVert_2^2$ as a \textit{fuzzy edge detector}\cite{dic18-04}. An important part
+to understanding why this leads to an edge enhancing effect is the flux function
+arising from this specific diffusivity. In general, the flux function is simply defined as 
+\begin{equation}
+    \Phi(s) = sg(s^2)
+\end{equation}
+which in this particular case comes down to
+\begin{equation}
+    \Phi(s) =\frac{s}{1 + s^2/\lambda^2}\label{def:Flux}
+\end{equation}
+\begin{figure}
+    \includegraphics[width=\linewidth]{../Images/diffflux.png}
+    \caption{\textbf{Left:} Diffusivity mentioned in~\eqref{def:Diffusivity}. \textbf{Right:} Flux
+    function\eqref{def:Flux}. Source: \cite{dic18-04}}\label{fig:DiffFlux}
+\end{figure}
+As we already know, the flux describes the change in concentration at each position. The edge
+enhancing effect comes from the so called \textit{backwards diffusion} which happens when the
+gradient magnitude surpasses the contrast parameter as seen in \ref{fig:DiffFlux}. Backwards
+diffusion is basically the opposite from `normal' diffusion in a sense that it sharpens image
+features instead of smoothing them.
+If we look at the derivative of the flux function this will become more obvious:
+\begin{equation}
+    \Phi'(s) = \frac{d}{ds} \left(\frac{s}{1 + s^2/\lambda^2}\right) = 
+    \frac{1 - s^2/\lambda^2}{\left(1 + s^2/\lambda^2\right)^2}
+\end{equation}
+As we see, we have a maximum in the flux function at $s = \lambda$. Furthermore we can extract from
+the above equation that $\Phi'(s) < 0$ for $s < \lambda$ and $\Phi'(s) > 0$ for $s > \lambda$. This
+can also be seen in \ref{fig:DiffFlux}. This distinction between an increasing and decreasing flux
+function for values left and right from the contrast parameter causes the previously mentioned
+edge enhancing effect.
+However, this particular process is not \textit{well-posed}\cite{weickert96}. As a remedy, it was
+generally agreed upon to use a Gaussian smoothed version to \textit{regularise} the
+process\cite{weickert96}.
+%\begin{figure}
+%    \includegraphics[width=\linewidth]{../Images/nonlineardiff.png}
+%    \caption{\textbf{Left:} original image. \textbf{Right:} After regularised Perona-Malik
+%    filtering. Source: \cite{dic18-04}}\label{fig:NonlinearDiff}
+%\end{figure}
 
+\subsubsection{Nonlinear anisotropic diffusion}
+But we can still go one step further and even make the direction of the smoothing process dependent
+on the local structure. For example, one might want to prevent smoothing across edges and rather
+smooth parallel to them to further embrace the edge-preserving nature of nonlinear diffusion.
+%To be able to detect the local structure and smooth accordingly, we have to specify the diffusion
+%tensor as a 2$\times$2 matrix-valued function instead of a scalar function.
+%In the following I am only showing the reasoning behind the diffusion tensor for
+ %\textit{edge-enhancing diffusion} since for us, this is the most relevant case.
+%As the name says, edge-enhancing diffusion aims to enhance edges beyond the capabilities of
+%regularised Perona-Malik diffusion. 
+On the contrary to the isotropic case, in the anisotropic case the diffusivity function is not a
+scalar-valued function but a matrix-valued one. The diffusion tensor in this case is built 
+in such a way that it encourages smoothing in flat regions as well as smoothing \textit{along} 
+edges but not \textit{across} to them\cite{dic18-07}. 
+Its eigenvectors are defined to be parallel and orthogonal to the image gradient, i.e.
+\begin{align}
+    \boldsymbol v_1 &\Vert \boldsymbol\nabla u_\sigma &\boldsymbol v_2 &\bot \boldsymbol\nabla
+    u_\sigma
+\intertext{As mentioned before, we want to encourage smoothing along edges and in flat regions. Thus, we
+        define the eigenvalue for the eigenvector parallel to the gradient to be 1 and the eigenvalue to
+        the orthogonal one to be a diffusivity function similar to the one in the nonlinear isotropic case.}
+    \lambda_1 &= g(\lVert\boldsymbol\nabla u_\sigma\rVert_2^2) &\lambda_2 &= 1
+\end{align}
+The diffusion tensor is then defined as 
+\begin{equation}
+    \boldsymbol D(\boldsymbol\nabla u_\sigma) := (\boldsymbol v_1 \Vert \boldsymbol
+    v_2)\ \textnormal{diag}(\lambda_1, \lambda_2)\begin{pmatrix}\boldsymbol
+    v_1^\top\\\boldsymbol v_2^\top\end{pmatrix}
+\end{equation}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{../Images/diff_examples.png}
+    \caption{Denoising capabilities of the different types of diffusion. \textbf{Top Left:} Original
+    image. \textbf{Top Right:} Linear isotropic diffusion. \textbf{Bottom Left:} Nonlinear
+isotropic diffusion. \textbf{Bottom Right:} Edge-enhancing diffusion. Source:
+\cite{weickert96}}\label{fig:DiffExamples}
+\end{figure}
+As we see in figure \ref{fig:DiffExamples}, EED possesses great restorative and denoising
+capabilities. But as Galić et al. showed, EED is also an excellent choice for
+PDE-based inpainting\cite{galic05}.
 \section{EED-based inpainting}
+Inpainting in digital image processing has first been introduced in \cite{bertalmio00}, as
+mentioned in related work. They used 
 \TODO{Shortly explain "normal" inpainting}
 \TODO{Explain basics of EED inpainting}

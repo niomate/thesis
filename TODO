@@ -1,13 +1,24 @@
-[x] Command line arguments for inpainting
-[x] Script to automate corner_detection + inpainting
-[] Stopping criterion for inpainting ?
-[x] Multiprocessing for python script to improve runtime
-[x] Quantile selection for corners
-[x] Documentation for command line arguments
-[x] Email Weickert 
-    [x] meeting for thesis registration
-    [x] latex template for thesis
-    [x] questions about thesis content
-[] Bachelor's seminar presentation
-[x] Thesis outline
-[] Meaningful test images
+[Programming]
+    [x] Command line arguments for inpainting
+    [x] Script to automate corner_detection + inpainting
+    [] Stopping criterion for inpainting ?
+    [x] Multiprocessing for python script to improve runtime
+    [x] Quantile selection for corners
+    [x] Documentation for command line arguments
+    [] Meaningful test images
+
+[Thesis]
+    [x] Thesis outline
+    [] Related work
+    [] Scale spaces
+    [] EED Discretisation
+    [] Inpainting
+    [] Parameter selection
+    [] Experiments
+
+[Misc]
+    [x] Email Weickert 
+        [x] meeting for thesis registration
+        [x] latex template for thesis
+        [x] questions about thesis content
+    [] Bachelor's seminar presentation

@@ -18,7 +18,7 @@ been much more troublesome.
 That is why we rather develop a continuous theory and then discretise it later to actually
 implement the ideas as algorithms.
 
-\subsection{Discrete Images}
+\subsection{Discrete images}
 Let $f:\Omega \rightarrow \mathbb{R}$ be an image where $\Omega
 := (0, n_x)\times(0, n_y) \subset \mathbb{R}^2$ as defined in section \ref{sec:Basics}. To
 \textit{sample} the image, i.e. to discretise the image domain, we assume that all pixels lie on a
@@ -41,7 +41,7 @@ to discretise the \textit{co-domain} or \textit{grey-value-domain}. In theory ou
 is just $\mathbb{R}$, but since this is rather unpractical, we quantise the grey value range, i.e.
 limit it to $[0, 255]$.
 
-\subsection{Numerical Differentiation}
+\subsection{Numerical differentiation}
 
 Image derivatives are essential to image processing as seen in the previous chapter. Therefore we
 need a way to compute them even on discrete images. To compute the gradient or in the simpler case
@@ -124,16 +124,29 @@ To find out how good this scheme is, we re-insert \eqref{eq:fi-1} and \eqref{eq:
     \frac{h^5}{120}f_i''''' + \mathcal{O}(h^6)\right) + \notag\\
      &\frac{1}{2h}\left(f_i - hf_i' + \frac{h^2}{2}f_i'' - \frac{h^3}{6}f_i''' + \frac{h^4}{24}f_i'''' -
     \frac{h^5}{120}f_i''''' + \mathcal{O}(h^6)\right)\notag
-\intertext{Expanding and simplifying yields}
+\end{align}
+Expanding and simplifying yields
+\begin{align}
         \frac{f_{i+1} - f_{i-1}}{2h} &= f_i' + \underbrace{\frac{h^2}{6}f_i'' + \frac{h^4}{30}f_i'''' +
         \mathcal{O}(h^5)}_\text{quadratic leading error term}\notag\\
             \Rightarrow \frac{f_{i+1} - f_{i-1}}{2h} &= f_i' + \mathcal{O}(h^2)
 \end{align}
 This means that the error of our approximation is quadratic in the grid size. 
 We also say that this approximation has a \textit{consistency order} of 2. Note that for such an
-appapproximation to be reasonable, it has to have at least consistency order 1. Otherwise, it is
-not guaranteed that the error term diminishes if we send the grid size $h$ to 0.
-\subsection{Numerical Schemes for Diffusion}
+approximation to be reasonable, it has to have at least consistency order 1. Otherwise, it is
+not guaranteed that the error term diminishes if we send the grid size $h$ to 0.\\
+The scheme derived above is also called \textit{central difference scheme}. Not that there are
+other schemes such as \textit{forward} and \textit{backward} differences, but for the most part, we
+will only use central differences since it provides us with the highest consistency
+order out of all three. 
+\begin{align}
+    f_i' &= \frac{f_i - f_{i-1}}{h} + \mathcal{O}(h)&\textnormal{(backward differences)}\notag\\
+    f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
+\end{align}
+Sometimes however, central differences are not applicable, hence we have to
+use one of the other schemes. One example is the time discretisation in many diffusion methods as
+we will see in the next section.
+\subsection{Numerical schemes for diffusion}
 
 \section{Parameter Selection}
 \subsection{Corner Detection}
