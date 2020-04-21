@@ -1,8 +1,47 @@
-\chapter{Results} 
+\chapter{Experiments} 
 
-\label{ch:Results} 
-
-\section{Testing framework}
+\label{ch:Experiments} 
 \section{Test images}
-\section{Experiments}
+
+\section{Parameter Selection}
+In this section we will talk about how different parameter choices influence the results of the
+respective algorithm and what we can do to make selection more intuitive. First, we will discuss
+the different parameter choices for corner detection and how we can make it more intuitive. After
+that, I will explain what parameters were ultimately chosen to achieve the best results.\\
+In the second part, we will do the same thing for EED inpainting. Keep in mind that for most of the
+parameters therein, we will use fixed values that were predetermined in previous works.
+\subsection{Corner Detection}
+For corner detection there are not that many different parameters to play around with. In the
+classical approach using the structure tensor (cf section \ref{sub:Corner}) we have only 3
+parameters:
+\begin{itemize}
+    \item the noise scale $\sigma$
+    \item the integration scale $\rho$ and
+    \item a threshold parameter $T$ to filter out non-important corners
+\end{itemize}
+
+Traditionally, one wants to choose the noise scale as large as necessary but keep it as small as
+possible, meaning that we want to choose the smallest noise scale that gets rid of most of the
+noise in the image. That is because with a larger $\sigma$ 
+one often faces the problem that the detected corners can not be located as accurately anymore,
+since more and more relevant features are smoothed away (cf. scale space section). Another problem
+is that the gaussian scale space (iterated gaussian smoothing) may even introduce new corners.
+ Most of the time however, a $\sigma$ of 1 is sufficient enough to remove most of the noise and unnecessary
+ details and still provide an accurate result.\\
+Next up is the integration scale $\rho$. The integration scale basically determines how `local' 
+the corner detection is as it influences the size of the region structural information os averaged
+in in the computation of the structure tensor. $\rho$ should always be chosen larger than the noise
+scale $\sigma$, which leads us to a `standard' value of 2-2.5. In our experiments, these values
+usually yielded the best results.\\
+Now, in the classical version of the Harris corner detector which we used, the cornerness measure
+is thresholded against some artificial threshold $T$. The problem with this approach is that the
+value $T$ heavily depends on the input image and thus has to be chosen manually for every image. An
+alternative approach that does not require to adapt this threshold was used in \cite{zimmer07}.
+They fixed the threshold at a certain value and varied the integration scale based on the
+compression rate they wanted to achieve.\\
+In this work, I used another approach than the classical and the one by Zimmer\cite{zimmer07}.
+I replaced the artificial threshold $T$ by a simple percentile parameter. 
+
+\subsection{Inpainting}
+
 \section{Results}

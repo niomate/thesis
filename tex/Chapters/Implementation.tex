@@ -3,10 +3,11 @@
 \label{ch:Implementation} 
 
 In this chapter I will go over the technical details of the implementation. We will start with the
-discretisation of the theory introduced in chapter \ref{ch:Theory}. The topic after this deals with
-the selection of that various parameters of both the corner detection and inpainting algorithms and
-what methods were introduced to simplify the selection or at least make it more intuitive.
+discretisation of the theory introduced in chapter \ref{ch:Theory}. Afterwards I will explain
 
+\section{Corner regions}
+\subsection{Definition}
+\subsection{Choosing the best corners}
 \section{Discretisation}
 
 Since reality is not infinitely fine, things such as infinitesimal calculations as seen in 
@@ -143,12 +144,8 @@ order out of all three.
     f_i' &= \frac{f_i - f_{i-1}}{h} + \mathcal{O}(h)&\textnormal{(backward differences)}\notag\\
     f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
 \end{align}
-Sometimes however, central differences are not applicable, hence we have to
-use one of the other schemes. One example is the time discretisation in many diffusion methods as
-we will see in the next section.
 \subsection{Numerical schemes for diffusion}
-
-\section{Parameter Selection}
-\subsection{Corner Detection}
-\subsection{Inpainting}
-
+\section{Coding part}
+\subsection{Provided code}
+\subsection{Additions}
+\subsection{Graphical User Interface (GUI)}

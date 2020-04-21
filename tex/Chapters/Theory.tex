@@ -1,15 +1,15 @@
 \newcommand{\TODO}[1]{\ \\ \textbf{\textcolor{red}{!! #1 !!}}\\}
-\chapter{Theory}\label{ch:Theory}
+\chapter{Theoretical background}\label{ch:Theory}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Basics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Basics}\label{sec:Basics}
 The concepts used in this thesis require some prior knowledge about basic calculus and linear
 algebra as well as some more advanced topics that will be introduced in the following sections.
 But before introducing corner detection and diffusion, we have to first define what an image is
 mathematically.\\
-A \textit{grey value image} is defined as a function $f: \Omega \rightarrow [0, 255]$ where
+A \textit{grey value image} is defined as a function $f: \Omega \rightarrow \mathbb{R}$ where
 $\Omega \subset \mathbb{R}^2$ is a rectangular subset of $\mathbb{R}^2$ of size $n_x\times n_y$,
 wheras a
-\textit{colour image} is defined as a vector-valued function $f: \Omega \rightarrow [0, 255]^3$.
+\textit{colour image} is defined as a vector-valued function $f: \Omega \rightarrow \mathbb{R}^3$.
 For the sake of simplicity, we will focus on grey value images as most of the results can easily be
 transferred to vector-valued images.\\
 \textbf{Notation:} Instead of writing $(x, y)$, I will use $\boldsymbol x := (x, y)$ most of the
@@ -166,67 +166,124 @@ found and used in image processing.
 Before we begin to talk about diffusion, I will use this opportunity to shortly introduce scale
 spaces and explain how they are useful to diffusion processes in image processing and image
 processing in general.\\
+A scale space is generally defined as a family of images with a time parameter $t$ that become
+increasingly `simpler' as $t \to \infty$. The point of a structure like this is, that certain image
+features do only exist at a specific scale or a range of scales and that it is therefore beneficial
+to the understanding of an image to basically have a hierarchy of features.\\
+Mathematically, a scale
+space needs to meet certain requirements like the semi-group property, maximum-minimum principles
+and others.
+A full explanation of all the scale space requirements would be beyond the scope of this thesis
+and is frankly not needed to understand the following sections.\\
+To embed an image $f:\mathbb{R}^2 \rightarrow \mathbb{R}$ in a scale space, we need a smoothing
+operator $T$ that is applied iteratively to the image. One such an operation is the Gaussian
+convolution: 
+\begin{equation}
+    T_tf := K_{\sqrt{2t}} * f
+\end{equation}
+This operation spans the \textit{Gaussian scale space}, one of if not the the oldest and best
+understood scale space. In the western world, it was first mentioned by Witkin et
+al.\cite{witkin84} 1984, but as was later found out, researchers in Japan already proposed it in
+1963\cite{weickert-ishikawa}.\\
+Scale spaces as a tool are very important to diffusion filtering, since diffusion is an iterative
+process and as such benefits from the notion of a scale spaces. Embedding an image in such a scale
+space allows us to develop a theory of evolving the image over time as we will see in the next
+sections, where I will first show the basic idea behind the general diffusion equation and
+subsequently introduce different types of diffusion important to image processing.
+To avoid confusion we define the gradient for scale spaces as the \textit{spatial gradient} 
+\begin{equation}
+    \boldsymbol\nabla u(x, y, t) = \begin{pmatrix}
+        \partial_x u(x, y, t)\\
+        \partial_y u(x, y, t)
+    \end{pmatrix} 
+\end{equation}
+instead of the spatiotemporal gradient.
 
 \subsection{Mathematical background}
-To derive the diffusion equation, we first need Fick's law \eqref{eq:Fick} that introduces the
-flux
+To get a glimpse of the basic idea of diffusion, we have to take a small dive into the world of
+physics.
+As mentioned in the introduction to this section, diffusion is used to describe processes of
+particle or concentration distribution. The differences in concentration are evened out by a flow
+or \textit{flux} that is aimed from high concentration areas to areas with low concentration. This
+principle is stated by \textit{Fick's law}\eqref{eq:Fick} (hence this type of diffusion is called \textit{Fickian
+diffusion}):
 \begin{equation}
     \boldsymbol j = -\boldsymbol D\cdot\boldsymbol\nabla u\label{eq:Fick}
 \end{equation}
-In this equation, $\boldsymbol D$ is the \textit{Diffusion tensor}, a $2\times2$ symmetric and
-positive definite matrix and $j = (j_1, j_2)$ is the aforementioned flux.\cite{dic18-02}\\
-The principle of mass conservation in general is given by the equation
+Here, the flow from high to low concentration areas is modelled by a flow whose direction is
+proportional to the inverse direction of the largest change in concentration, i.e. the gradient.
+While most of the time, the gradient determines the direction of the flux, the so called
+\textit{diffusion tensor} $\boldsymbol D$ determines its strength. In general, this diffusion
+tensor is defined as a
+$2\times2$ positive definite matrix, but as we will see later, it can be reduced to a scalar 
+valued function in more simple cases.
+In more complex cases, also called \textit{anisotropic}, the diffusion tensor can also adjust the
+direction of the flow. We will see how this works in the section about \textit{nonlinear
+anisotropic diffusion}.\\
+Another important principle for diffusion is the conservation of mass, since mass cannot be created
+out of thin air and similarly cannot simply vanish.
+This principle is given by the equation
 \begin{equation}
-    \partial_t u = - \textnormal{div}(j)\label{eq:Conservation}
+    \partial_t u = - \textnormal{div}(\boldsymbol j)\label{eq:Conservation}
 \end{equation}
-where $u: [0, \infty) \times \Omega \rightarrow \mathbb{R}$ is a function of time and space, div
+where $u: \Omega \times [0, \infty) \rightarrow \mathbb{R}$ is a function of time and space and div
 is the \textit{divergence operator}
-\[\textnormal{div}(j) := \partial_x j_1 + \partial_y j_2\]
-and $j$ the flux defined in~\eqref{eq:Fick}.\\
+\[\textnormal{div}(\boldsymbol j) := \partial_x j_1 + \partial_y j_2\]
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\linewidth]{../Images/divergence2.png}
     \caption{Visualisation of the divergence operator. Original image \cite{img-divergence}
     edited with GIMP}\label{fig:Divergence}
 \end{figure}
-In simple terms, div($u$) tells us how much the value of $u$ at a certain position changes
-depending on the sign.
-If we take the example from the introduction, the divergence of a region with high air pressure 
-would be a positive value, since wind flows from high to low pressure regions, thus `leaving' an 
-area with high pressure (cf. Figure~\ref{fig:Divergence}).
-Analogously, a region with low air pressure would have a negative divergence value since it 
-`takes in' wind from high pressure regions.\\
+In simple terms, the divergence of the flux measures whether the concentration at the current
+location diverges, i.e. diffuses away from the current location, or converges, i.e. moves in
+towards the current location.
 Together, equations~\eqref{eq:Fick} and \eqref{eq:Conservation} then form the general \textit{diffusion
     equation}\cite{dic18-02, weickert96}
 \begin{equation}
     \partial_t u = \textnormal{div}(\boldsymbol D\cdot\boldsymbol\nabla u)\label{eq:Diffusion}
 \end{equation}
-Depending on the diffusion tensor we can distinguish between different types of diffusion
-processes:
+%To solve this equation, it is embedded in the initial value problem
+%\begin{align}
+    %&\partial_t u = \textnormal{div}(\boldsymbol D\boldsymbol\nabla u)&\textnormal{on}\ 
+    %\Omega\times[0, \infty)\\
+    %&u(\boldsymbol x, 0) = f(\boldsymbol x)&\textnormal{on}\ \Omega\\
+    %&\boldsymbol n^\top \boldsymbol D\boldsymbol\nabla u = 0&\textnormal{on}\ 
+    %\partial\Omega\times[0, \infty)
+%\end{align}
+The solution to this equation can be interpreted as an image embedded in a scale space with the
+evolution time as the scale parameter. To get different scale spaces ergo different diffusion
+processes, one can alter the diffusion tensor in certain ways.
+In the following, we will see how different diffusion processes are characterized and what they are
+generally most useful for in image processing.
+
 \subsubsection*{Linear isotropic diffusion}
-In this first and simplest case, the diffusion tensor is omitted completely since it is equivalent
-to the identity matrix, i.e. the diffusivity is the same across the whole image.
-The consequence for the smooting process is that it is the same everywhere in the image, which
-is why this type of diffusion is also often referred to as \textit{homogeneous diffusion}.
-The characteristic diffusion equation in this case boils down to the 2D \textit{heat equation}
+In this first and simplest case, the diffusion tensor is replaced by a constant diffusivity
+resulting in equal smoothing all across the image. The constant diffusivity can also be expressed
+as the identity matrix $\boldsymbol I$ which simplifies the diffusion equation to the 2D\textit{
+heat equation}
 \begin{equation}
     \partial_t u = \Delta u = \textnormal{div}(\boldsymbol\nabla u)
 \end{equation}
-which can be solved analytically. Its solution is equivalent to a Gaussian convolution
-hence explaining the homogeneous smoothing. Even though this is a nice property and this case is
-completely understood in a mathematical sense, it is not very useful if one wants to e.g. enhance
-edges in an image. To achieve something like this, we have to look into nonlinear methods.
+which can be solved analytically. The solution to this equation has proven to be equivalent to
+a Gaussian convolution, thus this type of diffusion also produces a Gaussian scale space.\\
+Obviously, homogeneous smoothing is not very useful if one wants to create a filter that is able to
+enhance edges. Still, it is the best understood and oldest scale space and used for many
+applications in image processing. One example is optical character recognition.
+However, to achieve edge enhancing properties, we need to look into nonlinear methods.
 
 \subsubsection*{Nonlinear isotropic diffusion}
-The huge difference to the linear isotropic case is the diffusivity function.
-Previously, we had a constant diffusivity, which resulted in the same amount of smoothing at every location.
-Now we want to smooth some regions more than others, i.e. the diffusivity function depends on the
-image or rather the gradient magnitude of the image. The most famous approach for this case is the
-one by Perona and Malik \cite{perona-malik}.
-\begin{equation}
-    \partial_t u = \textnormal{div}(g(\lVert\boldsymbol\nabla u\rVert_2^2)\boldsymbol\nabla u)
-\end{equation}
-where
+Previously, we replaced the diffusion tensor by the identity matrix, which resulted in the same
+amount of smoothing at every location.
+To get spatially varying smoothing, we have to introduce a \textit{diffusivity} function that
+depends continuously on the input image. 
+\begin{align}
+    \boldsymbol D &= g(\lVert\boldsymbol\nabla u\rVert_2^2)\boldsymbol I\\
+    \Rightarrow \partial_t u & = \textnormal{div}(g(\lVert\boldsymbol\nabla u\rVert_2^2)\boldsymbol\nabla u)
+\end{align}
+The diffusivity function determines how much the image should be smoothed at the current location.
+The most well known choice for a diffusivity function was proposed by Perona and Malik 
+\cite{perona-malik}
 \begin{equation}
     g(s^2) = \frac{1}{1 + s^2/\lambda^2}\label{def:Diffusivity}
 \end{equation}
@@ -262,30 +319,27 @@ the above equation that $\Phi'(s) < 0$ for $s < \lambda$ and $\Phi'(s) > 0$ for 
 can also be seen in \ref{fig:DiffFlux}. This distinction between an increasing and decreasing flux
 function for values left and right from the contrast parameter causes the previously mentioned
 edge enhancing effect.
-However, this particular process is not \textit{well-posed}\cite{weickert96}. As a remedy, it was
-generally agreed upon to use a Gaussian smoothed version to \textit{regularise} the
-process\cite{weickert96}.
-%\begin{figure}
-%    \includegraphics[width=\linewidth]{../Images/nonlineardiff.png}
-%    \caption{\textbf{Left:} original image. \textbf{Right:} After regularised Perona-Malik
-%    filtering. Source: \cite{dic18-04}}\label{fig:NonlinearDiff}
-%\end{figure}
+However, this particular process is not \textit{well-posed}\cite{weickert96}, i.e. it is very
+sensitive to high frequent noise. To solve this, it was proposed to use Gaussian smoothing for
+\textit{regularisation}, i.e. to convolve the original image with a Gaussian kernel to damp the high
+frequencies that cause numerical instabilities\cite{catte-lions-morel92}.
 
 \subsubsection{Nonlinear anisotropic diffusion}
 But we can still go one step further and even make the direction of the smoothing process dependent
 on the local structure. For example, one might want to prevent smoothing across edges and rather
-smooth parallel to them to further embrace the edge-preserving nature of nonlinear diffusion.
-%To be able to detect the local structure and smooth accordingly, we have to specify the diffusion
-%tensor as a 2$\times$2 matrix-valued function instead of a scalar function.
-%In the following I am only showing the reasoning behind the diffusion tensor for
- %\textit{edge-enhancing diffusion} since for us, this is the most relevant case.
-%As the name says, edge-enhancing diffusion aims to enhance edges beyond the capabilities of
-%regularised Perona-Malik diffusion. 
-On the contrary to the isotropic case, in the anisotropic case the diffusivity function is not a
-scalar-valued function but a matrix-valued one. The diffusion tensor in this case is built 
-in such a way that it encourages smoothing in flat regions as well as smoothing \textit{along} 
-edges but not \textit{across} to them\cite{dic18-07}. 
-Its eigenvectors are defined to be parallel and orthogonal to the image gradient, i.e.
+smooth parallel to them further embracing the edge-preserving nature of nonlinear diffusion.
+
+The diffusion tensor in this case is constructed from its eigenvectors $\boldsymbol v_1,
+\boldsymbol v_2$ and eigenvalues $\lambda_1, \lambda_2$ using the
+theorem of matrix diagonalisation
+\begin{equation}
+    \boldsymbol D = \left(\boldsymbol v_1\vert \boldsymbol v_2\right) \textnormal{diag}(\lambda_1, \lambda_2)
+    \begin{pmatrix}
+        \boldsymbol v_1^\top\\
+        \boldsymbol v_2^\top
+    \end{pmatrix}
+\end{equation}
+We define the the eigenvectors to be
 \begin{align}
     \boldsymbol v_1 &\Vert \boldsymbol\nabla u_\sigma &\boldsymbol v_2 &\bot \boldsymbol\nabla
     u_\sigma
@@ -294,12 +348,27 @@ Its eigenvectors are defined to be parallel and orthogonal to the image gradient
         the orthogonal one to be a diffusivity function similar to the one in the nonlinear isotropic case.}
     \lambda_1 &= g(\lVert\boldsymbol\nabla u_\sigma\rVert_2^2) &\lambda_2 &= 1
 \end{align}
-The diffusion tensor is then defined as 
+There are different viable choices for a diffusivity function that supports backwards diffusion.
+First, there is the already mentioned Perona-Malik diffusivity \eqref{def:Diffusivity}. Another
+option is the diffusivity function introduced by Weickert\cite{weickert96}
 \begin{equation}
-    \boldsymbol D(\boldsymbol\nabla u_\sigma) := (\boldsymbol v_1 \Vert \boldsymbol
-    v_2)\ \textnormal{diag}(\lambda_1, \lambda_2)\begin{pmatrix}\boldsymbol
-    v_1^\top\\\boldsymbol v_2^\top\end{pmatrix}
+    g(s^2) = \begin{cases}
+        1 & s^2 = 0\\
+        1 - \textnormal{exp}\left(\frac{-3.31488}{(s/\lambda)^8}\right) & s^2 > 0
+    \end{cases}\label{def:WeickertDiff}
 \end{equation}
+According to \cite{dic18-04}, diffusivities of this type, i.e. rapidly decreasing diffusivities,
+lead to more segmentation-like results.
+Finally, the diffusivity that was mainly used for inpainting in this work is the
+\textit{Charbonnier diffusivity} \cite{charbonnier}
+\begin{equation}
+    g(s^2) = \frac{1}{\sqrt{1 + s^2 / \lambda^2}}\label{def:CharbonnierDiff}
+\end{equation}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../Images/diffusivities.png}
+    \caption{Weickert \eqref{def:WeickertDiff} and Charbonnier \eqref{def:CharbonnierDiff} diffusivities for $\lambda = 1$. Graph created with Matplotlib}
+\end{figure}
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{../Images/diff_examples.png}
@@ -308,9 +377,9 @@ The diffusion tensor is then defined as
 isotropic diffusion. \textbf{Bottom Right:} Edge-enhancing diffusion. Source:
 \cite{weickert96}}\label{fig:DiffExamples}
 \end{figure}
-As we see in figure \ref{fig:DiffExamples}, EED possesses great restorative and denoising
-capabilities. But as Galić et al. showed, EED is also an excellent choice for
-PDE-based inpainting\cite{galic05}.
+%As we see in figure \ref{fig:DiffExamples}, EED possesses great restorative and denoising
+%capabilities. But as Galić et al. showed, EED is also an excellent choice for
+%PDE-based inpainting\cite{galic05}.
 \section{EED-based inpainting}
 Inpainting in digital image processing has first been introduced in \cite{bertalmio00}, as
 mentioned in related work. They used 
