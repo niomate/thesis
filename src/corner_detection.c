@@ -406,22 +406,22 @@ void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
         }
         v[i][j] = w[i][j];
       } else {
-        v[i][j] = 0.0f; 
+        v[i][j] = 0.0f;
       }
     }
   }
 }
 
 void percentile_thresholding(float **w, long nx, long ny, float perc) {
-  long i, j;
-  float vals[nx * ny];
-  long n_vals = 0;
+  long i, j;           /* Loop variables */
+  float vals[nx * ny]; /* Array for threshold computation */
+  long n_vals = 0;     /* Number of elements in the array */
 
-  /* Flatten array and prepare for sorting */
+  /* Flatten cornerness map and prepare for sorting */
   for (i = 1; i <= nx; ++i) {
     for (j = 1; j <= ny; ++j) {
       /* Preliminary thresholding to weed out outliers */
-      if (w[i][j] < 0.01) {
+      if (fabs(w[i][j]) < 0.01) {
         continue;
       } else {
         vals[n_vals++] = w[i][j];
@@ -431,7 +431,7 @@ void percentile_thresholding(float **w, long nx, long ny, float perc) {
 
   qsort(vals, n_vals, sizeof(float), float_cmp);
 
-  long index = (long)(n_vals * perc);
+  long index = (long)ceil(n_vals * perc);
 
   /* Percentile given by index at perc * n_pixels */
   float thresh = vals[index];
