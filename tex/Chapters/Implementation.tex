@@ -181,7 +181,7 @@ What we noticed when using the usual 8-neighbourhood non-maximum suppression tog
 circular corner regions is that in some
 images where multiple corners were located right next to each other this approach would create
 masks with many overlapping corner regions in a single spot and no regions in other places. To
-counteract this, we introduced \textit{circular non-maximum suppression}.\\
+counteract this, we introduced \textit{circular non-maximum suppression} (\textbf{CNMS}).\\
 \begin{figure}
     \begin{lstlisting}[language=Python]
 def circular_suppression(harris, (x, y), r, out):
@@ -192,7 +192,7 @@ def circular_suppression(harris, (x, y), r, out):
         -r: radius of corner regions
         -out: map of accepted corners after suppression
     '''
-    for (x', y') in circle(x, y, r):
+    for x', y' in circle(x, y, r):
         if harris[x',y'] > harris[x,y]:
             # The current location is not a maximum
             out[x, y] = 0
@@ -212,10 +212,16 @@ contained in another region.
 Using this approach, we were able to create masks with little to no overlap between the
 corner regions. However, this introduced one problem that we were not able to fix properly as
 discussed in section \ref{sec:Discussion}.
+% Examples for circular non-maximum suppression (CNMS) against normal non-maximum suppression
+After circular non-maximum suppression, we applied \textit{percentile thresholding} to make sure,
+that, out of the set of corners we just detected, we only keep the most important corner regions. 
+
 \subsection{Percentile thresholding}\label{sub:Percentile}
+In the classic version of Harris corner detection, an artificial threshold parameter $T$ is
+introduced to weed out `bad' corners. This parameter however is fairly sensible to the input image.
+% Images for corner detection with different images and same threshold to prove the point
  As a workaround to make this parameter a bit more robust, we introduced a percentile
 parameter that is in turn used to compute a more robust threshold.\\
-% Images for corner detection with different images and same threshold to prove the point
 In statistics, the \textit{n-th percentile} of a set is the value that is larger than $n$ percent
 of all values in this set.
 We computed the percentile using the \textit{nearest-rank method} since this was the easiest
@@ -223,17 +229,22 @@ approach and worked good enough already. In this method, the n-th percentile is 
 computed as the value at position $\lceil \frac{n}{100}\cdot N_xN_y\rceil$ of the ordered set of values.\\
 Since in an image, there are more non-corners than actual corners, we have to deal with many zero
 or close-to-zero cornerness values. This is a problem because the percentile computation would be skewed
-heavily if more than 80 percent of all values are zero already. To solve this, we first filtered
+heavily if e.g. more than 80 percent of all values are zero already. To solve this, we first filtered
 out all values below a threshold close to zero and then accumulated the remaining values into an
 array of appropriate size. This array is then sorted using an already implemented Quicksort
 algorithm from the C standard library. Subsequently, the new threshold is given as the value at
-the index calculated above.
+the index calculated above.\\
 \begin{figure}[ht]
     \lstinputlisting[language=C, linerange={416-446}]{/home/daniel/Uni/Thesis/src/corner_detection.c}
     \caption{Percentile thresholding}
 \end{figure}
 
-\section{Coding part}
-\subsection{Provided code}
-\subsection{Additions}
-\subsection{Graphical User Interface (GUI)}
+With these two additions we were able to make sure that the resulting masks are not too dense and
+the data is reasonably distributed across the image as seen in the examples in \ref{sec:Results}.
+Another interesting part is that thanks to CNMS, the number of corners detected is now somewhat
+dependent on the size of the corner regions which is a very useful result as it takes care of the
+second problem mentioned in the preface to this chapter on the size of the corner regions which is
+a very useful result as it takes care of the second problem mentioned in the preface to this
+chapter (cf section \ref{sec:Results}).
+% Before/After images
+\section{Graphical User Interface (GUI)}
