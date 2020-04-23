@@ -1,13 +1,13 @@
-\chapter{Implementation}
-
-\label{ch:Implementation} 
-
-In this chapter I will go over the technical details of the implementation. We will start with the
-discretisation of the theory introduced in chapter \ref{ch:Theory}. Afterwards I will explain
-
-\section{Corner regions}
-\subsection{Definition}
-\subsection{Choosing the best corners}
+\chapter{Implementation}\label{ch:Implementation} 
+In this chapter, I will present my contributions to this work and go over the technical side of
+things. First off, we need to discretise the theory introduced in chapter \ref{ch:Theory} in order
+to implement the corner detection and inpainting algorithms. To do that, we need to talk about
+discrete images and the method of finite differences to approximate image derivatives.
+After that we shortly talk about discretisation of diffusion processes which we need to implement
+the inpainting/restoration part to test the mask we chose.\\  
+Next up after the discretisation, I will introduce the concept of corner regions since they are
+essential to this work and explain how I decided what corners were the most important to keep.\\
+All source code is written in pure C and can be found in the appendix.
 \section{Discretisation}
 
 Since reality is not infinitely fine, things such as infinitesimal calculations as seen in 
@@ -145,6 +145,94 @@ order out of all three.
     f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
 \end{align}
 \subsection{Numerical schemes for diffusion}
+\section{Corner regions}
+Our starting point for the detection of the most relevant corners was the classic Foerstner-Harris
+corner detector based on the structure tensor (cf. section \ref{sub:Corner}). 
+\begin{equation}
+    \frac{\textnormal{det}(\boldsymbol J_\rho)}{\textnormal{tr}(\boldsymbol J_\rho)} =
+    \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2}\label{def:Harris}
+\end{equation}
+With that we build on the method that Zimmer \cite{zimmer07} examined in 2007. They chose the
+Foerstner-Harris detector because it is very accurate and simulatneously not as computationally
+invested as the Tomasi-Kanade detector that requires to compute both eigenvalues of the structure
+tensor using a principal axis transformation.\\
+But unlike in \cite{zimmer07}, we aim to to not just keep a small outline around the most important
+corners but increase the radius and keep a disc of pixels around each of them. 
+\begin{equation}
+    \texttt{corner\_region}_R(\boldsymbol x) := \lbrace \boldsymbol y \in \Omega\ : \ \lVert \boldsymbol
+    x - \boldsymbol y\rVert_2^2 \leq R^2 \rbrace
+\end{equation}
+One problem of this approach that was already apparent in \cite{zimmer07} is the sparsity of
+corners or similar features in images. Therefore, we had to come up with a solution to somehow
+solve this issue in order to create masks with which we can reconstruct the image reasonably 
+well.
+Another issue is that we have to limit the number of corners depending on the size of the corner
+regions since too many corners would result in a very dense mask not very suitable and/or
+useful for image compression. 
+To solve these issues reasonably well, we introduced two additional steps to the corner detection
+process.
+\subsection{Circular non-maximum suppression}\label{sub:Suppression}
+In the original version of the Foerstner-Harris corner detector, corners are detected as the local
+maxima of the cornerness measure \eqref{def:Harris}. However, in this method, the local maxima were
+only determined in a 4- or 8-neigbourhood. This works fine in a setting where corner regions are
+very small as they were in \cite{zimmer07}. When using larger regions however, this might create a
+very unique problem.\\
+What we noticed when using the usual 8-neighbourhood non-maximum suppression together with larger
+circular corner regions is that in some
+images where multiple corners were located right next to each other this approach would create
+masks with many overlapping corner regions in a single spot and no regions in other places. To
+counteract this, we introduced \textit{circular non-maximum suppression}.\\
+\begin{figure}
+    \begin{lstlisting}[language=Python]
+def circular_suppression(harris, (x, y), r, out):
+    ''' Circular non-maximum suppression at location (x,y) with radius r.
+    Parameters:
+        -harris: Harris measure map
+        -(x, y): current location
+        -r: radius of corner regions
+        -out: map of accepted corners after suppression
+    '''
+    for (x', y') in circle(x, y, r):
+        if harris[x',y'] > harris[x,y]:
+            # The current location is not a maximum
+            out[x, y] = 0
+            return
+    # Current location is a maximum, keep the region around it
+    out[x, y] = harris[x, y]
+    return 
+    \end{lstlisting}
+    \caption{Pseudo-Code for circular non-maximum suppression}
+\end{figure}
+The idea behind this addition is that in larger corner regions, one might have multiple 
+important corners in a single corner region.
+Now, instead of creating a disc around every single one of these corners, we checked if there 
+would be another maximum in an imaginative circle around this corner. 
+If this is the case, we disregard this corner region since the current corner is already 
+contained in another region.
+Using this approach, we were able to create masks with little to no overlap between the
+corner regions. However, this introduced one problem that we were not able to fix properly as
+discussed in section \ref{sec:Discussion}.
+\subsection{Percentile thresholding}\label{sub:Percentile}
+ As a workaround to make this parameter a bit more robust, we introduced a percentile
+parameter that is in turn used to compute a more robust threshold.\\
+% Images for corner detection with different images and same threshold to prove the point
+In statistics, the \textit{n-th percentile} of a set is the value that is larger than $n$ percent
+of all values in this set.
+We computed the percentile using the \textit{nearest-rank method} since this was the easiest
+approach and worked good enough already. In this method, the n-th percentile is just simply
+computed as the value at position $\lceil \frac{n}{100}\cdot N_xN_y\rceil$ of the ordered set of values.\\
+Since in an image, there are more non-corners than actual corners, we have to deal with many zero
+or close-to-zero cornerness values. This is a problem because the percentile computation would be skewed
+heavily if more than 80 percent of all values are zero already. To solve this, we first filtered
+out all values below a threshold close to zero and then accumulated the remaining values into an
+array of appropriate size. This array is then sorted using an already implemented Quicksort
+algorithm from the C standard library. Subsequently, the new threshold is given as the value at
+the index calculated above.
+\begin{figure}[ht]
+    \lstinputlisting[language=C, linerange={416-446}]{/home/daniel/Uni/Thesis/src/corner_detection.c}
+    \caption{Percentile thresholding}
+\end{figure}
+
 \section{Coding part}
 \subsection{Provided code}
 \subsection{Additions}

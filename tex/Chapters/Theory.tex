@@ -151,7 +151,7 @@ second approach, $(det(\mathbf{J}_\rho))/(tr(\mathbf{J}_\rho))$ needs to be a lo
 
 For the detection of relevant corners in the data selection phase, I mainly used the approach of F\"orstner/Harris as well as
 the approach of Rohr even though the Tomasi-Kanade approach was an option and has also been
-tested as we will see later in chapter \ref{ch:Results}. However, it has not proven as successful
+tested as we will see later in chapter \ref{ch:Experiments}. However, it has not proven as successful
 as the other two methods during the initial testing phase.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Diffusion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Diffusion}\label{sec:Diffusion}
@@ -364,12 +364,12 @@ Finally, the diffusivity that was mainly used for inpainting in this work is the
 \begin{equation}
     g(s^2) = \frac{1}{\sqrt{1 + s^2 / \lambda^2}}\label{def:CharbonnierDiff}
 \end{equation}
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \includegraphics[width=\linewidth]{../Images/diffusivities.png}
     \caption{Weickert \eqref{def:WeickertDiff} and Charbonnier \eqref{def:CharbonnierDiff} diffusivities for $\lambda = 1$. Graph created with Matplotlib}
 \end{figure}
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\linewidth]{../Images/diff_examples.png}
     \caption{Denoising capabilities of the different types of diffusion. \textbf{Top Left:} Original
