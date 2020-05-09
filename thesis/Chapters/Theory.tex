@@ -324,7 +324,7 @@ sensitive to high frequent noise. To solve this, it was proposed to use Gaussian
 \textit{regularisation}, i.e. to convolve the original image with a Gaussian kernel to damp the high
 frequencies that cause numerical instabilities\cite{catte-lions-morel92}.
 
-\subsubsection{Nonlinear anisotropic diffusion}
+\subsubsection*{Nonlinear anisotropic diffusion}
 But we can still go one step further and even make the direction of the smoothing process dependent
 on the local structure. For example, one might want to prevent smoothing across edges and rather
 smooth parallel to them further embracing the edge-preserving nature of nonlinear diffusion.
@@ -380,7 +380,7 @@ isotropic diffusion. \textbf{Bottom Right:} Edge-enhancing diffusion. Source:
 %As we see in figure \ref{fig:DiffExamples}, EED possesses great restorative and denoising
 %capabilities. But as Galić et al. showed, EED is also an excellent choice for
 %PDE-based inpainting\cite{galic05}.
-\section{EED-based inpainting}
+\section{EED-based inpainting}\label{sec:Inpainting}
 Inpainting in digital image processing has first been introduced in \cite{bertalmio00}, as
 mentioned in related work. They used 
 \TODO{Shortly explain "normal" inpainting}

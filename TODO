@@ -5,16 +5,18 @@
     [x] Multiprocessing for python script to improve runtime
     [x] Quantile selection for corners
     [x] Documentation for command line arguments
+    [x] Overthink circular suppression+percentile threshold
     [] Meaningful test images
 
 [Thesis]
     [x] Thesis outline
     [] Related work
-    [] Scale spaces
+    [x] Scale spaces
     [] EED Discretisation
     [] Inpainting
-    [] Parameter selection
-    [] Experiments
+    [x] Rewrite Outline
+    [] Results
+    [] Conclusion
 
 [Misc]
     [x] Email Weickert 
@@ -22,3 +24,15 @@
         [x] latex template for thesis
         [x] questions about thesis content
     [] Bachelor's seminar presentation
+
+[Related Work]
+    [Image features in image compression]
+        [x] Image Compression using Homogeneous Inpainting and Edges
+        [x] Master thesis by Zimmer
+    [PDE-based image compression]
+        [x] Towards PDE-based image compression
+        [] Beating JPEG2000 with anisotropic diffusion
+        [x] Beyond Pure Quality ...
+        [] Fast Inpainting Based Compression ...
+    [Inpainting]
+        [] First mentioned in Image Inpainting by Bertalmio

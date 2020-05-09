@@ -7,6 +7,16 @@
 
 #define pi 3.1415927
 
+void create_initial_image_inpainting(float **u, long nx, long ny, float **mask) {
+  for (long i = 0; i <= nx; ++i) {
+    for (long j = 0; i <= ny; ++i) {
+      if (mask[i][j] <= 0.0001) {
+        u[i][j] = 0.0;
+      }
+    }
+  }
+}
+
 void mask
 
     (float **u,  /* image, altered ! */
@@ -18,9 +28,12 @@ void mask
 {
   long i, j; /* loop variables */
   long k, l; /* loop variables */
+  long n_mask_pixels = 0;
   dummies(u, nx, ny);
 
-  int r = 2 * radius;
+  int r = radius + 2; /* To create a circle, we have to start the iteration
+                         outside of it to not get a weird looking rectangle */
+
   for (i = 1; i <= nx; ++i) {
     for (j = 1; j <= ny; j++) {
       u[i][j] = 0;
@@ -30,17 +43,25 @@ void mask
   for (i = 1; i <= nx; ++i) {
     for (j = 1; j <= ny; j++) {
       if (v[i][j] != 255.0) {
+        /* Not a corner */
         continue;
-      }
-      for (k = i - r; k <= i + r; k++) {
-        for (l = j - r; l <= j + r; l++) {
-          if (k < 1 || k > nx || l < 1 || l > ny)
-            continue;
-          float dist = powf(k - i, 2) + powf(l - j, 2);
-          if (dist > radius * radius) {
-            continue;
+      } else if (radius == 0) {
+        /* Add only the current pixel to the mask since we do not use corner
+         * regions */
+        u[i][j] = 255.0;
+      } else {
+        /* Create a circle around of radius r around the current pixel */
+        for (k = i - r; k <= i + r; k++) {
+          for (l = j - r; l <= j + r; l++) {
+            if (k < 1 || k > nx || l < 1 || l > ny)
+              continue;
+            float dist = powf(k - i, 2) + powf(l - j, 2);
+            if (dist >= radius * radius) {
+              continue;
+            }
+            u[k][l] = 255.0;
+            n_mask_pixels++;
           }
-          u[k][l] = 255.0;
         }
       }
     }

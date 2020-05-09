@@ -49,6 +49,8 @@ headsepline, % Uncomment to get a line under the header
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{makeidx}
+\makeindex
 
 %----------------------------------------------------------------------------------------
 %   LISTING SETTINGS
@@ -95,7 +97,7 @@ headsepline, % Uncomment to get a line under the header
 %   THESIS INFORMATION
 %----------------------------------------------------------------------------------------
 
-\thesistitle{Exploring Corner Regions as Inpainting Domain for PDE-based Image Compression} % Your thesis title, this is used in the title and abstract, print it elsewhere with \ttitle
+\thesistitle{Exploring Circular Corner Regions as Seed Points for PDE-based Inpainting} % Your thesis title, this is used in the title and abstract, print it elsewhere with \ttitle
 \supervisor{Prof. Joachim Weickert} % Your supervisor's name, this is used in the title page, print it elsewhere with \supname
 \examiner{} % Your examiner's name, this is not currently used anywhere in the template, print it elsewhere with \examname
 \degree{Bachelor of Science} % Your degree name, this is used in the title page and abstract, print it elsewhere with \degreename
@@ -269,7 +271,8 @@ headsepline, % Uncomment to get a line under the header
 % Include the chapters of the thesis as separate files from the Chapters folder
 % Uncomment the lines as you write the chapters
 
-\include{Chapters/Motivation}
+\include{Chapters/Introduction}
+\include{Chapters/RelatedWork}
 \include{Chapters/Theory}
 \include{Chapters/Implementation}
 \include{Chapters/Results}
@@ -287,6 +290,8 @@ headsepline, % Uncomment to get a line under the header
 %\include{Appendices/AppendixA}
 %\include{Appendices/AppendixB}
 %\include{Appendices/AppendixC}
+
+\printindex
 
 %----------------------------------------------------------------------------------------
 %   BIBLIOGRAPHY

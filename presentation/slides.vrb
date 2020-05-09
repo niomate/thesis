@@ -1,0 +1,34 @@
+\frametitle{Intro}
+When I thought about it, I realized there are actually so many ways of displaying code using LaTeX packages. So I'll start with the most basic and then go on to the more advanced ones ;)
+\framebreak
+
+\begin{columns}[T,onlytextwidth]
+\column{0.25\textwidth}
+\metroset{block=fill}
+\begin{exampleblock}{texttt}
+\begin{verbatim}
+\texttt{}
+\end{verbatim}
+\end{exampleblock}
+\column{0.7\textwidth}
+\footnotesize
+This one isn't a verbatim way to express code, but it will change the font to typewriter, so it 'looks like code'. However, in these short bits of code, you will have to use escape sequences for reserved characters.
+
+I make massive use of \texttt{} when 'talking' about code or, you know, writing explanatory text sequences. It is especially useful for bits of code where there is no excessive (or none at all) use of escape sequences. Then it is a really handy way to quickly typeset code. Once you have lots of reserved characters, you might be better of just using this next one.
+\end{columns}
+\framebreak
+
+\begin{columns}[T,onlytextwidth]
+\column{0.35\textwidth}
+\metroset{block=fill}
+\begin{exampleblock}{The verbatim environment}
+\texttt{\\begin\{verbatim\}}
+    code goes here
+\texttt{\\end\{verbatim\}}
+\end{exampleblock}
+\column{0.6\textwidth}
+\footnotesize
+\alert{This one really is a staple} and pretty failsafe, but also doesn't have code highlighting which you might want in most cases, apart from very short bits of code where highlighting isn't important.
+
+You can use verbatim as an environment for multiple lines of code which appear like a quote as a separate block in your text. In other cases, where you just want \texttt{} but without having to escape reserved characters, you might want to use the \verb|some code| command. You can use any characters as delimiters to denote beginng and end of code. So it can also be \verb+test+. The idea is that you can choose one which you will not need inside the code, as not to 'confuse' the enviroment.
+\end{columns}

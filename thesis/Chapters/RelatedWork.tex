@@ -1,0 +1,155 @@
+\chapter{Related Work}\label{ch:RelatedWork}
+
+
+\section{PDE-based image compression}
+
+In recent years, a new image codec based on partial differential equations was developed as an
+alternative to JPEG and JPEG2000. The core idea is to compress the image by selecting a set of
+pixels that serves as the basis for an inpainting process. This inpainting process is defined by a
+partial differential equation that is solved iteratively during the reconstruction phase.\\
+In 2005, Galić et al.\cite{galic05}\ first introduced an alternative image compression method using nonlinear
+anisotropic diffusion
+ as
+a serious alternative to more classical approaches like JPEG. In this
+work, the authors showed the inpainting capabilities of a diffusion process known as edge-enhancing
+diffusion, which has since then established itself as the prime choice for PDE-based image
+compression. The approach they presented relies on efficiently storing a pixel mask that is later
+on used to reconstruct the image by filling in the missing regions using the aforementioned process
+of edge-enhancing diffusion and lays the groundwork for later publications building on the codec
+defined herein. \\
+As already mentioned, the codec relies on computing a pixel mask from the original image. However,
+this process is a balancing act. On one hand, one wants to get a mask that yields a perfect
+reconstruction of the original image but on the other hand, one also wants to create a mask that
+can be encoded and stored efficiently, i.e. using the smallest amount of \textit{bits-per-pixel
+(bpp)} possible. This step of mask computation is still topic of ongoing research which proves the
+difficulty of this problem.\\
+In the initial codec, also called the \textbf{BTTC-EED} codec, the mask was
+computed by means of an adaptive sparsification scheme relying on B-tree triangular coding (BTTC)
+that was already introduced by Distasi et al\cite{distasi97} back in 1997. This fairly simple
+approach iteratively subdivides the image diagonally if the error of the reconstruction of the image using only
+the corner points of the subdivision exceeds an a priori defined threshold. In this version, the
+reconstruction is approximated by a simple linear interpolation inside the triangle. The efficiency
+of constructing a mask using BTTC lies in the binary tree structure of the subdivision that can be encoded extremely
+efficiently by a simple binary string. Furthermore, grey values are encoded using a straight
+forward entropy
+coding method like Huffman coding\cite{huffman}.
+With this fairly simple approach they were already able to outperform JPEG visually for high
+compression rates and comic-style images~\cite{galic05}.\\
+In 2008, the same authors improved this version by adding a requantisation step to the encoding
+phase, in which they quantised the grey values form 256 values to 64 in order to further shorten
+the sequences obtained by Huffman coding.
+
+%Improving on this, the authors published a new paper in 2008, adding a number of additional
+%procedures to the compression phase, with which they were finally able to come close to the quality
+%of JPEG 2000~\cite{galic08}.
+%Finally, in 2009, Schmaltz et al.\ optimised the ideas even further, building the
+%so called \textbf{R-EED} codec with which they could even beat JPEG 2000~\cite{schmaltz09}.
+%The main differences between~\cite{galic05} and~\cite{schmaltz09} are the addition of several
+%procedures to optimise the data set that is kept for inpainting in the decompression step.
+%To roughly summarise the whole compression phase~\cite{schmaltz09}:\\
+%First, an initial set of points is gathered by using a rectangular subdivision (instead of the
+%previous triangular subdivision) of the image. This works by recursively splitting the image in
+%half whenever the reconstruction using only the boundary points exceeds a certain error threshold.
+%The reconstruction is also done using EED inpainting.
+%After obtaining the initial data set, the brightness values of each of the kept pixels is rescaled
+%to $[0, 255]$ to eliminate possible quantisation artifacts. Due to this brightness rescaling, the
+%optimal contrast parameter for the decompression phase may change and thus has to be adjusted as
+%well. This is generally done alternating between optimising points and the contrast
+%parameter until a certain convergence criterion is met.
+%Abs a last step, the authors invert the inpainting mask and perform the inpainting process to fill in
+    %the kept data as a means to increase the coherence between the optimised pixels and the
+    %original image.
+
+    %All of these measures serve the purpose of decreasing the \textit{mean squared error (MSE)} to a
+%level where the proposed codec is able to outperform JPEG 2000 for compression rates higher than
+%$\mathbf{43:1}$.
+
+\section{Image features in image compression}
+Features such as edges and corners are very important in the field of image processing as they
+provide almost all of the semantics of an image\cite{marr82}. Therefore, feature detection has been a staple in
+this field for a long time. Actually, corner and edge detection algorithms such as the ones by John Canny
+and Chris Harris\cite{harris88, canny86} are still used today. 
+Despite their semantical importance, edges and corners have not had that much impact on image
+compression so far.\\
+
+In 2007, Zimmer introduced a new approach using corners to compute inpainting masks for
+PDE-based image compression\cite{zimmer07}. In their approach, they used a simple corner detection method to
+sample a set of the most important corners. The inpainting mask was then obtained by storing the
+8-neighbourhood around each corner. In the reconstruction/inpainting phase they used a method
+following the idea proposed by Bertalmio et al\cite{bertalmio00}. Instead of just using pure EED to
+inpaint the image, they interleaved edge-enhancing diffusion with mean curvature motion in order to
+improve the inpainting in regions with sparser inpainting domains. \\
+Even though their codec was
+not able to compete with widely used codecs like JPEG and JPEG2000 they proved that corners are
+indeed useful for PDE based inpainting. They found the largest disadvantages to be the sparsity of
+corners in images. The reasoning behind this is that because of the sparsity of corners in an
+image, one has to either invest in a very sophisticated and complex inpainting mechanism to fill in
+the large areas between the few detected corners \textit{or} adjust the corner detector to be more
+`fuzzy'. On one hand, this leads to a denser mask and hence better results reconstruction-wise 
+but on the other also creates suboptimal inpainting masks. Due to the fuzzy nature of the
+corner detector, flat or homogeneous areas are classified as corners and therefore kept in the
+mask, even though these regions could have easily been filled in by even a simple inpainting
+process like linear diffusion. \\
+To improve on their work, they suggested to touch on the parameter
+selection for the corner detector, especially the selection of both the cornerness threshold and
+integration scale used in the computation of the structure tensor since these heavily influence the
+amount and quality of corners that are detected. As another improvement, they suggested different
+shapes of corner regions. My thesis is largely built upon the results from this work and tries to
+implement the improvement ideas proposed by Zimmer to see how well they work.\\
+
+In \cite{mainberger09, mainberger10}, the authors implemented a diffusion based reconstruction
+using mainly edges as the inpainting mask. For the mask construction they used the Marr-Hildreth
+edge detector combined with \textit{hysteresis thresholding} as proposed by Canny\cite{canny86}.
+They stated however, that they were not locked in on the Marr-Hildreth edge detector and that
+others such as the classical Canny edge detector could also be used, especially for images that
+contain a larger amount of blurry edges. The addition of hysteresis thresholding yielded closed and
+well localised contours which they encoded using the lossless \textit{JBIG} encoding\cite{jbig}.
+To reconstruct the image from the stored contours, they used a simple linear diffusion approach
+which, in this case, was good enough. For cartoon-like images, they could beat the quality of
+JPEG and even the more sophisticated JPEG2000 in terms of the PSNR (peak signal to noise ratio) of the reconstructed image to the
+original one. This was all done in the earlier work\cite{mainberger09}. In the follow-up
+publication from the same authors in 2010 they introduced some optimisations such as different
+entropy coders for the edge locations as well as an optimised method of storing the grey/colour
+values of the mask pixels. Another improvement was the use of an advanced method for solving the
+linear systems arising from the inpainting problem. In contrast to the earlier publications a fast
+\textit{full multigrid scheme} was implemented to speed up the decoding phase significantly to 
+a point where the codec is now realtime capable.\\
+
+In \cite{peter15}, region of interest(ROI) coding was first introduced for the R-EED codec. Previously,
+it was not possible to specify certain regions of an image to be reconstructed with higher detail.
+With this new contribution, they allowed the user to specify a weighting mask that is used during
+the mask construction phase to adapt the mask in such a way that the specified regions would have a
+denser mask than other regions. This is expecially useful in medical imaging, where some regions of
+an image, e.g. in a CT scan of a brain region, need to be reconstructed exactly in order to prevent
+false diagnoses. In this work however, the weight masks had to be chosen manually, which is not
+always very practical (cf. section \ref{sec:Discussion}: Discussion).
+\\
+ROI coding was not the only contribution in this publication. The authors also proposed
+\textit{progressive modes} for the R-EED codec to be able to compete better with widely available codecs.
+Progressive modes allow an image to be displayed in a coarse manner, e.g. when shown on a website
+that has not fully loaded the image data yet, and gradually refine the representation as more data
+becomes available. Last but certainly not least, they showed that their PDE-based codec is also
+capable of realtime video decoding and playback which sets a milestone on the way to prove the
+\textit{suitability of R-EED for real-world applications}\cite{peter15}. In their words this
+publication, or rather the extensions presented therein, mark the first step of an evolution of
+PDE-based compression codecs from the proof-of-concept stage to fully grown codecs with relevance
+for practical applications.\cite{peter15}\\
+
+\section{Outline}
+So far, we have reviewed some of the work that is closely related and motivated the goal of our work.
+To explain what exactly was done in order to get to this goal, we first have to go over some of the
+theoretical background. We will introduce basic concepts from
+calculus and linear algebra (\ref{sec:Basics}) as well as some more advanced topics
+like the structure tensor (\ref{sec:Structure}) and
+inpainting methods (\ref{sec:Inpainting}).\\
+In chapter \ref{ch:Implementation} we will then talk about the technical details of our 
+implementation, for example the discretisation used to implement the theoretical ideas from 
+the previous chapter (\ref{sec:Discretisation}). 
+Furthermore, we will present some additions we made and the reasoning behind them
+(\ref{sec:Contribution}).\\
+Afterwards, we discuss the experiments that were concluded in order to evaluate the initial idea as
+well as show the results these experiments yielded.\\
+Last but not least in chapter \ref{ch:Conclusion}, we conclude our work, discuss the strengths
+and shortcomings of our approach, h ow it could see some improvements and where it could be
+applied to.\\
+

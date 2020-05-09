@@ -175,10 +175,13 @@ def get_params_corner():
     rho = entries['corner']['rho'].get()
     size = entries['corner']['mask'].get()
     circ_supp = 'selected' in entries['corner']['circ_supp'].state()
+    tppt = 'selected' in entries['corner']['tppt'].state()
 
     params = ['-c', detector, '-q', thresh, '-s', sigma, '-r', rho, '-m', size]
     if circ_supp:
         params.append('-C')
+    if tppt:
+        params.append('-P')
 
     return list(map(str, params))
 
@@ -288,7 +291,7 @@ def clear_cache():
     num_cache = len(cache)
     if messagebox.askyesno('Clear cache?', f'Do you want to remove all {num_cache} files in the cache ?'):
         for file in cache:
-            remove(join(TEMP_FOLDER, file))
+            remove(join(TEMP_FOLDER.name, file))
         messagebox.showinfo('Info', 'Cache cleared!')
 
 

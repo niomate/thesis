@@ -5,10 +5,14 @@ to implement the corner detection and inpainting algorithms. To do that, we need
 discrete images and the method of finite differences to approximate image derivatives.
 After that we shortly talk about discretisation of diffusion processes which we need to implement
 the inpainting/restoration part to test the mask we chose.\\  
-Next up after the discretisation, I will introduce the concept of corner regions since they are
-essential to this work and explain how I decided what corners were the most important to keep.\\
-All source code is written in pure C and can be found in the appendix.
-\section{Discretisation}
+In the second chapter I will introduce corner regions as an essential concept to this work and talk
+about the additions we made to the corner detection algorithm in order to select the most valuable
+corners for our inpainting mask.\\
+All the source code is written in pure C and can be found in the appendix.
+The initial corner detection algorithm as well as the code for the inpainting alogorithm was given
+to me courtesy of Joachim Weickert.
+
+\section{Discretisation}\label{sec:Discretisation}
 
 Since reality is not infinitely fine, things such as infinitesimal calculations as seen in 
 calculus, e.g. differentation of functions, can not be applied to the real world directly.
@@ -36,11 +40,11 @@ An alternative idea defines the pixels to lie in the centre of each cell, i.e. a
 $((i-\frac{1}{2})h_x,\ (j- \frac{1}{2})h_y)^\top$.
 As a sidenote, the cell sizes in either direction are pretty much always assumed to be 1 in 
 practice. 
-But to keep the theory as universal as possible, we will use $h_x$ and $h_y$ instead.
-Sampling of the spatial domain is not the only step necessary to discretise an image. We also have
+But to keep the theory as universal as possible, we will use $h_x$ and $h_y$ instead.\\
+Sampling of the spatial domain is not the only step necessary to fully discretise an image. We also have
 to discretise the \textit{co-domain} or \textit{grey-value-domain}. In theory our grey value domain
-is just $\mathbb{R}$, but since this is rather unpractical, we quantise the grey value range, i.e.
-limit it to $[0, 255]$.
+is just $\mathbb{R}$, but since this is rather unpractical, we limit it to $[0, 255]$. This step of
+the discretisation process is also called \textit{quantisation}.
 
 \subsection{Numerical differentiation}
 
@@ -145,7 +149,7 @@ order out of all three.
     f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
 \end{align}
 \subsection{Numerical schemes for diffusion}
-\section{Corner regions}
+\section{Corner regions}\label{sec:Contribution}
 Our starting point for the detection of the most relevant corners was the classic Foerstner-Harris
 corner detector based on the structure tensor (cf. section \ref{sub:Corner}). 
 \begin{equation}
@@ -216,6 +220,24 @@ discussed in section \ref{sec:Discussion}.
 After circular non-maximum suppression, we applied \textit{percentile thresholding} to make sure,
 that, out of the set of corners we just detected, we only keep the most important corner regions. 
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.31\linewidth]{../Images/trui_corners_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-mask_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-inpaint_cnms.png}\\
+    \vspace{0.2cm}
+    \includegraphics[width=0.31\linewidth]{../Images/trui_corners_non_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-mask_non_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-inpaint_non_cnms.png}
+    \caption{Effect of circular non maximum suppression on spread of corners across the image.
+        \textbf{Top row:} Position of corners, inpainting mask and inpainting results
+        \textbf{with} CNMS.
+\textbf{Bottom row:} Position of corners, inpainting mask and inpainting results \textbf{without} CNMS.
+    Corner detection with Foerstner-Harris corner detector, $\sigma=1,\rho=2.5,R=15$ and a
+percentile of 0.5}
+\end{figure}
+
+\TODO{Redo this section for the new thresholding}
 \subsection{Percentile thresholding}\label{sub:Percentile}
 In the classic version of Harris corner detection, an artificial threshold parameter $T$ is
 introduced to weed out `bad' corners. This parameter however is fairly sensible to the input image.
@@ -235,7 +257,7 @@ array of appropriate size. This array is then sorted using an already implemente
 algorithm from the C standard library. Subsequently, the new threshold is given as the value at
 the index calculated above.\\
 \begin{figure}[ht]
-    \lstinputlisting[language=C, linerange={416-446}]{/home/daniel/Uni/Thesis/src/corner_detection.c}
+    \lstinputlisting[language=C, linerange={537-564,566-576}]{/home/daniel/Uni/Thesis/src/corner_detection.c}
     \caption{Percentile thresholding}
 \end{figure}
 
@@ -245,6 +267,19 @@ Another interesting part is that thanks to CNMS, the number of corners detected 
 dependent on the size of the corner regions which is a very useful result as it takes care of the
 second problem mentioned in the preface to this chapter on the size of the corner regions which is
 a very useful result as it takes care of the second problem mentioned in the preface to this
-chapter (cf section \ref{sec:Results}).
+chapter (cf. section \ref{sec:Results}).
 % Before/After images
 \section{Graphical User Interface (GUI)}
+To make experimenting with different parameters and images much simpler, we implemented a Graphical
+User Interface using Python's \texttt{Tkinter} module.
+We wrote wrapper functions that call the compiled C programme from the command line with the given
+parameters.
+\begin{figure}
+    \includegraphics[width=\linewidth]{../Images/gui.png}
+    \caption{GUI for easier testing}
+\end{figure}
+\begin{figure}
+    \includegraphics[width=0.5\linewidth]{../Images/parameters1.png}
+    \includegraphics[width=0.5\linewidth]{../Images/parameters2.png}
+    \caption{Panels to control parameters}
+\end{figure}
