@@ -1,1 +1,1 @@
-{"corner": {"detector": "Foerstner", "thresh": 0.9, "sigma": 1.0, "rho": 2.5, "mask": 15, "circ_supp": ["selected"]}, "inpaint": {"sigma": 1.0, "lambda": 0.03, "alpha": 0.5, "gamma": 1.0, "outer": "100", "inner": "200"}}
+{"corner": {"circ_supp": ["selected", "alternate"], "tppt": ["selected", "alternate"]}, "inpaint": {"sigma": 1.0, "lambda": 0.06, "alpha": 0.49, "gamma": 1.0, "outer": "100", "inner": "200"}}

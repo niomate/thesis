@@ -1,0 +1,1 @@
+{"corner": {"circ_supp": ["selected", "alternate"], "tppt": ["selected", "alternate"]}, "inpaint": {"sigma": 4.0, "lambda": 0.1, "alpha": 0.49, "gamma": 1.0, "outer": "1000", "inner": "200"}}

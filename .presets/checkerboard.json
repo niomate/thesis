@@ -1,1 +1,0 @@
-{"corner": {"detector": "Rohr", "thresh": 92, "sigma": 1.0, "rho": 2.0, "mask": 20}, "inpaint": {"sigma": 1.0, "lambda": 0.01, "alpha": 0.5, "gamma": 1.0, "outer": "100", "inner": "200"}}

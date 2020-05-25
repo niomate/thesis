@@ -222,16 +222,17 @@ def save_preset():
         title='Save preset as...',
         defaultextension='.json',
         initialfile='preset1.json')
-    vals = {'corner': {x: y.get() for x, y in entries['corner'].items() if x != 'circ_supp'}, 'inpaint': {
+    vals = {'corner': {x: y.get() for x, y in entries['corner'].items() if hasattr(x, 'get')}, 'inpaint': {
         x: y.get() for x, y in entries['inpaint'].items()}}
     vals['corner']['circ_supp'] = entries['corner']['circ_supp'].state()
+    vals['corner']['tppt'] = entries['corner']['tppt'].state()
     if len(filename) != 0:
         json.dump(vals, open(filename, 'w+'))
 
 
 def set_preset_values(vals):
     for k, v in vals['corner'].items():
-        if k == 'circ_supp':
+        if not hasattr(entries['corner'][k], 'set'):
             entries['corner'][k].state(v)
         else:
             entries['corner'][k].set(v)

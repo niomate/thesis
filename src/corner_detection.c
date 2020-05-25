@@ -1,5 +1,6 @@
 #include "mask.h"
 #include "utils.h"
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +24,16 @@
  - presmoothing at integration scale: convolution-based, Dirichlet b.c.
 */
 
+#ifndef max
+#define max(x, y) ((x) > (y) ? (x) : (y))
+#endif
+
+typedef struct {
+  long i;
+  long j;
+  float val;
+} pixel_t;
+
 int float_cmp(const void *a, const void *b) {
   const float v1 = *((const float *)a);
   const float v2 = *((const float *)b);
@@ -31,11 +42,13 @@ int float_cmp(const void *a, const void *b) {
   return v1 > v2;
 }
 
-typedef struct {
-  long i; 
-  long j;
-  float val;
-} pixval_t;
+int pixel_cmp(const void *a, const void *b) {
+  const pixel_t v1 = *((const pixel_t *)a);
+  const pixel_t v2 = *((const pixel_t *)b);
+  if (v1.val < v2.val)
+    return -1;
+  return v1.val > v2.val;
+}
 
 void gauss_conv
 
@@ -365,7 +378,6 @@ void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
                                     float **v) {
   long i, j, k, l; /* Loop variables */
   int max;         /* Variables for non maximum suppression */
-  float dist;      /* From centre of circle */
 
   for (i = 1; i <= nx; i++) {
     for (j = 1; j <= ny; j++) {
@@ -379,12 +391,8 @@ void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
        * radius */
       for (k = i - radius; k <= i + radius; k++) {
         for (l = j - radius; l <= j + radius; l++) {
-          if (k < 1 || k > nx || l < 1 || l > ny) {
-            continue;
-          }
-          /* Squared distance from centre of circle to current pixel */
-          dist = powf(k - i, 2) + powf(l - j, 2);
-          if (dist >= radius * radius) {
+          if (out_of_bounds(k, nx) || out_of_bounds(l, ny) ||
+              !in_circle(k, l, i, j, radius)) {
             continue;
           }
           if (w[k][l] > w[i][j]) {
@@ -397,76 +405,55 @@ void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
       } else {
         v[i][j] = 0;
       }
-      /*for (k = i - radius; k <= i + radius; k++) {*/
-      /*for (l = j - radius; l <= j + radius; l++) {*/
-      /*if (k < 1 || k > nx || l < 1 || l > ny) {*/
-      /*continue;*/
-      /*}*/
-      /*[> Squared distance from centre of circle to current pixel <]*/
-      /*dist = powf(k - i, 2) + powf(l - j, 2);*/
-      /*if (dist >= radius * radius) {*/
-      /*continue;*/
-      /*}*/
-      /*v[k][l] = 0;*/
-      /*}*/
-      /*}*/
-      /*v[i][j] = w[i][j];*/
-      /*}*/
     }
   }
 }
 
 void total_pixel_percentage_thresholding(float **u, long nx, long ny,
                                          int radius, float perc) {
-  long i, j;
-  /* We want to make sure that we keep a maximum of p percent of all pixels */
+  assert(perc >= 0 && perc <= 1);
   long n_total = nx * ny;
   /* Max number of pixels per corner region given by upper bound of Gauss'
    * circle problem */
-  float max_area_p_corner;
-  printf("Radius %d\n", radius);
-  if (radius < 0) {
-    max_area_p_corner = 1;
-  } else {
-    max_area_p_corner = pi * radius * radius + powf(radius, 131.0 / 208.0);
-  }
+  float max_area_p_corner =
+      radius < 0 ? 1 : pi * radius * radius + powf(radius, 131.0 / 208.0);
+
   float perc_keep = (1 - perc) * n_total;
   long n_corners = ceil(perc_keep / max_area_p_corner);
-  float vals[n_total];
 
-  printf("Optimal number of corners: %ld\n", n_corners);
+  pixel_t vals[n_total];
+
+  long i, j;
 
   /* Flatten cornerness map and prepare for sorting */
   long idx = 0;
   for (i = 1; i <= nx; ++i) {
     for (j = 1; j <= ny; ++j) {
-      vals[idx++] = u[i][j];
-    }
-  }
-
-  qsort(vals, idx, sizeof(float), float_cmp);
-
-  float T;
-  if (n_total - n_corners < 0) {
-    T = vals[0];
-  } else if (n_corners >= n_total) {
-    T = vals[n_total];
-  } else {
-    T = vals[n_total - n_corners];
-  }
-
-  n_corners = 0;
-  for (i = 1; i <= nx; i++) {
-    for (j = 1; j <= ny; j++) {
-      if (u[i][j] <= T) {
-        u[i][j] = 0;
-      } else {
-        u[i][j] = 255.0f;
-        ++n_corners;
+      if (u[i][j] > 0.01) {
+        vals[idx++] = (pixel_t){i, j, u[i][j]};
       }
     }
   }
-  printf("Actual number of corners: %ld\n", n_corners);
+
+  qsort(vals, idx, sizeof(pixel_t), pixel_cmp);
+
+  /* Initialize */
+  for (i = 1; i <= nx; i++) {
+    for (j = 1; j <= ny; j++) {
+      u[i][j] = 0;
+    }
+  }
+
+  /* Keep best corners */
+  long n;
+  for (i = idx - 1; i > max(idx - n_corners, 0); --i) {
+    long x = vals[i].i;
+    long y = vals[i].j;
+    u[x][y] = 255.0f;
+    ++n;
+  }
+
+  printf("Actual number of corners: %ld\n", n);
 }
 
 void percentile_thresholding(float **u, long nx, long ny, float perc) {
@@ -512,6 +499,22 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
 }
 
 /*--------------------------------------------------------------------------*/
+
+void export_corners(float **v, long nx, long ny, const char *filename) {
+  FILE *f = fopen(filename, "w+");
+  if (f == NULL) {
+    fprintf(stderr, "Error opening corner output file!");
+    return;
+  }
+  for (long i = 1; i <= nx; ++i) {
+    for (long j = 0; j <= ny; ++j) {
+      if (v[i][j] == 255.0f) {
+        fprintf(f, ",%ld %ld", i, j);
+      }
+    }
+  }
+  fclose(f);
+}
 
 void corner_detection
 
@@ -610,6 +613,8 @@ void corner_detection
   } else {
     total_pixel_percentage_thresholding(v, nx, ny, radius, perc);
   }
+
+  export_corners(v, nx, ny, "corners");
 
   /* free storage */
   disalloc_matrix(u, nx + 2, ny + 2);
@@ -770,6 +775,7 @@ int main(int argc, char **argv)
   printf("  Sigma:          %8.2f\n", sigma);
   printf("  Rho:            %8.2f\n", rho);
   printf("  Percentile:     %8.2f\n", q);
+  mask_radius = 4 * rho;
   if (mask_radius > -1) {
     printf("  Mask radius: %8d\n", mask_radius);
   }

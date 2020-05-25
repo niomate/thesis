@@ -30,5 +30,7 @@ void imgcpy (float**, float**, size_t, size_t);
 float sgn (float);
 void analyse_grey (float **, long, long, float *, float *, float *, float *);
 long clamp (long, long, long);
+int in_circle(long, long, long, long, float);
+int out_of_bounds(long, long);
 
 #endif // utils_h__
