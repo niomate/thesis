@@ -2,6 +2,7 @@
 #include "utils.h"
 #include <assert.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -349,7 +350,7 @@ void PA_trans
 
 /*--------------------------------------------------------------------------*/
 
-float non_maximum_suppression(float **w, long nx, long ny, float **v) {
+void non_maximum_suppression(float **w, long nx, long ny, float **v) {
   long i, j, k, l; /* Loop variables */
   for (i = 1; i <= nx; i++) {
     for (j = 1; j <= ny; j++) {
@@ -411,19 +412,16 @@ void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
 
 void total_pixel_percentage_thresholding(float **u, long nx, long ny,
                                          int radius, float perc) {
-  assert(perc >= 0 && perc <= 1);
+  long i, j;
   long n_total = nx * ny;
+  pixel_t vals[n_total];
+
   /* Max number of pixels per corner region given by upper bound of Gauss'
    * circle problem */
   float max_area_p_corner =
       radius < 0 ? 1 : pi * radius * radius + powf(radius, 131.0 / 208.0);
 
-  float perc_keep = (1 - perc) * n_total;
-  long n_corners = ceil(perc_keep / max_area_p_corner);
-
-  pixel_t vals[n_total];
-
-  long i, j;
+  long n_corners = ceil((perc * n_total) / max_area_p_corner);
 
   /* Flatten cornerness map and prepare for sorting */
   long idx = 0;
@@ -445,22 +443,14 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
   }
 
   /* Keep best corners */
-  long n;
   for (i = idx - 1; i > max(idx - n_corners, 0); --i) {
     long x = vals[i].i;
     long y = vals[i].j;
     u[x][y] = 255.0f;
-    ++n;
   }
-
-  printf("Actual number of corners: %ld\n", n);
 }
 
 void percentile_thresholding(float **u, long nx, long ny, float perc) {
-  if (perc <= 0 || perc > 1) {
-    return;
-  }
-
   long i, j;           /* Loop variables */
   float vals[nx * ny]; /* Array for threshold computation */
   long n_vals = 0;     /* Number of elements in the array */
@@ -479,9 +469,9 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
 
   qsort(vals, n_vals, sizeof(float), float_cmp);
 
-  long index = clamp((long)ceil(n_vals * (1 - perc)), 0, n_vals);
+  long index = clamp((long)ceil(n_vals * perc), 0, n_vals);
 
-  float thresh = vals[n_vals - index];
+  float thresh = vals[index];
 
   /* Apply percentile threshold */
   long n_corners = 0;
@@ -491,47 +481,26 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
         u[i][j] = 0;
       } else {
         u[i][j] = 255.0f;
-        n_corners++;
       }
     }
   }
-  printf("Actual number of corners: %ld\n", n_corners);
-}
-
-/*--------------------------------------------------------------------------*/
-
-void export_corners(float **v, long nx, long ny, const char *filename) {
-  FILE *f = fopen(filename, "w+");
-  if (f == NULL) {
-    fprintf(stderr, "Error opening corner output file!");
-    return;
-  }
-  for (long i = 1; i <= nx; ++i) {
-    for (long j = 0; j <= ny; ++j) {
-      if (v[i][j] == 255.0f) {
-        fprintf(f, ",%ld %ld", i, j);
-      }
-    }
-  }
-  fclose(f);
 }
 
 void corner_detection
 
-    (float **f,   /* image, unaltered */
-     long nx,     /* image dimension in x direction */
-     long ny,     /* image dimension in y direction */
-     float hx,    /* pixel size in x direction */
-     float hy,    /* pixel size in y direction */
-     long type,   /* type of corner detector */
-     float perc,  /* percentile */
-     long radius, /* radius for non maximum suppression */
-     int cnms,    /* flag to enable circular non maximum suppression */
-     int tppt,    /* flag to enable total pixel percentage thresholding */
-     float sigma, /* noise scale */
-     float rho,   /* integration scale */
-     float kappa, /* kappa for Harrison measure */
-     float **v)   /* corner locations */
+    (float **f,    /* image, unaltered */
+     float **v,    /* corner locations, output */
+     long nx,      /* image dimension in x direction */
+     long ny,      /* image dimension in y direction */
+     float hx,     /* pixel size in x direction */
+     float hy,     /* pixel size in y direction */
+     long type,    /* type of corner detector */
+     float perc,   /* percentile */
+     float radius, /* radius for non maximum suppression */
+     float sigma,  /* noise scale */
+     float rho,    /* integration scale */
+     bool cnms,    /* flag to enable circular non maximum suppression */
+     bool tppt /* flag to enable total pixel percentage thresholding */)
 
 /*
  calculates structure tensor based corner detector;
@@ -590,16 +559,6 @@ void corner_detection
       }
     }
 
-  if (type == 3) {
-    /* Harris measure det(J) - kappa * trace(J)^2 */
-    for (i = 1; i <= nx; i++) {
-      for (j = 1; j <= ny; j++) {
-        trace = dxx[i][j] + dyy[i][j];
-        det = dxx[i][j] * dyy[i][j] - dxy[i][j] * dxy[i][j];
-        w[i][j] = det - kappa * trace * trace;
-      }
-    }
-  }
   dummies(w, nx, ny);
 
   if (!cnms) {
@@ -613,8 +572,6 @@ void corner_detection
   } else {
     total_pixel_percentage_thresholding(v, nx, ny, radius, perc);
   }
-
-  export_corners(v, nx, ny, "corners");
 
   /* free storage */
   disalloc_matrix(u, nx + 2, ny + 2);
@@ -669,32 +626,31 @@ void draw_corners
 int main(int argc, char **argv)
 
 {
-  char *in;           /* filename input image */
-  float **u;          /* input image */
-  float **v;          /* image with corner location */
-  long i, j;          /* loop variables */
-  long nx, ny;        /* image size in x, y direction */
-  long count;         /* number of corners */
-  char comments[512]; /* Comments for output image */
+  char *in;    /* Filename input image */
+  float **u;   /* Input image */
+  float **v;   /* Image with corner location */
+  long nx, ny; /* Image size in x, y direction */
+  long count;  /* Number of corners */
 
   /* Variables given from command line interface */
-  char *out = "corners.pgm"; /* filename output image */
-  long type = 3;             /* type of corner detector */
-  float q = 0.7;             /* threshold */
-  float sigma = 1;           /* noise scale */
-  float rho = 2.5;           /* integration scale */
-  float kappa = 0.06;        /* parameter for harris measure */
-  int mask_radius = -1;      /* Output mask with given radius instead of drawing
-                                corners onto image*/
-  int enable_cnms = 0;
-  int enable_tppt = 0;
-  int display_mask = 0;
+  char *out = "corners.pgm"; /* Filename output image */
+  long type = 2;             /* Type of corner detector */
+  float q = 0.1;             /* Percentile parameter to compute threshold */
+  float sigma = 1;           /* Noise scale */
+  float rho = 2.5;           /* Integration scale */
+  float mask_factor = 0;     /* Factor to scale integration scale with to obtain
+                                radius of corner regions */
+
+  /* Flags for corner detection options */
+  bool enable_cnms = 0;
+  bool enable_tppt = 0;
+  bool display_mask = 0;
 
   printf("\n");
   printf("CORNER DETECTION WITH THE STRUCTURE TENSOR\n\n");
 
   int c;
-  while ((c = getopt(argc, argv, "q:c:s:r:k:o:m:CMP")) != -1) {
+  while ((c = getopt(argc, argv, "q:c:s:r:o:m:CMP")) != -1) {
     switch (c) {
     case 'q':
       q = atof(optarg);
@@ -712,14 +668,11 @@ int main(int argc, char **argv)
     case 'r':
       rho = atof(optarg);
       break;
-    case 'k':
-      kappa = atof(optarg);
-      break;
     case 'o':
       out = optarg;
       break;
     case 'm':
-      mask_radius = atoi(optarg);
+      mask_factor = atof(optarg);
       break;
     case 'C':
       enable_cnms = 1;
@@ -749,45 +702,76 @@ int main(int argc, char **argv)
 
   read_pgm_and_allocate_memory(in, &nx, &ny, &u);
 
-  /* allocate storage for corner locations */
+  /* Allocate storage for corner locations */
   alloc_matrix(&v, nx + 2, ny + 2);
 
   /* Initialize corner map */
   for (long i = 1; i <= nx; ++i) {
     for (long j = 1; j <= ny; ++j) {
-      v[i][j] = 0.0f;
+    v[i][j] = 0.0f;
     }
   }
 
-  printf("Using parameters: \n");
+  /* Compute mask radius in dependence of rho */
+  float mask_radius = mask_factor * rho;
+
+  printf("Using parameters:\n");
   printf("  Corner detector:    ");
   if (type == 0) {
     printf("Rohr\n");
   } else if (type == 1) {
     printf("Tomasi-Kanade\n");
   } else if (type == 2) {
-    printf("Foerstner-Harris (harmonic mean)\n");
-  } else if (type == 3) {
-    printf("Harris measure\n");
-  }
-  printf("  Initial image:      %s\n", in);
-  printf("  Output image:       %s\n", out);
-  printf("  Sigma:          %8.2f\n", sigma);
-  printf("  Rho:            %8.2f\n", rho);
-  printf("  Percentile:     %8.2f\n", q);
-  mask_radius = 4 * rho;
-  if (mask_radius > -1) {
-    printf("  Mask radius: %8d\n", mask_radius);
-  }
-
-  /* corner detection */
-  corner_detection(u, nx, ny, 1.0, 1.0, type, q, mask_radius, enable_cnms,
-                   enable_tppt, sigma, rho, kappa, v);
-
-  if (display_mask && mask_radius > 0) {
-    mask(u, nx, ny, mask_radius, v);
+    printf("Foerstner-Harris\n");
   } else {
-    /* insert corner marks into the image */
+    fprintf(stderr, "Invalid feature detection method.");
+    abort();
+  }
+  printf("  Initial image:      %-s\n", in);
+  printf("  Output image:       %-s\n", out);
+  printf("  Sigma:              %-8.2f\n", sigma);
+  printf("  Rho:                %-8.2f\n", rho);
+  printf("  Percentile:         %-8.2f\n", q);
+  printf("  Mask factor:        %-8.2f\n", mask_factor);
+  printf("  Mask radius:        %-8.2f\n", mask_radius);
+  printf("  CNMS enabled:       %-5s\n", enable_cnms ? "true" : "false");
+  printf("  TPPT enabled:       %-5s\n", enable_tppt ? "true" : "false");
+  printf("  Compute mask:       %-5s\n", display_mask ? "true" : "false");
+  printf("\n");
+
+  corner_detection(u, v, nx, ny, 1.0, 1.0, type, q, mask_radius, sigma, rho,
+                   enable_cnms, enable_tppt);
+  /*corner_detection(u, nx, ny, 1.0, 1.0, type, q, mask_radius, enable_cnms,*/
+  /*enable_tppt, sigma, rho, v);*/
+
+  long n_corners = 0;
+  for (long i = 1; i <= nx; ++i) {
+    for (long j = 1; j <= ny; ++j) {
+      if (v[i][j] == 255.0f) {
+        n_corners++;
+      }
+    }
+  }
+
+  printf("Number of detected corners:       %-8ld\n", n_corners);
+
+  if (display_mask) {
+    /* Create mask with disk shaped corner regions */
+    mask(u, nx, ny, mask_radius, v);
+
+    long n_mask_pixels = 0;
+    for (long i = 1; i <= nx; ++i) {
+      for (long j = 1; j <= ny; ++j) {
+        if (u[i][j] == 255.0f) {
+          n_mask_pixels++;
+        }
+      }
+    }
+    printf("Number of pixels in mask:       %-8ld\n", n_mask_pixels);
+    printf("Percentage:                     %-8.2f\n",
+           100.0f * ((float)n_mask_pixels) / (nx * ny));
+  } else {
+    /* Insert corner marks into the image */
     draw_corners(u, nx, ny, v);
   }
 

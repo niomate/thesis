@@ -7,8 +7,7 @@
 
 #define pi 3.1415927
 
-    void
-    mask
+void mask
 
     (float **u,  /* image, altered ! */
      long nx,    /* image dimension in x direction */
@@ -19,7 +18,6 @@
 {
   long i, j; /* loop variables */
   long k, l; /* loop variables */
-  long n_mask_pixels = 0;
   dummies(u, nx, ny);
 
   int r = radius + 2; /* To create a circle, we have to start the iteration
@@ -40,7 +38,6 @@
         /* Add only the current pixel to the mask since we do not use corner
          * regions */
         u[i][j] = 255.0;
-        n_mask_pixels++;
       } else {
         /* Create a circle around of radius r around the current pixel */
         for (k = i - r; k <= i + r; k++) {
@@ -49,15 +46,10 @@
                 !in_circle(k, l, i, j, radius)) {
               continue;
             }
-            if (u[k][l] < 255.0) {
-              n_mask_pixels++;
-            }
             u[k][l] = 255.0;
           }
         }
       }
     }
   }
-  float perc = n_mask_pixels * 100.0f / (nx * ny);
-  printf("Percentage of pixels in mask: %f\n", perc);
 }
