@@ -1,7 +1,7 @@
 [Programming]
     [x] Command line arguments for inpainting
     [x] Script to automate corner_detection + inpainting
-    [] Stopping criterion for inpainting ?
+    [x] Stopping criterion for inpainting ?
     [x] Multiprocessing for python script to improve runtime
     [x] Quantile selection for corners
     [x] Documentation for command line arguments
@@ -23,7 +23,16 @@
         [x] meeting for thesis registration
         [x] latex template for thesis
         [x] questions about thesis content
-    [] Bachelor's seminar presentation
+    [x] Bachelor's seminar presentation
+
+[Questions]
+    [] Level of detail for diffusion processes?
+    [] Level of detail for inpainting with EED?
+    [] How much more testing with mask size etc?
+
+[Implementation]
+    [] Mask size <-> Rho
+    [] Total pixel percentile thresholding, Gauss's circle problem
 
 [Related Work]
     [Image features in image compression]
