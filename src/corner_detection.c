@@ -17,24 +17,78 @@
 /*                  (Copyright Joachim Weickert, 12/2005)                   */
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
-
-/*
- features:
- - for greyscale and colour images
- - presmoothing at noise scale:  convolution-based, Neumann b.c.
- - presmoothing at integration scale: convolution-based, Dirichlet b.c.
-*/
+/*                                                                          */
+/*                  Modified by Daniel Gusenburger for                      */
+/*                use in their bachelor's thesis titled                     */
+/*      "Exploring circular corner regions in PDE-based inpainting"         */
+/*                       (October '19 - May '20)                            */
+/*--------------------------------------------------------------------------*/
+/*                                                                          */
+/* Modifications include:                                                   */
+/*  - Command line interface                                                */
+/*  - Adapted non maximum suppression                                       */
+/*  - Dynamic thresholding for cornerness measure                           */
+/*  - Mask computation                                                      */
+/*                                                                          */
+/*--------------------------------------------------------------------------*/
 
 #ifndef max
-#define max(x, y) ((x) > (y) ? (x) : (y))
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
+/**
+ * Enum for convolution types for better readability */
+typedef enum {
+  GAUSSIAN = 0, /*!< Gaussian convolution */
+  PILLBOX = 1   /*!< "Pillbox" kernel convolution-> simple averaging in disk
+                   shaped neighbourhood */
+} convolution;
+
+/**
+ * Enum for cornerness measure for better readability */
+typedef enum { ROHR = 0, TOMASI = 1, HARRIS = 2 } corner_detector;
+const char *CORNER_DETECTOR_NAMES[3] = {"Rohr", "Tomasi-Kanade",
+                                        "Foerstner-Harris"};
+
+/**
+ * Enum for boundary conditions for better readability */
+typedef enum {
+  DIRICHLET = 0, /*!< Dirichlet boundary conditions,
+                   i.e. 0 outside of the known grid*/
+  NEUMANN = 1,   /*!< Neumann boundary conditions,
+                   i.e. reflecting boundary conditions*/
+  PERIOD = 2     /*!< Periodic boundary conditions*/
+} boundary_condition;
+
+/**
+ * Additional options for corner detection extension */
+typedef struct options {
+  bool enable_cnms; /*<! Flag to enable circular non maximum suppression. If set
+                       to false, just computes regular non maximum suppression*/
+  bool enable_tppt; /*<! Flag to enable total pixel percentage thresholding. If
+                       set to false, compute regular percentile thresholding on
+                       cornerness value*/
+  bool display_mask; /*<! Flag to enable computing the mask. If enabled, the
+                        output of the programme will be an image that represents
+                        the inpainting mask */
+  convolution conv;  /*<! Convolution type */
+} options_t;
+
+options_t OPTIONS = (options_t){1, 1, 1, GAUSSIAN}; /*<! Default options */
+
+/**
+ * Struct containing informatin about a pixel. Contains position and value.
+ * Used in total_pixel_percentage_thresholding to get a more accurate result.
+ */
 typedef struct {
   long i;
   long j;
   float val;
 } pixel_t;
 
+/**
+ * \brief Float compare function.
+ */
 int float_cmp(const void *a, const void *b) {
   const float v1 = *((const float *)a);
   const float v2 = *((const float *)b);
@@ -43,6 +97,11 @@ int float_cmp(const void *a, const void *b) {
   return v1 > v2;
 }
 
+/**
+ * \brief Pixel compare function.
+ *
+ * Compares the values of to pixels
+ */
 int pixel_cmp(const void *a, const void *b) {
   const pixel_t v1 = *((const pixel_t *)a);
   const pixel_t v2 = *((const pixel_t *)b);
@@ -51,17 +110,79 @@ int pixel_cmp(const void *a, const void *b) {
   return v1.val > v2.val;
 }
 
+/**
+ * \brief Uniform average in disk shaped neighbourhood of size radius.
+ *
+ * Convolve the image with a normalised disk shaped kernel for a sharper
+ * representation of the influence area of the non-vanishing part of a Gaussian
+ * kernel.
+ *
+ * @param radius; size of the kernel
+ * @param nx: size of the image in x direction
+ * @param ny: size of the image in y direction
+ * @param hx: grid size of the image in x direction
+ * @param hy: grid size of the image in y direction
+ */
+void pillbox_conv(float radius, long nx, long ny, float hx, float hy,
+                  float **f) {
+  long i, j, k, l; /* loop variables */
+  long length;
+  long n = 0; /* Since we can not calculate n analytically, we have to compute
+                 it in the first iteration by counting all pixels that happen to
+                 be inside the circle. */
+  bool calc_n = true;
+  float sum;    /* Variable for averaging */
+  float **help; /* Copy of the image */
+  alloc_matrix(&help, nx + 2, ny + 2);
+
+  /* Copy image */
+  imgcpy(f, help, nx + 2, ny + 2);
+
+  /* calculate length of convolution vector */
+  length = ceil(radius) + 1;
+
+  for (i = 1; i <= nx; ++i) {
+    for (j = 1; j <= ny; j++) {
+      sum = 0;
+      for (k = i - length; k <= i + length; ++k) {
+        for (l = j - length; l <= j + length; ++l) {
+          if (!in_circle(k, l, i, j, radius)) {
+            continue;
+          }
+
+          if (calc_n) {
+            ++n;
+          }
+
+          /* Dirichlet boundary conditions
+           *  Add 0 if not in image. Otherwise the normal value can be added
+           *  Normalisation is done by dividing by n that was computed in the
+           * very first iteration, since n stays the same.(duh)
+           * */
+          if (!out_of_bounds(k, nx) && !out_of_bounds(l, ny)) {
+            sum += f[k][l];
+          }
+        }
+      }
+      help[i][j] = sum / (float)n;
+      calc_n = false; /* Only need to calculate n in the first iteration */
+    }
+  }
+  /* Put computed data back */
+  imgcpy(help, f, nx + 2, ny + 2);
+}
+
 void gauss_conv
 
-    (float sigma,     /* standard deviation of Gaussian */
-     long nx,         /* image dimension in x direction */
-     long ny,         /* image dimension in y direction */
-     float hx,        /* pixel size in x direction */
-     float hy,        /* pixel size in y direction */
-     float precision, /* cutoff at precision * sigma */
-     long bc,         /* type of boundary condition */
-                      /* 0=Dirichlet, 1=reflecing, 2=periodic */
-     float **f)       /* input: original image ;  output: smoothed */
+    (float sigma,           /* standard deviation of Gaussian */
+     long nx,               /* image dimension in x direction */
+     long ny,               /* image dimension in y direction */
+     float hx,              /* pixel size in x direction */
+     float hy,              /* pixel size in y direction */
+     float precision,       /* cutoff at precision * sigma */
+     boundary_condition bc, /* type of boundary condition */
+                            /* 0=Dirichlet, 1=reflecing, 2=periodic */
+     float **f)             /* input: original image ;  output: smoothed */
 
 /*
  Gaussian convolution.
@@ -107,17 +228,17 @@ void gauss_conv
       help[i + length - 1] = f[i][j];
 
     /* assign boundary conditions */
-    if (bc == 0) /* Dirichlet boundary conditions */
+    if (bc == DIRICHLET) /* Dirichlet boundary conditions */
       for (p = 1; p <= length; p++) {
         help[length - p] = 0.0;
         help[nx + length - 1 + p] = 0.0;
       }
-    else if (bc == 1) /* reflecting b.c. */
+    else if (bc == NEUMANN) /* reflecting b.c. */
       for (p = 1; p <= length; p++) {
         help[length - p] = help[length + p - 1];
         help[nx + length - 1 + p] = help[nx + length - p];
       }
-    else if (bc == 2) /* periodic b.c. */
+    else if (bc == PERIOD) /* periodic b.c. */
       for (p = 1; p <= length; p++) {
         help[length - p] = help[nx + length - p];
         help[nx + length - 1 + p] = help[length + p - 1];
@@ -173,17 +294,17 @@ void gauss_conv
       help[j + length - 1] = f[i][j];
 
     /* assign boundary conditions */
-    if (bc == 0) /* Dirichlet boundary conditions */
+    if (bc == DIRICHLET) /* Dirichlet boundary conditions */
       for (p = 1; p <= length; p++) {
         help[length - p] = 0.0;
         help[ny + length - 1 + p] = 0.0;
       }
-    else if (bc == 1) /* reflecting b.c. */
+    else if (bc == NEUMANN) /* reflecting b.c. */
       for (p = 1; p <= length; p++) {
         help[length - p] = help[length + p - 1];
         help[ny + length - 1 + p] = help[ny + length - p];
       }
-    else if (bc == 2) /* periodic b.c. */
+    else if (bc == PERIOD) /* periodic b.c. */
       for (p = 1; p <= length; p++) {
         help[length - p] = help[ny + length - p];
         help[ny + length - 1 + p] = help[length + p - 1];
@@ -279,9 +400,15 @@ void struct_tensor
   /* ---- smoothing at integration scale, Dirichlet b.c. ---- */
 
   if (rho > 0.0) {
-    gauss_conv(rho, nx, ny, hx, hy, 3.0, 0, dxx);
-    gauss_conv(rho, nx, ny, hx, hy, 3.0, 0, dxy);
-    gauss_conv(rho, nx, ny, hx, hy, 3.0, 0, dyy);
+    if (OPTIONS.conv == PILLBOX) {
+      pillbox_conv(rho, nx, ny, hx, hy, dxx);
+      pillbox_conv(rho, nx, ny, hx, hy, dxy);
+      pillbox_conv(rho, nx, ny, hx, hy, dyy);
+    } else if (OPTIONS.conv == GAUSSIAN) {
+      gauss_conv(rho, nx, ny, hx, hy, 3.0, 0, dxx);
+      gauss_conv(rho, nx, ny, hx, hy, 3.0, 0, dxy);
+      gauss_conv(rho, nx, ny, hx, hy, 3.0, 0, dyy);
+    }
   }
 
   return;
@@ -348,8 +475,20 @@ void PA_trans
 
 } /* PA_trans */
 
-/*--------------------------------------------------------------------------*/
-
+/**
+ * \brief Search for the local maxima of the cornerness measure.
+ *
+ * Given a map of cornerness values, find the local maxima inside an
+ * 8-neighbourhood and discard every value that does not comply. This gives a
+ * less noisy and more accurate approximation of the actual positions of the
+ * corners.
+ *
+ * @param w cornerness map, unchanged
+ * @param nx: size of the image in x direction
+ * @param ny: size of the image in x direction
+ * @param v: corner map, afterwards contains the values of corners that are
+ * being kept, 0 elsewhere
+ */
 void non_maximum_suppression(float **w, long nx, long ny, float **v) {
   long i, j, k, l; /* Loop variables */
   for (i = 1; i <= nx; i++) {
@@ -375,6 +514,36 @@ void non_maximum_suppression(float **w, long nx, long ny, float **v) {
   }
 }
 
+/**
+ * \brief Discard corners that are already covered by 'better' corners.
+ *
+ * Iterate over all cornerness values and set the values of corners that are not
+ * the maximum inside a disk shaped neighbourdhood of the given radius to 0.
+ * The idea is that combined with the total pixel percentage thresholding, we
+ * can distribute the centres of the mask pixels more evenly across the image by
+ * thinning out the amount of corners in denser areas by discarding those
+ * corners that are already inside the disk of another corner.
+ * This implementation is not focused on speed or efficiency, it only serves as
+ * a proof of concept to show that an approach like this makes sense.
+ *
+ * This implementation also contains some bugs in edge case scenarios.
+ * e.g.
+ * if a corner is found to be covered by another corner, it is discarded. If
+ * however this next corner is also found to be covered by an even better
+ * corner, it is also discarded and we completely lose the information of the
+ * first corner.
+ *
+ * Currently, I don't know how to fix this edge case. If this proves to be a
+ * successful concept, then this would be one of the first points of
+ * improvement.
+ *
+ * @param w cornerness map, unchanged
+ * @param nx: size of the image in x direction
+ * @param ny: size of the image in x direction
+ * @param radius; mask size, i.e. radius of the disk surrounding each corner
+ * @param v: corner map, afterwards contains the values of corners that are
+ * being kept, 0 elsewhere
+ */
 void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
                                     float **v) {
   long i, j, k, l; /* Loop variables */
@@ -410,6 +579,27 @@ void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
   }
 }
 
+/**
+ * \brief Using a cornerness map, find the corners that should be kept
+ * in order to obtain a mask containing a certain percentage of pixels.
+ *
+ * Compute how many corners with a mask disk of size radius can be kept such
+ * that the resulting mask contains at most the given percentage of pixels.
+ * This method is more accurate in computing masks with a similar amount
+ * of pixels than using the percentile approach.
+ * Furthermore, it prevents the case where the all corners have the same value
+ * and thus choosing a percentile too low removes all corners from the map.
+ * In this approach we sort the corners by their cornerness value and then, as
+ * long as we have space left in the mask, put them into the mask one by one.
+ * This gives a better approximation to the desired mask size.
+ *
+ * @param u: cornerness map, thresholded afterwards, 255 at corner locations, 0
+ *           elsewhere
+ * @param nx: size of the image in x direction
+ * @param ny: size of the image in x direction
+ * @param radius; mask size, i.e. radius of the disk surrounding each corner
+ * @param perc: percentage of corners that should be kept
+ */
 void total_pixel_percentage_thresholding(float **u, long nx, long ny,
                                          int radius, float perc) {
   long i, j;
@@ -443,13 +633,29 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
   }
 
   /* Keep best corners */
-  for (i = idx - 1; i > max(idx - n_corners, 0); --i) {
+  for (i = idx - 1; i > MAX(idx - n_corners, 0); --i) {
     long x = vals[i].i;
     long y = vals[i].j;
     u[x][y] = 255.0f;
   }
 }
 
+/**
+ * \brief Computes the n-th percentile given by the parameter perc on a
+ * cornerness map
+ *
+ * Compute the n-th percentile on the given cornerness map and threshold it
+ * against the threshold computed this way. Afterwards, u is 0 at locations
+ * that were below the threshold and 255 for locations above the threshold.
+ *
+ * The parameter perc specifies how many percent of corners should be **kept**.
+ *
+ * @param u: cornerness map, thresholded afterwards, 255 at corner locations, 0
+ *           elsewhere
+ * @param nx: size of the image in x direction
+ * @param ny: size of the image in x direction
+ * @param perc: percentage of corners that should be kept
+ */
 void percentile_thresholding(float **u, long nx, long ny, float perc) {
   long i, j;           /* Loop variables */
   float vals[nx * ny]; /* Array for threshold computation */
@@ -486,29 +692,38 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
   }
 }
 
-void corner_detection
-
-    (float **f,    /* image, unaltered */
-     float **v,    /* corner locations, output */
-     long nx,      /* image dimension in x direction */
-     long ny,      /* image dimension in y direction */
-     float hx,     /* pixel size in x direction */
-     float hy,     /* pixel size in y direction */
-     long type,    /* type of corner detector */
-     float perc,   /* percentile */
-     float radius, /* radius for non maximum suppression */
-     float sigma,  /* noise scale */
-     float rho,    /* integration scale */
-     bool cnms,    /* flag to enable circular non maximum suppression */
-     bool tppt /* flag to enable total pixel percentage thresholding */)
-
-/*
- calculates structure tensor based corner detector;
- v[i][j]=255 for corners;
- v[i][j]=0   else;
-*/
-
-{
+/**
+ * \brief Corner detection using the structure tensor
+ *
+ * Find image features using a structure tensor based corner detection method
+ * like Harris, Rohr or Tomasi-Kanade.
+ * Incorporates some extensions like modified non maximum suppression and
+ * percentile thresholding.
+ *
+ * General order of actions is:
+ *  - Presmooth the image
+ *  - Compute structure tensor information
+ *  - Apply the cornerness measure
+ *  - Apply non maximum suppression
+ *  - Apply percentile thresholding or TPPT
+ *
+ * @param f original image, unaltered
+ * @param v corner locations, 255 at locations of image feature, 0 elsewhere
+ * @param nx size of image in x direction
+ * @param ny size of image in y direction
+ * @param hx grid size of image in x direction
+ * @param hy grid size of image in y direction
+ * @param type type of cornerness measure, a.k.a corner detector
+ * @param perc percentile parameter for percentile thresholding
+ * @param radius radius of the disk in the mask image and size of disk for CNMS
+ * @param sigma noise scale, i.e. scale at which the image is smoothed before
+ *        running the corner detection
+ * @param rho integration scale, i.e. size of the Gaussian kernel that is used
+ *        to average directional information from the structure tensor
+ */
+void corner_detection(float **f, float **v, long nx, long ny, float hx,
+                      float hy, corner_detector type, float perc, float radius,
+                      float sigma, float rho) {
   long i, j;                 /* loop variables */
   float **u;                 /* loop */
   float **dxx, **dxy, **dyy; /* tensor components */
@@ -530,7 +745,7 @@ void corner_detection
   /* calculate structure tensor of u */
   struct_tensor(u, nx, ny, hx, hy, sigma, rho, dxx, dxy, dyy);
 
-  if (type == 0)
+  if (type == ROHR)
     /* Rohr: det(J) */
     for (i = 1; i <= nx; i++) {
       for (j = 1; j <= ny; j++) {
@@ -538,7 +753,7 @@ void corner_detection
       }
     }
 
-  if (type == 1)
+  if (type == TOMASI)
     /* Tomasi-Kanade: smaller eigenvalue */
     for (i = 1; i <= nx; i++) {
       for (j = 1; j <= ny; j++) {
@@ -547,12 +762,11 @@ void corner_detection
       }
     }
 
-  if (type == 2)
-    /* Foerstner-Harris: det(J)/trace(J)
-     * -> Harmonic mean */
+  if (type == HARRIS)
+    /* Foerstner-Harris: det(J)/trace(J) */
     for (i = 1; i <= nx; i++) {
       for (j = 1; j <= ny; j++) {
-        /* Adding a small epsilon to prevent division through zero */
+        /* Adding a small epsilon to prevent division by zero */
         trace = dxx[i][j] + dyy[i][j] + 0.000001;
         det = dxx[i][j] * dyy[i][j] - dxy[i][j] * dxy[i][j];
         w[i][j] = 2 * det / trace;
@@ -561,13 +775,13 @@ void corner_detection
 
   dummies(w, nx, ny);
 
-  if (!cnms) {
+  if (!OPTIONS.enable_cnms) {
     non_maximum_suppression(w, nx, ny, v);
   } else {
     non_maximum_suppression_circle(w, nx, ny, radius, v);
   }
 
-  if (!tppt) {
+  if (!OPTIONS.enable_tppt) {
     percentile_thresholding(v, nx, ny, perc);
   } else {
     total_pixel_percentage_thresholding(v, nx, ny, radius, perc);
@@ -583,20 +797,16 @@ void corner_detection
 
 /*--------------------------------------------------------------------------*/
 
-void draw_corners
-
-    (float **u, /* image, altered ! */
-     long nx,   /* image dimension in x direction */
-     long ny,   /* image dimension in y direction */
-     float **v) /* image with corner locations */
-
-/*
- draws corners into the image u, at locations specified by v
- v[i][j]=255 for corners;
- v[i][j]=0   else;
-*/
-
-{
+/**
+ * \brief Highlight corner locations in the original image by drawing a white
+ * circle.
+ *
+ * @param u original image, highlighted corner locations afterwards
+ * @param nx size of image in x direction
+ * @param ny size of image in y direction
+ * @param v corner locations
+ */
+void draw_corners(float **u, long nx, long ny, float **v) {
   long i, j; /* loop variables */
   long k, l; /* loop variables */
 
@@ -621,8 +831,6 @@ void draw_corners
   }
 } /* draw_corners */
 
-/*--------------------------------------------------------------------------*/
-
 int main(int argc, char **argv)
 
 {
@@ -633,24 +841,19 @@ int main(int argc, char **argv)
   long count;  /* Number of corners */
 
   /* Variables given from command line interface */
-  char *out = "corners.pgm"; /* Filename output image */
-  long type = 2;             /* Type of corner detector */
-  float q = 0.1;             /* Percentile parameter to compute threshold */
-  float sigma = 1;           /* Noise scale */
-  float rho = 2.5;           /* Integration scale */
-  float mask_factor = 0;     /* Factor to scale integration scale with to obtain
-                                radius of corner regions */
-
-  /* Flags for corner detection options */
-  bool enable_cnms = 0;
-  bool enable_tppt = 0;
-  bool display_mask = 0;
+  char *out = "corners.pgm";     /* Filename output image */
+  corner_detector type = HARRIS; /* Type of corner detector */
+  float q = 0.1;                 /* Percentile parameter to compute threshold */
+  float sigma = 1;               /* Noise scale */
+  float rho = 2.5;               /* Integration scale */
+  float mask_factor = 0; /* Factor to scale integration scale with to obtain
+                            radius of corner regions */
 
   printf("\n");
   printf("CORNER DETECTION WITH THE STRUCTURE TENSOR\n\n");
 
   int c;
-  while ((c = getopt(argc, argv, "q:c:s:r:o:m:CMP")) != -1) {
+  while ((c = getopt(argc, argv, "q:c:s:r:o:m:CDMP")) != -1) {
     switch (c) {
     case 'q':
       q = atof(optarg);
@@ -660,7 +863,7 @@ int main(int argc, char **argv)
       }
       break;
     case 'c':
-      type = atoi(optarg);
+      type = (corner_detector)atoi(optarg);
       break;
     case 's':
       sigma = atof(optarg);
@@ -675,13 +878,15 @@ int main(int argc, char **argv)
       mask_factor = atof(optarg);
       break;
     case 'C':
-      enable_cnms = 1;
+      OPTIONS.enable_cnms = true;
       break;
     case 'P':
-      enable_tppt = 1;
+      OPTIONS.enable_tppt = true;
       break;
+    case 'D':
+      OPTIONS.conv = PILLBOX;
     case 'M':
-      display_mask = 1;
+      OPTIONS.display_mask = true;
       break;
     default:
       abort();
@@ -708,7 +913,7 @@ int main(int argc, char **argv)
   /* Initialize corner map */
   for (long i = 1; i <= nx; ++i) {
     for (long j = 1; j <= ny; ++j) {
-    v[i][j] = 0.0f;
+      v[i][j] = 0.0f;
     }
   }
 
@@ -716,17 +921,7 @@ int main(int argc, char **argv)
   float mask_radius = mask_factor * rho;
 
   printf("Using parameters:\n");
-  printf("  Corner detector:    ");
-  if (type == 0) {
-    printf("Rohr\n");
-  } else if (type == 1) {
-    printf("Tomasi-Kanade\n");
-  } else if (type == 2) {
-    printf("Foerstner-Harris\n");
-  } else {
-    fprintf(stderr, "Invalid feature detection method.");
-    abort();
-  }
+  printf("  Corner detector:    %-s\n", CORNER_DETECTOR_NAMES[type]);
   printf("  Initial image:      %-s\n", in);
   printf("  Output image:       %-s\n", out);
   printf("  Sigma:              %-8.2f\n", sigma);
@@ -734,13 +929,15 @@ int main(int argc, char **argv)
   printf("  Percentile:         %-8.2f\n", q);
   printf("  Mask factor:        %-8.2f\n", mask_factor);
   printf("  Mask radius:        %-8.2f\n", mask_radius);
-  printf("  CNMS enabled:       %-5s\n", enable_cnms ? "true" : "false");
-  printf("  TPPT enabled:       %-5s\n", enable_tppt ? "true" : "false");
-  printf("  Compute mask:       %-5s\n", display_mask ? "true" : "false");
+  printf("  CNMS enabled:       %-5s\n",
+         OPTIONS.enable_cnms ? "true" : "false");
+  printf("  TPPT enabled:       %-5s\n",
+         OPTIONS.enable_tppt ? "true" : "false");
+  printf("  Compute mask:       %-5s\n",
+         OPTIONS.display_mask ? "true" : "false");
   printf("\n");
 
-  corner_detection(u, v, nx, ny, 1.0, 1.0, type, q, mask_radius, sigma, rho,
-                   enable_cnms, enable_tppt);
+  corner_detection(u, v, nx, ny, 1.0, 1.0, type, q, mask_radius, sigma, rho);
   /*corner_detection(u, nx, ny, 1.0, 1.0, type, q, mask_radius, enable_cnms,*/
   /*enable_tppt, sigma, rho, v);*/
 
@@ -755,7 +952,7 @@ int main(int argc, char **argv)
 
   printf("Number of detected corners:       %-8ld\n", n_corners);
 
-  if (display_mask) {
+  if (OPTIONS.display_mask) {
     /* Create mask with disk shaped corner regions */
     mask(u, nx, ny, mask_radius, v);
 
