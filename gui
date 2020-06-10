@@ -1,13 +1,15 @@
 #!/usr/bin/python
 import json
+import os
 import shutil
 import tkinter as tk
-from tempfile import TemporaryDirectory
 from os import listdir, remove
 from os.path import abspath, dirname, exists, join
+from tempfile import TemporaryDirectory
 from time import time
 from tkinter import filedialog, messagebox, ttk
-from scripts.run_all import mask, corners, inpaint, name_from_path
+
+from scripts.run_all import corners, inpaint, mask, name_from_path
 
 # Directories
 here = dirname(__file__)
@@ -22,14 +24,14 @@ TEMP_FOLDER = TemporaryDirectory()
 fields = json.load(open(join(here, 'conf.json'), 'r'))
 
 
-def param_str(*params, suffix=True):
+def param_str(*params):
     base = ''.join([str(x) for x in params])
     base = base.replace('-', '').replace('.', '')
     return base + '{}.pgm'
 
 
 def temp(img_name, *params, suffix=''):
-    filename = img_name + param_str(*params, suffix=False)
+    filename = img_name + param_str(*params)
     return join(TEMP_FOLDER.name, filename.format(suffix))
 
 
@@ -68,11 +70,12 @@ mask_displayed.initialize(False)
 base_img_name = tk.StringVar()
 base_img_name.initialize('')
 
-entries = {'corner': {}, 'inpaint': {}}
+variables = {'corner': {}, 'inpaint': {}}
 
 # Initialise parameter fields
 for key in fields.keys():
     for field, conf in fields[key].items():
+        var = None
         frame = tk.Frame(entryframes[key])
         if conf['style'] != 'checkbox':
             lab = tk.Label(frame, width=22,
@@ -80,32 +83,27 @@ for key in fields.keys():
             lab.pack(side=tk.LEFT, pady=5)
 
         if conf['style'] == 'slider':
+            var = tk.DoubleVar()
             bot, top, step, default = conf['limits']
             ent = tk.Scale(frame, from_=bot, to=top, resolution=step,
-                           length=200, orient=tk.HORIZONTAL)
-            ent.set(default)
+                           length=200, orient=tk.HORIZONTAL, variable=var)
+            var.set(default)
         elif conf['style'] == 'textbox':
-            ent = tk.Entry(frame)
-            ent.insert(0, conf['default'])
+            var = tk.StringVar()
+            ent = tk.Entry(frame, textvariable=var)
+            var.set(conf['default'])
         elif conf['style'] == 'checkbox':
-            ent = ttk.Checkbutton(frame, text=conf['label'])
-            ent.state(['selected' if conf['default'] else ['!selected']])
+            var = tk.BooleanVar()
+            ent = ttk.Checkbutton(frame, text=conf['label'], variable=var)
+            var.set(conf['default'])
         elif conf['style'] == 'combobox':
-            ent = ttk.Combobox(frame, values=conf['entries'])
-            ent.current(0)
+            var = tk.StringVar()
+            ent = ttk.Combobox(frame, values=conf['entries'], textvariable=var)
+            var.set(conf['default'])
 
         ent.pack(side=tk.LEFT, fill=tk.X, pady=5)
         frame.pack(fill=tk.X, padx=20, pady=5)
-        entries[key][field] = ent
-
-
-def read_header(img):
-    with open(img, 'r', errors='replace') as f:
-        lines = [l.replace('#', '').replace('\n', '')
-                 for l in f.readlines() if '#' in l]
-    lines = [l.split(':') for l in lines if ':' in l]
-    header = {x.strip(): y.strip() for x, y in lines}
-    return header
+        variables[key][field] = var
 
 
 def corners_action():
@@ -168,33 +166,21 @@ def inpaint_action():
 
 
 def get_params_corner():
-    detector = fields['corner']['detector']['entries'].index(
-        entries['corner']['detector'].get())
-    thresh = entries['corner']['thresh'].get()
-    sigma = entries['corner']['sigma'].get()
-    rho = entries['corner']['rho'].get()
-    size = entries['corner']['mask'].get()
-    circ_supp = 'selected' in entries['corner']['circ_supp'].state()
-    tppt = 'selected' in entries['corner']['tppt'].state()
-
-    params = ['-c', detector, '-q', thresh, '-s', sigma, '-r', rho, '-m', size]
-    if circ_supp:
-        params.append('-C')
-    if tppt:
-        params.append('-P')
-
-    return list(map(str, params))
+    params = []
+    for k, v in variables['corner'].items():
+        if isinstance(v.get(), bool):
+            if v.get():
+                params.append(k)
+        else:
+            params.extend([k, str(v.get())])
+    return params
 
 
 def get_params_inpaint():
-    lbda = entries['inpaint']['lambda'].get()
-    sigma = entries['inpaint']['sigma'].get()
-    alpha = entries['inpaint']['alpha'].get()
-    gamma = entries['inpaint']['gamma'].get()
-    outer = entries['inpaint']['outer'].get()
-    inner = entries['inpaint']['inner'].get()
-
-    return list(map(str, ['-l', lbda, '-s', sigma, '-a', alpha, '-g', gamma, '-n', outer, '-N', inner]))
+    params = []
+    for k, v in variables['inpaint'].items():
+        params.extend([k, str(v.get())])
+    return params
 
 
 def file_dialog():
@@ -222,26 +208,20 @@ def save_preset():
         title='Save preset as...',
         defaultextension='.json',
         initialfile='preset1.json')
-    vals = {'corner': {x: y.get() for x, y in entries['corner'].items() if hasattr(x, 'get')}, 'inpaint': {
-        x: y.get() for x, y in entries['inpaint'].items()}}
-    vals['corner']['circ_supp'] = entries['corner']['circ_supp'].state()
-    vals['corner']['tppt'] = entries['corner']['tppt'].state()
-    if len(filename) != 0:
-        json.dump(vals, open(filename, 'w+'))
+
+    if not filename:
+        return
+
+    vals = {frame: {k: v.get() for k, v in var.items()}
+            for frame, var in variables.items()}
+
+    json.dump(vals, open(filename, 'w+'))
 
 
 def set_preset_values(vals):
-    for k, v in vals['corner'].items():
-        if not hasattr(entries['corner'][k], 'set'):
-            entries['corner'][k].state(v)
-        else:
-            entries['corner'][k].set(v)
-    for k, v in vals['inpaint'].items():
-        if k in ['outer', 'inner']:
-            entries['inpaint'][k].delete(0, tk.END)
-            entries['inpaint'][k].insert(tk.END, v)
-        else:
-            entries['inpaint'][k].set(v)
+    for frame, vars in vals.items():
+        for k, v in vars.items():
+            variables[frame][k].set(v)
 
 
 def load_preset():
@@ -249,9 +229,12 @@ def load_preset():
         initialdir=PRESET_FOLDER,
         title='Select preset',
         filetypes=(('JSON files', '*.json'),))
-    if len(filename) != 0:
-        vals = json.load(open(filename, 'r+'))
-        set_preset_values(vals)
+
+    if not filename:
+        return
+
+    vals = json.load(open(filename, 'r+'))
+    set_preset_values(vals)
 
 
 def set_default_preset():
@@ -259,6 +242,10 @@ def set_default_preset():
         initialdir=PRESET_FOLDER,
         title='Select default preset',
         filetypes=(('JSON files', '*.json'),))
+
+    if not filename:
+        return
+
     with open(DEFAULT_PRESET_FILE, 'w+') as f:
         f.write(filename)
 
@@ -266,30 +253,17 @@ def set_default_preset():
 def clear_presets():
     cache = listdir(PRESET_FOLDER)
     num_cache = len(cache)
+
     if messagebox.askyesno('Clear presets?', f'Do you want to remove all {num_cache} presets ?'):
         for file in cache:
             remove(join(PRESET_FOLDER, file))
         messagebox.showinfo('Info', 'Presets deleted!')
 
 
-def reset_to_default():
-    # for k, v in fields_corner.items():
-    #     if k == 'detector':
-    #         entries['corner'][k].set(DETECTOR_TYPES[0])
-    #     else:
-    #         entries['corner'][k].set(v['limits'][-1])
-    # for k, v in fields_inpaint.items():
-    #     if v['style'] == 'textbox':
-    #         entries['inpaint'][k].delete(0, tk.END)
-    #         entries['inpaint'][k].insert(tk.END, v['default'])
-    #     else:
-    #         entries['inpaint'][k].set(v['limits'][-1])
-    pass
-
-
 def clear_cache():
     cache = listdir(TEMP_FOLDER.name)
     num_cache = len(cache)
+
     if messagebox.askyesno('Clear cache?', f'Do you want to remove all {num_cache} files in the cache ?'):
         for file in cache:
             remove(join(TEMP_FOLDER.name, file))
@@ -356,9 +330,10 @@ def display_original():
     corner_canvas.create_image(256, 256, image=corner_photo)
 
 
-default_preset_file = open(DEFAULT_PRESET_FILE, 'r+').read().strip()
-if len(default_preset_file) > 0:
-    set_preset_values(json.load(open(default_preset_file, 'r+')))
+if os.path.exists(DEFAULT_PRESET_FILE):
+    default_preset_file = open(DEFAULT_PRESET_FILE, 'r+').read().strip()
+    if len(default_preset_file) > 0:
+        set_preset_values(json.load(open(default_preset_file, 'r+')))
 
 
 original_button = tk.Button(

@@ -74,7 +74,8 @@ typedef struct options {
   convolution conv;  /*<! Convolution type */
 } options_t;
 
-options_t OPTIONS = (options_t){1, 1, 1, GAUSSIAN}; /*<! Default options */
+options_t OPTIONS =
+    (options_t){false, false, false, GAUSSIAN}; /*<! Default options */
 
 /**
  * Struct containing informatin about a pixel. Contains position and value.
@@ -113,6 +114,7 @@ int pixel_cmp(const void *a, const void *b) {
 /**
  * \brief Uniform average in disk shaped neighbourhood of size radius.
  *
+ * Uses Dirichlet boundary conditions.
  * Convolve the image with a normalised disk shaped kernel for a sharper
  * representation of the influence area of the non-vanishing part of a Gaussian
  * kernel.
@@ -126,50 +128,59 @@ int pixel_cmp(const void *a, const void *b) {
 void pillbox_conv(float radius, long nx, long ny, float hx, float hy,
                   float **f) {
   long i, j, k, l; /* loop variables */
-  long length;
-  long n = 0; /* Since we can not calculate n analytically, we have to compute
-                 it in the first iteration by counting all pixels that happen to
-                 be inside the circle. */
-  bool calc_n = true;
-  float sum;    /* Variable for averaging */
-  float **help; /* Copy of the image */
+  float **help;    /* Copy of the image */
   alloc_matrix(&help, nx + 2, ny + 2);
 
-  /* Copy image */
-  imgcpy(f, help, nx + 2, ny + 2);
+  long length = ceil(radius) + 1; /* Length of the kernel in either direction */
+  long lmax = 2 * length + 1;     /* Total length of the kernel in positive and
+                                     negative diurection combined */
 
-  /* calculate length of convolution vector */
-  length = ceil(radius) + 1;
+  float **kernel; /* Convolution kernel */
+  alloc_matrix(&kernel, lmax, lmax);
 
-  for (i = 1; i <= nx; ++i) {
-    for (j = 1; j <= ny; j++) {
-      sum = 0;
-      for (k = i - length; k <= i + length; ++k) {
-        for (l = j - length; l <= j + length; ++l) {
-          if (!in_circle(k, l, i, j, radius)) {
-            continue;
-          }
+  long n = 0; /* Number of pixels that are 1, used for normalization */
 
-          if (calc_n) {
-            ++n;
-          }
-
-          /* Dirichlet boundary conditions
-           *  Add 0 if not in image. Otherwise the normal value can be added
-           *  Normalisation is done by dividing by n that was computed in the
-           * very first iteration, since n stays the same.(duh)
-           * */
-          if (!out_of_bounds(k, nx) && !out_of_bounds(l, ny)) {
-            sum += f[k][l];
-          }
-        }
+  /* Compute pillbox kernel for the given radius */
+  for (i = 0; i < lmax; ++i) {
+    for (j = 0; j < lmax; ++j) {
+      /* Check if (i, j) is in a circle with origin
+       * (length, length) */
+      if (in_circle(i, j, length, length, radius)) {
+        kernel[i][j] = 1;
+        n++;
+      } else {
+        kernel[i][j] = 0;
       }
-      help[i][j] = sum / (float)n;
-      calc_n = false; /* Only need to calculate n in the first iteration */
     }
   }
+
+  float norm = 1 / (float)n;
+
+  /* Normalise kernel */
+  for (i = 0; i < lmax; ++i) {
+    for (j = 0; j < lmax; ++j) {
+      kernel[i][j] = kernel[i][j] * norm;
+    }
+  }
+
+  /* Convolution step */
+  for (i = 1; i <= nx; ++i) {
+    for (j = 1; j <= ny; j++) {
+      help[i][j] = 0;
+      for (k = -length; k <= length; ++k) {
+        for (l = -length; l <= length; ++l) {
+          if (in_image(i + k, j + l, nx, ny))
+            help[i][j] += f[i + k][j + l] * kernel[length + k][length + l];
+        }
+      }
+    }
+  }
+
   /* Put computed data back */
   imgcpy(help, f, nx + 2, ny + 2);
+
+  disalloc_matrix(help, nx + 2, ny + 2);
+  disalloc_matrix(kernel, lmax, lmax);
 }
 
 void gauss_conv
@@ -214,8 +225,10 @@ void gauss_conv
 
   /* normalization */
   sum = conv[0];
-  for (i = 1; i <= length; i++)
+  for (i = 1; i <= length; i++) {
     sum = sum + 2.0 * conv[i];
+  }
+
   for (i = 0; i <= length; i++)
     conv[i] = conv[i] / sum;
 
@@ -561,8 +574,7 @@ void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
        * radius */
       for (k = i - radius; k <= i + radius; k++) {
         for (l = j - radius; l <= j + radius; l++) {
-          if (out_of_bounds(k, nx) || out_of_bounds(l, ny) ||
-              !in_circle(k, l, i, j, radius)) {
+          if (!in_image(k, l, nx, ny) || !in_circle(k, l, i, j, radius)) {
             continue;
           }
           if (w[k][l] > w[i][j]) {
@@ -657,38 +669,67 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
  * @param perc: percentage of corners that should be kept
  */
 void percentile_thresholding(float **u, long nx, long ny, float perc) {
-  long i, j;           /* Loop variables */
-  float vals[nx * ny]; /* Array for threshold computation */
-  long n_vals = 0;     /* Number of elements in the array */
+  /*long i, j;           [> Loop variables <]*/
+  /*float vals[nx * ny]; [> Array for threshold computation <]*/
+  /*long n_vals = 0;     [> Number of elements in the array <]*/
+
+  /*[> Flatten cornerness map and prepare for sorting <]*/
+  /*for (i = 1; i <= nx; ++i) {*/
+    /*for (j = 1; j <= ny; ++j) {*/
+      /*[> Preliminary thresholding to weed out outliers <]*/
+      /*if (fabs(u[i][j]) < 0.01) {*/
+        /*continue;*/
+      /*} else {*/
+        /*vals[n_vals++] = u[i][j];*/
+      /*}*/
+    /*}*/
+  /*}*/
+
+  /*qsort(vals, n_vals, sizeof(float), float_cmp);*/
+
+  /*for (i = 0; i < n_vals; ++i) {*/
+    /*printf("%f ", vals[i]);*/
+  /*}*/
+  /*printf("\n");*/
+
+  /*long index = clamp((long)ceil(n_vals * perc), 0, n_vals);*/
+
+  /*float thresh = vals[index];*/
+
+  long i, j;
+  long n_total = nx * ny;
+  pixel_t vals[n_total];
 
   /* Flatten cornerness map and prepare for sorting */
+  long idx = 0;
   for (i = 1; i <= nx; ++i) {
     for (j = 1; j <= ny; ++j) {
-      /* Preliminary thresholding to weed out outliers */
-      if (fabs(u[i][j]) < 0.01) {
-        continue;
-      } else {
-        vals[n_vals++] = u[i][j];
+      if (u[i][j] > 0.01) {
+        vals[idx++] = (pixel_t){i, j, u[i][j]};
       }
     }
   }
 
-  qsort(vals, n_vals, sizeof(float), float_cmp);
+  long index = clamp((long)ceil(idx * perc), 0, idx);
+  qsort(vals, idx, sizeof(pixel_t), pixel_cmp);
 
-  long index = clamp((long)ceil(n_vals * perc), 0, n_vals);
+  for (i = 0; i < idx; ++i) {
+    printf("%f ", vals[i].val);
+  }
+  printf("\n");
 
-  float thresh = vals[index];
-
-  /* Apply percentile threshold */
-  long n_corners = 0;
+  /* Initialize */
   for (i = 1; i <= nx; i++) {
     for (j = 1; j <= ny; j++) {
-      if (u[i][j] <= thresh) {
-        u[i][j] = 0;
-      } else {
-        u[i][j] = 255.0f;
-      }
+      u[i][j] = 0;
     }
+  }
+
+  /* Keep best corners */
+  for (i = idx - 1; i > MAX(idx - index, 0); --i) {
+    long x = vals[i].i;
+    long y = vals[i].j;
+    u[x][y] = 255.0f;
   }
 }
 
@@ -885,6 +926,7 @@ int main(int argc, char **argv)
       break;
     case 'D':
       OPTIONS.conv = PILLBOX;
+      break;
     case 'M':
       OPTIONS.display_mask = true;
       break;

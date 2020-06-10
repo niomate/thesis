@@ -418,3 +418,7 @@ int in_circle(long x, long y, long cx, long cy, float radius) {
 int out_of_bounds(long i, long nx) {
   return i < 1 || i > nx;
 }
+
+int in_image(long i, long j, long nx, long ny) {
+  return !out_of_bounds(i, nx) && !out_of_bounds(j, ny);
+}
