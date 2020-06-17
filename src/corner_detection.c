@@ -618,10 +618,8 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
   long n_total = nx * ny;
   pixel_t vals[n_total];
 
-  /* Max number of pixels per corner region given by upper bound of Gauss'
-   * circle problem */
-  float max_area_p_corner =
-      radius < 0 ? 1 : pi * radius * radius + powf(radius, 131.0 / 208.0);
+  /* Compute the area explicitly to get the most accurate result. */ 
+  float max_area_p_corner = gauss_circle(radius);
 
   long n_corners = ceil((perc * n_total) / max_area_p_corner);
 
@@ -645,7 +643,7 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
   }
 
   /* Keep best corners */
-  for (i = idx - 1; i > MAX(idx - n_corners, 0); --i) {
+  for (i = idx - 1; i >= MAX(idx - n_corners, 0); --i) {
     long x = vals[i].i;
     long y = vals[i].j;
     u[x][y] = 255.0f;
@@ -675,20 +673,20 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
 
   /*[> Flatten cornerness map and prepare for sorting <]*/
   /*for (i = 1; i <= nx; ++i) {*/
-    /*for (j = 1; j <= ny; ++j) {*/
-      /*[> Preliminary thresholding to weed out outliers <]*/
-      /*if (fabs(u[i][j]) < 0.01) {*/
-        /*continue;*/
-      /*} else {*/
-        /*vals[n_vals++] = u[i][j];*/
-      /*}*/
-    /*}*/
+  /*for (j = 1; j <= ny; ++j) {*/
+  /*[> Preliminary thresholding to weed out outliers <]*/
+  /*if (fabs(u[i][j]) < 0.01) {*/
+  /*continue;*/
+  /*} else {*/
+  /*vals[n_vals++] = u[i][j];*/
+  /*}*/
+  /*}*/
   /*}*/
 
   /*qsort(vals, n_vals, sizeof(float), float_cmp);*/
 
   /*for (i = 0; i < n_vals; ++i) {*/
-    /*printf("%f ", vals[i]);*/
+  /*printf("%f ", vals[i]);*/
   /*}*/
   /*printf("\n");*/
 
@@ -713,10 +711,10 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
   long index = clamp((long)ceil(idx * perc), 0, idx);
   qsort(vals, idx, sizeof(pixel_t), pixel_cmp);
 
-  for (i = 0; i < idx; ++i) {
-    printf("%f ", vals[i].val);
-  }
-  printf("\n");
+  /*for (i = 0; i < idx; ++i) {*/
+  /*printf("%f ", vals[i].val);*/
+  /*}*/
+  /*printf("\n");*/
 
   /* Initialize */
   for (i = 1; i <= nx; i++) {
@@ -726,9 +724,10 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
   }
 
   /* Keep best corners */
-  for (i = idx - 1; i > MAX(idx - index, 0); --i) {
+  for (i = idx - 1; i >= MAX(idx - index, 0); --i) {
     long x = vals[i].i;
     long y = vals[i].j;
+    printf("(%ld, %ld), ", x, y);
     u[x][y] = 255.0f;
   }
 }
@@ -839,8 +838,8 @@ void corner_detection(float **f, float **v, long nx, long ny, float hx,
 /*--------------------------------------------------------------------------*/
 
 /**
- * \brief Highlight corner locations in the original image by drawing a white
- * circle.
+ * \brief Highlight corner locations in the original image by drawing a cross at 
+ * the corner location.
  *
  * @param u original image, highlighted corner locations afterwards
  * @param nx size of image in x direction
@@ -857,14 +856,12 @@ void draw_corners(float **u, long nx, long ny, float **v) {
     for (j = 5; j <= ny - 4; j++) {
       /* draw corner */
       if (v[i][j] == 255.0) {
-        for (k = i - 4; k <= i + 4; k++) {
-          for (l = j - 4; l <= j + 4; l++) {
-            /* black outer circle */
-            if ((k - i) * (k - i) + (l - j) * (l - j) <= 20)
-              u[k][l] = 0.0;
-            /* white interior */
-            if ((k - i) * (k - i) + (l - j) * (l - j) <= 6)
-              u[k][l] = 255.0;
+        for (k = -5; k <= 5; k++) {
+          if (k == 0) {
+            u[i][j] = 255 - u[i][j];
+          } else {
+            u[i + k][j] = 255 - u[i + k][j];
+            u[i][j + k] = 255 - u[i][j + k];
           }
         }
       }

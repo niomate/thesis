@@ -1,34 +1,35 @@
 \newcommand{\TODO}[1]{\ \\ \textbf{\textcolor{red}{!! #1 !!}}\\}
-\chapter{Theoretical background}\label{ch:Theory}
+\chapter{Prerequisites}\label{ch:Theory}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Basics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Basics}\label{sec:Basics}
 The concepts used in this thesis require some prior knowledge about basic calculus and linear
 algebra as well as some more advanced topics that will be introduced in the following sections.
 But before introducing corner detection and diffusion, we have to first define what an image is
 mathematically.\\
-A \textit{grey value image} is defined as a function $f: \Omega \rightarrow \mathbb{R}$ where
-$\Omega \subset \mathbb{R}^2$ is a rectangular subset of $\mathbb{R}^2$ of size $n_x\times n_y$,
+A \textit{grey value image} is defined as a function $f: \Omega \rightarrow \R$ where
+$\Omega \subset \R^2$ is a rectangular subset of $\R^2$ of size $n_x\times n_y$,
 wheras a
-\textit{colour image} is defined as a vector-valued function $f: \Omega \rightarrow \mathbb{R}^3$.
+\textit{colour image} is defined as a vector-valued function $f: \Omega \rightarrow \R^3$.
 For the sake of simplicity, we will focus on grey value images as most of the results can easily be
 transferred to vector-valued images.\\
 \textbf{Notation:} Instead of writing $(x, y)$, I will use $\boldsymbol x := (x, y)$ most of the
 time, as it makes most equations and definitions more readable. Furthermore, lowercase bold letters will denote vectors and uppercase bold letters will
 denote matrices.
-\subsection{Image gradient}
+\subsection{Partial derivatives}
 One of the most important operations on functions in image processing is \textit{partial
     differentiation}.
-The partial derivative of an image $f: \Omega \rightarrow [0, 255]$ in $x$-direction is herein denoted as $f_x$ or
+The partial derivative of an image $f: \Omega \rightarrow \R$ in $x$-direction is herein denoted as $f_x$ or
 synonymously as $\partial_x f$ and defined as
 \begin{equation}
     f_x(x, y) = \partial_x f (x, y) = \frac{\partial f}{\partial x} (x, y) := \lim_{h \to 0}\frac{f(x+h, y) -f(x, y)}{h} 
 \end{equation}
-The \textit{gradient} of an image $f$ is the vector containing both partial image derivatives.
+The \textit{gradient} of an image $f$ at position $(x, y)$ is the vector containing both partial
+image derivatives at this position.
 In multivariable calculus, the gradient of a function is an important tool to find the (both local
 and global) extrema of a function similar to the first derivative for a function with a single
 variable.
 \begin{equation}
-    \textbf{grad}(f) = \boldsymbol\nabla f := \left(f_x, f_y\right)^\top
+    \textbf{grad}(f) = \del f := \left(f_x, f_y\right)^\top\label{def:Grad}
 \end{equation}
 The gradient always points in the direction of the steepest ascent/descent, it is the tangent
 vector to the surface at the given location\cite{mfi3}.
@@ -37,14 +38,47 @@ Note that the gradient of a function is a vector-valued function and not a vecto
 \subsection{Convolution}
 Another operation from calculus that we will need is the \textit{convolution operator}.\\
 \begin{equation}
-    (f * g)(\boldsymbol x) := \int\limits_{\mathbb{R}^2} f(\boldsymbol x-\boldsymbol y)g(\boldsymbol y)d\boldsymbol y\label{eq:2DConv}
+    (f * g)(\boldsymbol x) := \int\limits_{\R^2} f(\boldsymbol x-\boldsymbol y)g(\boldsymbol y)d\boldsymbol y\label{eq:2DConv}
 \end{equation}
+The \textit{discrete} convolution of two vectors $(f_i)_{i\in\Z}, (g_i)_{i\in\Z}$ is usually defined as
+\begin{equation}
+    (f*g)_i := \sum_{j\in\Z} f_{i-j}g_i
+\end{equation}
+In both definitions, the function/vector $g$ is normally called the \textit{convolution kernel}.
 Convolution is especially useful in image and signal processing to design so called linear filters
-such as a moving average or smoothing operation\cite{ipcv19-02,dic18-02}. As a matter of fact, in a later
-section we will need the convolution as a tool to smooth our image to reduce noise artifacts. To
-achieve this, we will use a \textit{Gaussian convolution}, i.e.\ a convolution with a
-\textit{Gaussian kernel} which is basically just a two-dimensional Gaussian function with a certain
-standard deviation\cite{ipcv19-02}:
+such as a moving average or smoothing operation\cite{ipcv,dic}. 
+In praxis though, discrete convolution has to be used as dealing with continuous functions in a
+computational context is strictly not possible. This is why continuous convolution is only used to
+develop a theory, that is later on \textit{discretised}, that is, transformed to the digital
+domain.\\
+Discrete convolution kernels are usually described in the so called \textit{stencil notation}, for
+example, a convolution filter that computes the average of 3 pixels is defined by the stencil
+\begin{equation}
+    \frac{1}{3} \cdot \begin{array}{|c|c|c|}
+       \hline
+       1 & 1 & 1\\
+       \hline
+    \end{array}
+\end{equation}
+The cells in the stencil define the weights for the corresponding pixel relative to the center
+pixel. To visualise the correspondence, we can have a look at the following 2D stencil:
+\begin{equation}
+    \begin{array}{|c|c|c|}
+       \hline
+       (i-1,j-1) & (i-1, j) & (i-1, j+1)\\\hline
+       (i,j-1) & (i, j) & (i, j+1)\\\hline
+       (i+1,j-1) & (i+1, j) & (i+1, j+1)\\\hline
+    \end{array}
+\end{equation}
+Convolution is useful for all kinds of operations on images as almost all operations can be
+expressed in terms of a stencil.\cite{ipcv}
+One example that I want to present here, as it is important for the rest of the theory in my
+thesis, is \textit{Gaussian convolution}, i.e.\ a convolution with a
+\textit{Gaussian kernel}. It is also known as \textit{Gaussian blur} or \textit{Gaussian
+smoothing} and is widely used as a preprocessing step in the computation of image derivatives in
+order to reduce noise.
+The continuous Gaussian convolution kernel is basically just a Gaussian function, also known as
+\textit{probability density function of a normal distribution}. In the 2-dimensional case it is defined as
 \begin{equation}
     K_\sigma (\boldsymbol x) := \frac{1}{2\pi\sigma^2}\exp\left(\frac{-\lVert\boldsymbol
             x\rVert_2^2}{2\sigma^2}\right)
@@ -52,14 +86,16 @@ standard deviation\cite{ipcv19-02}:
 where $\lVert \cdot \rVert_2$ denotes the \textit{Euclidean norm}.
 For the rest of this thesis, an image $f$ convolved with a Gaussian with standard deviation $\sigma$
 will be denoted by \[f_\sigma := K_\sigma * f\]
-Note that because of the symmetry of the
-convolution, it would have been perfectly fine to write it as $f * K_\sigma$.
+
+Convolution inhibits some very important properties that I will not cover here, since they are not
+inherently necessary to understand the rest of the thesis. The interested reader can find more
+information about convolution in \cite{dspguide}\cite{ipcv}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Structure Tensor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The Structure Tensor}\label{sec:Structure}
 For some applications only the gradient of an image does not give us enough information. The
 gradient on its own is mostly just used as an edge detector, hence we need to come up with
-something else for e.g.\ corner detection\cite{ipcv19-13}. One option is the so called \textit{structure tensor}, a
+something else for e.g.\ corner detection\cite{ipcv}. One option is the so called \textit{structure tensor}, a
 matrix that contains information about the surrounding region at a specific position. With the
 structure tensor, or rather its eigenvalues (cf.~\ref{sub:Corner}), one is able to
 distinguish between flat regions, edges and corners.
@@ -70,46 +106,46 @@ The structure tensor is defined as a matrix whose eigenvectors tell us the direc
 both the largest and smallest grey value change. Mathematically, we can model this
 as an optimisation problem:\\
 Let $u$ be a grey value image.
-We want to find a unit vector $\mathbf{n} \in \mathbb{R}^2$ that is `most parallel' or `most orthogonal' to the
-gradient $\boldsymbol\nabla u$ within a circle of radius $\rho > 0$, i.e. one wants to optimise the
+We want to find a unit vector $\mathbf{n} \in \R^2$ that is `most parallel' or `most orthogonal' to the
+gradient $\del u$ within a circle of radius $\rho > 0$, i.e. one wants to optimise the
 function
 \begin{align}
-    E(\mathbf{n}) &= \int\limits_{B_\rho(\boldsymbol x)} \left(\mathbf{n}^\top\boldsymbol\nabla
+    E(\mathbf{n}) &= \int\limits_{B_\rho(\boldsymbol x)} \left(\mathbf{n}^\top\del
         u\right)^2d\boldsymbol x'\\
-    &= \mathbf{n}^\top \left(\int\limits_{B_\rho(\boldsymbol x)} \boldsymbol\nabla u \boldsymbol\nabla
+    &= \mathbf{n}^\top \left(\int\limits_{B_\rho(\boldsymbol x)} \del u \del
         u^\top d\boldsymbol x' \right) \mathbf{n}\label{eq:QuadForm}
 \end{align}
 This function is also called the \textit{local autocorrelation function/local average
-    contrast}\cite{harris88, ipcv19-13}.
+    contrast}\cite{harris88, ipcv}.
 Since~\eqref{eq:QuadForm} is a quadratic form of the matrix
-\[M_\rho(\boldsymbol\nabla u) := \int\limits_{B_\rho(\boldsymbol x)} \boldsymbol\nabla u \boldsymbol\nabla
+\[M_\rho(\del u) := \int\limits_{B_\rho(\boldsymbol x)} \del u \del
     u^\top d\boldsymbol x'\]
 such an optimal unit vector is by definition also the eigenvector to the smallest/largest
-eigenvalue of $M_\rho(\boldsymbol\nabla u)$\cite{ipcv19-13}.
-The matrix $M_\rho(\boldsymbol\nabla u)$ can also be seen as a component-wise convolution with the indicator
+eigenvalue of $M_\rho(\del u)$\cite{ipcv}.
+The matrix $M_\rho(\del u)$ can also be seen as a component-wise convolution with the indicator
 function
 \[b_\rho(\boldsymbol x) = \begin{cases} 1 & \lVert \boldsymbol x\rVert_2^2 \leq \rho^2\\ 0 & \text{else} \end{cases}\]
 However, as the author stated in \cite{harris88}, using this \textit{binary window function} leads
 to a noisy response and they therefore suggest using a \textit{Gaussian window function} with standard
 deviation $\rho$. This parameter is also
 called the \textit{integration scale} and determines how localised the structure information
-is\cite{ipcv19-13}.
+is\cite{ipcv}.
 This ultimately leads to the definition
 \begin{equation}
-    \mathbf{J}_\rho(\boldsymbol\nabla u) := K_\rho * (\boldsymbol\nabla u\boldsymbol\nabla u^\top)
+    \mathbf{J}_\rho(\del u) := K_\rho * (\del u\del u^\top)
 \end{equation}
 It is important to state that almost always, one uses a smoothed or \textit{regularised} image instead of the
 original unregularised form in order to reduce numeric instabilities caused by
-differentiation\cite{ipcv19-12}. The definition then becomes
+differentiation\cite{ipcv}. The definition then becomes
 \begin{equation}
-    \mathbf{J}_\rho(\boldsymbol\nabla u_\sigma) := K_\rho * (\boldsymbol\nabla u_\sigma\boldsymbol\nabla
+    \mathbf{J}_\rho(\del u_\sigma) := K_\rho * (\del u_\sigma\del
     u_\sigma^\top)\label{def:StructTensor}
 \end{equation}
 To keep things simpler, I will omit the brackets and just simply use $\mathbf{J}_\rho$ as the
 structure tensor.\\
 \subsection{Usage in Corner Detection}\label{sub:Corner}
 The structure tensor is a symmetric matrix and thus possesses orthonormal eigenvectors $\boldsymbol v_1,
-\boldsymbol v_2$ with real-valued eigenvalues $\lambda_1, \lambda_2 \geq 0$. \cite{ipcv19-13} As
+\boldsymbol v_2$ with real-valued eigenvalues $\lambda_1, \lambda_2 \geq 0$. \cite{ipcv} As
 mentioned in the preface to this section, we can use these eigenvalues to distinguish between
 corners, edges and flat regions as seen in figure \ref{fig:Structure}.
 In total, we have to deal with 3 different cases:
@@ -175,13 +211,13 @@ space needs to meet certain requirements like the semi-group property, maximum-m
 and others.
 A full explanation of all the scale space requirements would be beyond the scope of this thesis
 and is frankly not needed to understand the following sections.\\
-To embed an image $f:\mathbb{R}^2 \rightarrow \mathbb{R}$ in a scale space, we need a smoothing
+To embed an image $f:\R^2 \rightarrow \R$ in a scale space, we need a smoothing
 operator $T$ that is applied iteratively to the image. One such an operation is the Gaussian
 convolution: 
 \begin{equation}
     T_tf := K_{\sqrt{2t}} * f
 \end{equation}
-This operation spans the \textit{Gaussian scale space}, one of if not the the oldest and best
+This operation spans the \textit{Gaussian scale space}, one of if not the oldest and best
 understood scale space. In the western world, it was first mentioned by Witkin et
 al.\cite{witkin84} 1984, but as was later found out, researchers in Japan already proposed it in
 1963\cite{weickert-ishikawa}.\\
@@ -192,7 +228,7 @@ sections, where I will first show the basic idea behind the general diffusion eq
 subsequently introduce different types of diffusion important to image processing.
 To avoid confusion we define the gradient for scale spaces as the \textit{spatial gradient} 
 \begin{equation}
-    \boldsymbol\nabla u(x, y, t) = \begin{pmatrix}
+    \del u(x, y, t) = \begin{pmatrix}
         \partial_x u(x, y, t)\\
         \partial_y u(x, y, t)
     \end{pmatrix} 
@@ -208,7 +244,7 @@ or \textit{flux} that is aimed from high concentration areas to areas with low c
 principle is stated by \textit{Fick's law}\eqref{eq:Fick} (hence this type of diffusion is called \textit{Fickian
 diffusion}):
 \begin{equation}
-    \boldsymbol j = -\boldsymbol D\cdot\boldsymbol\nabla u\label{eq:Fick}
+    \boldsymbol j = -\boldsymbol D\cdot\del u\label{eq:Fick}
 \end{equation}
 Here, the flow from high to low concentration areas is modelled by a flow whose direction is
 proportional to the inverse direction of the largest change in concentration, i.e. the gradient.
@@ -226,7 +262,7 @@ This principle is given by the equation
 \begin{equation}
     \partial_t u = - \textnormal{div}(\boldsymbol j)\label{eq:Conservation}
 \end{equation}
-where $u: \Omega \times [0, \infty) \rightarrow \mathbb{R}$ is a function of time and space and div
+where $u: \Omega \times [0, \infty) \rightarrow \R$ is a function of time and space and div
 is the \textit{divergence operator}
 \[\textnormal{div}(\boldsymbol j) := \partial_x j_1 + \partial_y j_2\]
 \begin{figure}[h]
@@ -239,16 +275,16 @@ In simple terms, the divergence of the flux measures whether the concentration a
 location diverges, i.e. diffuses away from the current location, or converges, i.e. moves in
 towards the current location.
 Together, equations~\eqref{eq:Fick} and \eqref{eq:Conservation} then form the general \textit{diffusion
-    equation}\cite{dic18-02, weickert96}
+    equation}\cite{dic, weickert96}
 \begin{equation}
-    \partial_t u = \textnormal{div}(\boldsymbol D\cdot\boldsymbol\nabla u)\label{eq:Diffusion}
+    \partial_t u = \textnormal{div}(\boldsymbol D\cdot\del u)\label{eq:Diffusion}
 \end{equation}
 %To solve this equation, it is embedded in the initial value problem
 %\begin{align}
-    %&\partial_t u = \textnormal{div}(\boldsymbol D\boldsymbol\nabla u)&\textnormal{on}\ 
+    %&\partial_t u = \textnormal{div}(\boldsymbol D\del u)&\textnormal{on}\ 
     %\Omega\times[0, \infty)\\
     %&u(\boldsymbol x, 0) = f(\boldsymbol x)&\textnormal{on}\ \Omega\\
-    %&\boldsymbol n^\top \boldsymbol D\boldsymbol\nabla u = 0&\textnormal{on}\ 
+    %&\boldsymbol n^\top \boldsymbol D\del u = 0&\textnormal{on}\ 
     %\partial\Omega\times[0, \infty)
 %\end{align}
 The solution to this equation can be interpreted as an image embedded in a scale space with the
@@ -257,13 +293,14 @@ processes, one can alter the diffusion tensor in certain ways.
 In the following, we will see how different diffusion processes are characterized and what they are
 generally most useful for in image processing.
 
+\subsection{Isotropic diffusion}
 \subsubsection*{Linear isotropic diffusion}
 In this first and simplest case, the diffusion tensor is replaced by a constant diffusivity
 resulting in equal smoothing all across the image. The constant diffusivity can also be expressed
 as the identity matrix $\boldsymbol I$ which simplifies the diffusion equation to the 2D\textit{
 heat equation}
 \begin{equation}
-    \partial_t u = \Delta u = \textnormal{div}(\boldsymbol\nabla u)
+    \partial_t u = \Delta u = \textnormal{div}(\del u)\label{eq:IsoDiff}
 \end{equation}
 which can be solved analytically. The solution to this equation has proven to be equivalent to
 a Gaussian convolution, thus this type of diffusion also produces a Gaussian scale space.\\
@@ -272,14 +309,15 @@ enhance edges. Still, it is the best understood and oldest scale space and used 
 applications in image processing. One example is optical character recognition.
 However, to achieve edge enhancing properties, we need to look into nonlinear methods.
 
-\subsubsection*{Nonlinear isotropic diffusion}
+\subsubsection*{Nonlinear isotropic diffusion}\label{sub:NonIsoDiff}
 Previously, we replaced the diffusion tensor by the identity matrix, which resulted in the same
 amount of smoothing at every location.
 To get spatially varying smoothing, we have to introduce a \textit{diffusivity} function that
 depends continuously on the input image. 
 \begin{align}
-    \boldsymbol D &= g(\lVert\boldsymbol\nabla u\rVert_2^2)\boldsymbol I\\
-    \Rightarrow \partial_t u & = \textnormal{div}(g(\lVert\boldsymbol\nabla u\rVert_2^2)\boldsymbol\nabla u)
+    \boldsymbol D &= g(\lVert\del u\rVert_2^2)\boldsymbol I\\
+    \Rightarrow \partial_t u & = \textnormal{div}(g(\lVert\del
+    u\rVert_2^2)\del u)\label{eq:NonIsoDiff}
 \end{align}
 The diffusivity function determines how much the image should be smoothed at the current location.
 The most well known choice for a diffusivity function was proposed by Perona and Malik 
@@ -289,7 +327,7 @@ The most well known choice for a diffusivity function was proposed by Perona and
 \end{equation}
 The interesting part about this diffusivity function is that it distinguishes between edges and
 non-edges or flat areas according to the \textit{contrast parameter} $\lambda$ using the gradient
-magnitude $\lVert\boldsymbol\nabla u\rVert_2^2$ as a \textit{fuzzy edge detector}\cite{dic18-04}. An important part
+magnitude $\lVert\del u\rVert_2^2$ as a \textit{fuzzy edge detector}\cite{dic}. An important part
 to understanding why this leads to an edge enhancing effect is the flux function
 arising from this specific diffusivity. In general, the flux function is simply defined as 
 \begin{equation}
@@ -302,7 +340,7 @@ which in this particular case comes down to
 \begin{figure}
     \includegraphics[width=\linewidth]{../Images/diffflux.png}
     \caption{\textbf{Left:} Diffusivity mentioned in~\eqref{def:Diffusivity}. \textbf{Right:} Flux
-    function\eqref{def:Flux}. Source: \cite{dic18-04}}\label{fig:DiffFlux}
+    function\eqref{def:Flux}. Source: \cite{dic}}\label{fig:DiffFlux}
 \end{figure}
 As we already know, the flux describes the change in concentration at each position. The edge
 enhancing effect comes from the so called \textit{backwards diffusion} which happens when the
@@ -324,7 +362,7 @@ sensitive to high frequent noise. To solve this, it was proposed to use Gaussian
 \textit{regularisation}, i.e. to convolve the original image with a Gaussian kernel to damp the high
 frequencies that cause numerical instabilities\cite{catte-lions-morel92}.
 
-\subsubsection*{Nonlinear anisotropic diffusion}
+\subsection{Anisotropic diffusion}
 But we can still go one step further and even make the direction of the smoothing process dependent
 on the local structure. For example, one might want to prevent smoothing across edges and rather
 smooth parallel to them further embracing the edge-preserving nature of nonlinear diffusion.
@@ -332,21 +370,20 @@ smooth parallel to them further embracing the edge-preserving nature of nonlinea
 The diffusion tensor in this case is constructed from its eigenvectors $\boldsymbol v_1,
 \boldsymbol v_2$ and eigenvalues $\lambda_1, \lambda_2$ using the
 theorem of matrix diagonalisation
-\begin{equation}
+\begin{equation}\label{eq:DiffTensor}
     \boldsymbol D = \left(\boldsymbol v_1\vert \boldsymbol v_2\right) \textnormal{diag}(\lambda_1, \lambda_2)
     \begin{pmatrix}
         \boldsymbol v_1^\top\\
         \boldsymbol v_2^\top
     \end{pmatrix}
 \end{equation}
-We define the the eigenvectors to be
+We define the eigenvectors to be
 \begin{align}
-    \boldsymbol v_1 &\Vert \boldsymbol\nabla u_\sigma &\boldsymbol v_2 &\bot \boldsymbol\nabla
-    u_\sigma
+    \boldsymbol v_1 &= \del u_\sigma &\boldsymbol v_2 &= \del u_\sigma^\bot
 \intertext{As mentioned before, we want to encourage smoothing along edges and in flat regions. Thus, we
         define the eigenvalue for the eigenvector parallel to the gradient to be 1 and the eigenvalue to
         the orthogonal one to be a diffusivity function similar to the one in the nonlinear isotropic case.}
-    \lambda_1 &= g(\lVert\boldsymbol\nabla u_\sigma\rVert_2^2) &\lambda_2 &= 1
+    \lambda_1 &= g(\lVert\del u_\sigma\rVert_2^2) &\lambda_2 &= 1
 \end{align}
 There are different viable choices for a diffusivity function that supports backwards diffusion.
 First, there is the already mentioned Perona-Malik diffusivity \eqref{def:Diffusivity}. Another
@@ -357,7 +394,7 @@ option is the diffusivity function introduced by Weickert\cite{weickert96}
         1 - \textnormal{exp}\left(\frac{-3.31488}{(s/\lambda)^8}\right) & s^2 > 0
     \end{cases}\label{def:WeickertDiff}
 \end{equation}
-According to \cite{dic18-04}, diffusivities of this type, i.e. rapidly decreasing diffusivities,
+According to \cite{dic}, diffusivities of this type, i.e. rapidly decreasing diffusivities,
 lead to more segmentation-like results.
 Finally, the diffusivity that was mainly used for inpainting in this work is the
 \textit{Charbonnier diffusivity} \cite{charbonnier}
@@ -377,11 +414,159 @@ Finally, the diffusivity that was mainly used for inpainting in this work is the
 isotropic diffusion. \textbf{Bottom Right:} Edge-enhancing diffusion. Source:
 \cite{weickert96}}\label{fig:DiffExamples}
 \end{figure}
-%As we see in figure \ref{fig:DiffExamples}, EED possesses great restorative and denoising
-%capabilities. But as Galić et al. showed, EED is also an excellent choice for
-%PDE-based inpainting\cite{galic05}.
-\section{EED-based inpainting}\label{sec:Inpainting}
-Inpainting in digital image processing has first been introduced in \cite{bertalmio00}, as
-mentioned in related work. They used 
-\TODO{Shortly explain "normal" inpainting}
-\TODO{Explain basics of EED inpainting}
+As we see in figure \ref{fig:DiffExamples}, EED possesses great restorative and denoising
+capabilities. But as already mentioned in Related Work (\ref{ch:RelatedWork}), edge-ehancing is not
+only suited for image denoising\cite{galic05}\cite{weickert96}, but also one of the best methods for inpainting based on partial
+differential equations\cite{schmaltz09}\cite{galic08}\cite{schmaltz14}.
+
+\section{Inpainting}\label{sec:Inpainting}
+Inpainting itself originated as a technique used by image restorators and conservators and has
+been in use for many decades, centuries even. The main objective of inpainting is
+to restore damaged regions in an image or even filling in areas that are missing
+completely. In the analog or physical world, inpainting is often done in multiple steps as
+described in \cite{bertalmio00}:\\
+First, the lines defining the structure surrounding the blank area are continued inside the area.
+The smaller areas that result by drawing in the structure lines are then filled in with colours that
+match the colours outside the blank area.
+Lastly, texture and small details are added.\\
+
+Since this obviously cannot be applied to digital images, people had to come up with a way to
+translate this process to the digital domain.
+
+\subsection{The origin of digital inpainting}
+In 2000, a first method to digitize this technique was proposed by Bertalmio et al.
+\cite{bertalmio00}. The idea behind their algorithm was to iteratively continue so called \textit{isophote
+lines}, i.e.\ lines of equal brightness, inside the missing areas. 
+This was implemented by an image evolution described by 
+\begin{equation}
+    \partial_t u = \mathbf{\nabla_n} L(u)  
+\end{equation}
+where $L(u) = \diverg(\del  u) = u_{xx} + u_{yy}$ and $\nabla_n$ is the 
+directional derivative in the direction $n$. Note that in this particular case, the evolution is
+only performed in the inpainting regions. The regions of the image that are already known, are left
+unprocessed. \\
+The direction $n$ is given by the vector
+\begin{equation}
+    n = (\del  u)^\bot = \begin{pmatrix}
+        u_y\\-u_x
+    \end{pmatrix}
+\end{equation}
+which is orthogonal to the image gradient $\del u$ as defined in \ref{def:Grad}.
+The formula can also be written as 
+\begin{equation}
+    \partial_t u = \langle \del L(u), \del u^\bot\rangle
+\end{equation}
+where $\langle\cdot,\cdot\rangle$ is the euclidean inner product.\\
+The evolution given by this formula basically propagates information from outside of the blank
+area along the direction of isophote lines arriving at the boundary of this area, conserving the
+angle of arrival between the boundary and the isophote line.\cite{bertalmio00}
+This direction is given by a vector orthogonal to the gradient, i.e. the direction of the largest
+grey value change.
+Why this is the case becomes more obvious if we restate this to say that a vector orthogonal the gradient
+determines the direction of the \textit{smallest} grey value change, which ultimately is the
+direction of a line of equal brightness.\\
+This propagation is then complemented by a (\textit{anisotropic}) diffusion process that is performed regularly to
+\textit{periodically curve the lines to keep them from crossing each other}\cite{bertalmio00}.
+By alternatingly applying the prolongation and diffusion process, the inpainting regions are
+shrinked progressively until they vanish as can be seen in \ref{fig:InpaintingProgress}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../Images/inpainting_progress.png}
+    \caption{Results of the inpainting process at different stages showing the progressive
+    shrinking of the inpainting regions. Source: \cite{bertalmio00}}
+    \label{fig:InpaintingProgress}
+\end{figure}
+
+%\begin{figure}[h]
+    %\centering
+    %\includegraphics[width=\linewidth]{../Images/inpainting_bertalmio.png}
+    %\caption{Example for inpainting based on prolongation of isophote lines. Source: \cite{bertalmio00}}
+    %\label{fig:InpaintingExample}
+%\end{figure}
+
+\subsection{PDE-based inpainting}
+
+The general idea behind inpainting methods based on partial differential equations  is to
+retrieve an image in the form of an unknown function $v: \Omega \rightarrow \R$ as described in
+\cite{galic05}. Let
+$\Omega_1\subset\Omega$ be the subset of locations where the values of $v$ are 
+known from the original image. The
+\textit{inpainting domain}, that is, the locations where we want to reconstruct the image, is then
+given as the set $\Omega\backslash\Omega_1$. The goal is now to find a sufficiently often
+continuously differentiable function $u:\Omega\rightarrow\R$ that satisfies
+\begin{align}
+    &\; u(x) = v(x) &\forall x\in\Omega_1\\
+    &\vert u(x) - v(x) \vert < \epsilon &\forall x\in\Omega\backslash\Omega_1
+\end{align}
+for some $\epsilon>0$.\\
+The idea to find such a function is to specify an image evolution which yields the desired
+function as its \textit{steady state}, i.e. a state where $\partial_tu = 0$. More intuitively 
+steady state means that the function does not evolve any further with increasing $t$ once it has
+reached this state.\\
+Generally, the evolution for a PDE-based inpainting problem is given by
+\begin{equation}
+    \partial_t u(x,t) = (1-c(x))Lu(x,t) - c(x) (u(x, t) - f(x))\label{eq:Evolution}
+\end{equation}
+where 
+\begin{equation} 
+    c(x) := \begin{cases}
+        1&x\in\Omega_1\\
+        0&\text{elsewhere}
+    \end{cases} 
+\end{equation}
+is the characteristic function of the subset $\Omega_1$ and $f:\Omega\rightarrow\R$ is the
+initial state of the evolution given by
+\begin{equation} 
+    f(x) := \begin{cases}
+        v(x)&x\in\Omega_1\\
+        0&\text{elsewhere}
+    \end{cases} 
+\end{equation}
+On the boundary $\partial\Omega$ of the image domain, homogeneous Neumann boundary conditions are
+applied, which can be expressed mathematically as 
+\begin{equation*}
+    \partial_\mathbf{n}u = \langle \mathbf{n}, \del u \rangle = 0
+\end{equation*}
+where $ \mathbf{n}$ is the normal vector to the image boundary.
+The so called \textit{steady state equation}
+\begin{align}
+    (1 - c(x))Lu(x,t)- c(x)(u(x, t) - f(x)) = 0\label{eq:SteadyState}
+\end{align}
+determines the behaviour of the evolution as $t\to\infty$ and therefore defines the desired
+function $u$. Namely, for $x\in\Omega_1$, \eqref{eq:SteadyState} implies that 
+\[ u(x,t) = f(x) \]
+by using $c(x) = 1$ and similarly we get for $x\in\Omega\backslash\Omega_1$, that $c(x) = 0$ and
+thus
+\[ Lu(x, t) = 0 \]
+Using this, one can rewrite the original equation \eqref{eq:Evolution} in a simpler way by
+introducing \textit{Dirichlet boundary conditions} given by the subset $\Omega_1$ of known values on the 
+inpainting domain and solving the evolution equation
+\begin{equation}
+    \partial_t u(x,t) = Lu(x, t)
+\end{equation}
+The choice of the differential operator $L$ is still an active topic of
+research, but it was shown in \cite{schmaltz14}, that edge-enhancing diffusion is the best choice
+among those tested.
+The authors' explanation of the `favourable' performance of this operator in the context of
+inpainting is, that the inherent anisotropic behaviour of the operator allows it to create sharp
+edges while still being able to propagate directional information to outside of the known area.
+They explain this ability to propagate information by the Gaussian smoothing that is found in the
+definition of the diffusion tensor \eqref{eq:DiffTensor}.
+Other candidates that were being tested in \cite{schmaltz14} include the \textit{biharmonic
+and triharmonic operator} respectively defined as
+\begin{eqnarray*}
+    Lu = -\Delta^2u\\
+    Lu = \Delta^3u
+\end{eqnarray*}
+a nonlinear isotropic diffusion operator as described in \eqref{eq:NonIsoDiff} and simple
+homogeneous diffusion \eqref{eq:IsoDiff}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../Images/diffops_compare.png}
+    \caption{Comparison of different differential operators for PDE-based inpainting.
+    Source:\cite{schmaltz14}}
+    \label{fig:DiffOpsCompare}
+\end{figure}
+In figure \ref{fig:DiffOpsCompare}, (f) and (e) refer to the nonlinear isotropic diffusion defined
+in \eqref{eq:NonIsoDiff} and the regularised version also mentioned in \ref{sub:NonIsoDiff}.

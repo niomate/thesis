@@ -3,7 +3,7 @@
         "-c": {
             "label": "Corner detector",
             "style": "combobox",
-            "entries": ["Rohr", "Tomasi", "Foerstner", "Harris"],
+            "entries": ["Rohr", "Tomasi", "Foerstner"],
             "default": "Rohr"
         },
         "-q": {

@@ -24,8 +24,8 @@ That is why we rather develop a continuous theory and then discretise it later t
 implement the ideas as algorithms.
 
 \subsection{Discrete images}
-Let $f:\Omega \rightarrow \mathbb{R}$ be an image where $\Omega
-:= (0, n_x)\times(0, n_y) \subset \mathbb{R}^2$ as defined in section \ref{sec:Basics}. To
+Let $f:\Omega \rightarrow \R$ be an image where $\Omega
+:= (0, n_x)\times(0, n_y) \subset \R^2$ as defined in section \ref{sec:Basics}. To
 \textit{sample} the image, i.e. to discretise the image domain, we assume that all pixels lie on a
 rectangular equidistant grid inside $\Omega$, where each cell in the grid has a size of $h_x
 \times h_y$.
@@ -43,7 +43,7 @@ practice.
 But to keep the theory as universal as possible, we will use $h_x$ and $h_y$ instead.\\
 Sampling of the spatial domain is not the only step necessary to fully discretise an image. We also have
 to discretise the \textit{co-domain} or \textit{grey-value-domain}. In theory our grey value domain
-is just $\mathbb{R}$, but since this is rather unpractical, we limit it to $[0, 255]$. This step of
+is just $\R$, but since this is rather unpractical, we limit it to $[0, 255]$. This step of
 the discretisation process is also called \textit{quantisation}.
 
 \subsection{Numerical differentiation}
@@ -52,9 +52,9 @@ Image derivatives are essential to image processing as seen in the previous chap
 need a way to compute them even on discrete images. To compute the gradient or in the simpler case
 just the derivative of a discrete function, one generally uses so called \textit{finite difference
 schemes}. Such a scheme is normally derived from the \textit{Taylor expansion} of the continuous
-function. For example, we want to compute the first derivative of a 1D function $f:\mathbb{R}
-\rightarrow \mathbb{R}$.
-The Taylor expansion of \textit{degree $n$} of this function around the point $x_0\in\mathbb{R}$ is given by 
+function. For example, we want to compute the first derivative of a 1D function $f:\R
+\rightarrow \R$.
+The Taylor expansion of \textit{degree $n$} of this function around the point $x_0\in\R$ is given by 
 \begin{equation}
     f(x) = T_n(x, x_0) + \mathcal{O}(h^{n+1})
 \end{equation}
@@ -140,7 +140,7 @@ This means that the error of our approximation is quadratic in the grid size.
 We also say that this approximation has a \textit{consistency order} of 2. Note that for such an
 approximation to be reasonable, it has to have at least consistency order 1. Otherwise, it is
 not guaranteed that the error term diminishes if we send the grid size $h$ to 0.\\
-The scheme derived above is also called \textit{central difference scheme}. Not that there are
+The scheme derived above is also called \textit{central difference scheme}. Note that there are
 other schemes such as \textit{forward} and \textit{backward} differences, but for the most part, we
 will only use central differences since it provides us with the highest consistency
 order out of all three. 
@@ -149,44 +149,216 @@ order out of all three.
     f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
 \end{align}
 \subsection{Numerical schemes for diffusion}
-\section{Corner regions}\label{sec:Contribution}
-Our starting point for the detection of the most relevant corners was the classic Foerstner-Harris
-corner detector based on the structure tensor (cf. section \ref{sub:Corner}). 
+As discretisation for the inpainting process, the non-standard discretisation scheme that was
+derived in \cite{www13} was used. The actual derivation of the scheme is fairly complex so I will
+just explain the basics and then refer the interested reader to \cite{www13} and \cite{weickert96}
+for more information on numerical schemes for diffusion processes in general.\\
+We remember the defining equation of EED:
 \begin{equation}
-    \frac{\textnormal{det}(\boldsymbol J_\rho)}{\textnormal{tr}(\boldsymbol J_\rho)} =
-    \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2}\label{def:Harris}
+    \partial_t u = \diverg(\underbrace{g(\del u_\sigma\del u_\sigma^\top)}_{=:D}\del
+    u)\label{eq:EED}
 \end{equation}
-With that we build on the method that Zimmer \cite{zimmer07} examined in 2007. They chose the
-Foerstner-Harris detector because it is very accurate and simulatneously not as computationally
-invested as the Tomasi-Kanade detector that requires to compute both eigenvalues of the structure
-tensor using a principal axis transformation.\\
-But unlike in \cite{zimmer07}, we aim to to not just keep a small outline around the most important
-corners but increase the radius and keep a disc of pixels around each of them. 
+To discretise this equation, we first write the diffusion tensor $D$ as a symmetric matrix
 \begin{equation}
-    \texttt{corner\_region}_R(\boldsymbol x) := \lbrace \boldsymbol y \in \Omega\ : \ \lVert \boldsymbol
-    x - \boldsymbol y\rVert_2^2 \leq R^2 \rbrace
+    D = \begin{pmatrix}
+        a&b\\b&c
+    \end{pmatrix}
 \end{equation}
-One problem of this approach that was already apparent in \cite{zimmer07} is the sparsity of
-corners or similar features in images. Therefore, we had to come up with a solution to somehow
-solve this issue in order to create masks with which we can reconstruct the image reasonably 
-well.
-Another issue is that we have to limit the number of corners depending on the size of the corner
-regions since too many corners would result in a very dense mask not very suitable and/or
-useful for image compression. 
-To solve these issues reasonably well, we introduced two additional steps to the corner detection
-process.
+Resubstituting this into \eqref{eq:EED}, we get 
+\begin{equation}
+\partial_t u = \diverg \begin{pmatrix}
+    a\cdot \partial_x u+b\cdot \partial_y u\\
+    b\cdot \partial_x u+c\cdot \partial_y u
+\end{pmatrix} = a\cdot\partial_{xx} u + 2b\cdot \partial_{xy}u+ c\cdot \partial_{yy} u
+\end{equation}
+These second order derivatives can easily be discretised using central differences. This leads to a
+fairly complex stencil that the interested reader can look up in \cite{weickert96}.
+The problem with this discretisation is that it is not guaranteed to satisfy the
+\textit{nonnegativity requirement} or \textit{stability in the maximum norm}\cite{weickert96}. This requirement is
+an important theoretical requirement as it is needed to guarantee the well-posedness of the
+diffusion process, which in turn guarantees the numerical stability of the algorithm. \cite{weickert96}
+To enable this discretisation to fulfill this requirement, one has to impose the restriction that
+the \textit{spectral condition number $\kappa$}, which is the ratio between the smallest and
+largest eigenvalue of the matrix $D$, is bounded by 
+\begin{equation}
+    \kappa \leq 3 + 2\sqrt{2}
+\end{equation}
+This restriction might seem arbitrary, but the proof of this upper bound can be found in
+Weickert's book about anisotropic diffusion\cite{weickert96}.
+However, this requirement also puts a restriction on the anisotropy of the diffusion process as the
+ratio between the largest and smallest eigenvalue of the diffusion tensor is now bounded from
+above, which is why one might consider another discretisation, that is not necessarily stable in
+the maximum norm.
+In \cite{www13}, a whole framework for discretisations stable in the
+\textit{euclidean or 2-norm} was derived. This framework embeds a series of 8 different
+stencils that are dependent on 2 parameters $\alpha, \beta$. Let us now denote such a spatial
+discretisation of \eqref{eq:EED} by 
+\begin{equation}
+    \frac{d\mathbf{u}}{dt} = \mathbf{A}(\mathbf{u})\mathbf{u}
+\end{equation}
+It can be shown that the matrix $\mathbf{A}$ is negative semidefinite, i.e. 
+\begin{equation*}
+    x^\top \mathbf{A}x \leq 0
+\end{equation*}
+for all vectors $x$, if the parameters $\alpha,\beta$ satisfy
+\begin{eqnarray}
+    0 \leq \alpha \leq \frac{1}{2}\\
+    \vert\beta\vert \leq 1-2\alpha
+\end{eqnarray}
+The negative semidefiniteness of $\mathbf{A}$ is useful to show that the semi-implicit and
+explicit time discretisations both are stable in the 2-norm.
+The difference between the explicit and the implicit time discretisation is fairly small, but makes
+a huge difference in efficiency \textbf{!!!!sources!!!!}. Both time discretisations work by applying a forward difference on
+the temporal derivative on the left side with a time step size $\tau$ (this corresponds to the grid
+size in the spatial derivative). 
+The difference is now, that in the explicit scheme, the right hand side does not involve any terms
+`from the future', while in the semi-implicit scheme it does.
+We can now write the explicit scheme given by
+\begin{equation}
+    \frac{u^{k+1} - u^{k}}{\tau} = \mathbf{A}(u^k)u^k
+\end{equation}
+as
+\begin{equation}
+    u^{k+1} = (I + \tau\mathbf{A}(u^k))u^k
+\end{equation}
+The upper index $k$ denotes the `time level' of $u$.
+Stability for this scheme can be guaranteed, if 
+\begin{equation}
+    \rho(I + \tau\mathbf{A}(u^k)) \leq 1\ \Leftrightarrow\ \tau \leq \frac{2}{\rho(\mathbf{A}(u^k)))}
+\end{equation}
+where $\rho$ denotes the \textit{spectral norm} or \textit{modulus of the largest
+eigenvalue}.\cite{www13}
+The semi-implicit scheme however is given by
+\begin{equation}
+    \frac{u^{k+1} - u^{k}}{\tau} = \mathbf{A}(u^k)u^{k+1}
+\end{equation}
+which boils down to solving the linear system of equations
+\begin{equation}
+    (I-\mathbf{A}(u^k))u^{k+1} = u^k\label{eq:SemiImpl}
+\end{equation}
+Note that the matrix on the left hand side is invertible thanks to the negative semidefiniteness of
+$\mathbf{A}(u^k)$ since one can show, that because of the negative semidefiniteness, $(I-\mathbf{A}(u^k))$ only has eigenvalues
+larger than 1.
+This all shows that the semi-implicit scheme given by 
+\begin{equation}
+    u^{k+1} = (I- \mathbf{A}(u^k))^{-1}u^k
+\end{equation}
+is stable in the 2-norm for every time step size $\tau$.
+
+Furthemore, the semi-implicit scheme the next iteration can not be computed explicitly (as the name
+suggests) as is the case with the explicit scheme. Instead one has to solve
+the linear system of equations given by \eqref{eq:SemiImpl}. This is usually done with an iterative
+solver like Gauss-Seidel or conjugate gradients(CG) \cite{conjugateGradients}. I will not explain these solvers as this is way
+beyond the scope of this thesis.
+The only thing important to know, is that for the evaluation of the inpainting masks in my thesis,
+I used a semi-implicit scheme with a conjugate gradients solver and a timestep size of 1000.
+
+\section{Circular corner regions}\label{sec:Contribution}
+As mentioned in the beginning, the main concern for the approach of Zimmer\cite{zimmer07} was that the 
+corner localisation is not accurate enough that we can just keep a 4 or 8-neighbourhood 
+of pixels. The implication is that the regions they inserted into the mask were were too small to
+cover the potential uncertainty in the corner localisation process stemming from the Gaussian
+smoothing in the computation of the structure tensor (see \ref{sec:Structure}). Specifically
+because in order to limit the amount of corners detected, they chose to vary the integration scale
+parameter increasing the uncertainty in the localisation, this poses a problem.
+That is why I want to explore increasing the neighbourhood of pixels that is kept around each
+corner. A disk-shaped neighbourhood with radius $r$ and origin point $(x, y)$ (also called a
+\textit{(circular) corner region} in the following) is defined as 
+\begin{equation}
+    B_r(x, y) = \lbrace (x',y') \in \Omega\ \vert\ (x'-x)^2 + (y'-y)^2 \leq r^2\rbrace
+\end{equation}
+The optimal choice for the radius of the corner disks is discussed in section \ref{sec:Parameters}.
+Increasing the radius of the corner regions obviously leads to denser masks if one does not adjust
+the limit of corner regions that are put in the mask. Since doing this manually for every picture
+would not be practical at all in the context of a codec, we have to come up with a way to make sure
+the masks that are produced are always similar in pixel density.\\
+One way to achieve this would be to introduce a percentile parameter instead of using the constant
+threshold introduced in the corner detection method described in \ref{sub:Corner}.
+
+\subsection{Percentile thresholding}\label{sub:Percentile}
+In the classic version of Harris corner detection, an artificial threshold parameter $T$ is
+introduced to weed out `bad' corners. This parameter however is fairly sensible to the input image.
+
+% Images for corner detection with different images and same threshold to prove the point
+ As a workaround to make this parameter a bit more robust, a percentile
+parameter is introduced that is in turn used to compute a more robust threshold.\\
+In statistics, the \textit{n-th percentile} of a set is the value that is larger than $n$ percent
+of all values in this set.
+I computed the percentile using the \textit{nearest-rank method} since this was the easiest
+approach and worked good enough already. In this method, the n-th percentile is just simply
+computed as the value at position 
+\[
+\lceil \frac{n}{100}\cdot N_xN_y\rceil
+\] 
+of the ordered set of values\cite{percentile}.\\
+Since in an image, there are more non-corners than actual corners, we have to deal with many zero
+or close-to-zero cornerness values. This is a problem because the percentile computation would be skewed
+heavily if e.g. more than 80 percent of all values are zero already. To solve this, I first filtered
+out all values below a threshold close to zero and then accumulated the remaining values into an
+array of appropriate size. This array is then sorted using an already implemented Quicksort
+algorithm from the C standard library. Subsequently, the new threshold is given as the value at
+the index calculated above.
+\begin{figure}[ht]
+    \lstinputlisting[language=C, linerange={617-651}]{/home/daniel/Uni/Thesis/src/corner_detection.c}
+    \caption{Total pixel percentage thresholding}
+\end{figure}\\
+While this approach works a bit better than the original version using the fixed threshold, it is
+still not perfect. For example, if one uses a percentile of $0.5$, meaning that we want to throw
+out $50\%$ of all corners, we could still get wildly different results for two different input
+images as we can see in \ref{fig:PercExample}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\linewidth]{../Images/example_rect_50.png}
+    \includegraphics[width=0.4\linewidth]{../Images/example_cat_50.png}
+    \caption{Corner detection with the same parameters}%
+    \label{fig:PercExample}
+\end{figure}\\
+To tackle this issue, I propose a new method I call \textit{Total Pixel Percentage
+Thresholding}. The idea behind this method is, that one makes the amount of corners that are kept
+in the masks dependent on the mask radius, i.e. the radius of a corner region in the inpainting
+mask. In other words, one specifies the desired mask pixel density and depending on the mask
+radius, the maximum number of corners that can be inserted into the mask is calculated.
+The problem of calculating the number of pixels inside a disc of radius $r$ is also known as
+\textit{Gauss' circle problem}\cite{gaussCircle}. The exact solution to this problem is given
+by\cite{hilbert96}
+\begin{equation}
+    N(r) = 1 + 4\sum_{i=0}^{\infty}\left(\left\lfloor\frac{r^2}{4i+1}\right\rfloor - \left\lfloor
+    \frac{r^2}{4i+3}\right\rfloor\right)
+\end{equation}
+but since this is an infinite sum, the exact solution can not be computed this way. This is why I
+chose the naive way by just iterating through a loop and count the numbers inside the disk as seen
+in \ref{fig:PixelRegion}. 
+I could have also chosen to use an upper bound and estimate the number of pixels this way, but this
+would not have been as accurate.
+\begin{figure}[h]
+    \centering
+    \lstinputlisting[language=C, linerange={424-435}]{/home/daniel/Uni/Thesis/src/utils.c}
+    \caption{Computation of number of pixels in disk}
+    \label{fig:PixelRegion}
+\end{figure}
+
+After computing the area per corner region we can simple calculate how many regions can be inserted
+into the mask without exceeding the pixel density threshold.
+\begin{equation}
+    N_{corners} = \left\lceil \frac{q \cdot N_xN_y}{N_{disc}} \right\rceil,\qquad0\leq q\leq 1 
+\end{equation}
+where $q$ is the percentile parameter, $N_x, N_y$ the number of pixels in the respective direction
+and $N_{disc}$ the amount of pixels per corner region. $N_{corners}$ is then an upper bound on the
+amount of corners.
+Using this method, the pixel density of inpainting masks can be consistently recreated, as we will
+see in the next chapter where I will present some examples of this method in action.\\
+Note that I did not consider the potential overlap of corner regions inside the
+computation of this upper bound, since there would have been no easy way to determine the amount of
+overlapping pixels a priori.
+Instead, I introduced another method tackling the issue of potentially overlapping corner regions
+called \textit{Circular non-maximum suppression}. We will see how this method
+works in the next section \ref{sub:Suppression}.
+Another thing to mention is that the amount of pixels in the mask using this approach is limited by
+the number of corners detected since I do not even consider pixels that have a sufficiently small
+cornerness value as mask candidates.
+
 \subsection{Circular non-maximum suppression}\label{sub:Suppression}
-In the original version of the Foerstner-Harris corner detector, corners are detected as the local
-maxima of the cornerness measure \eqref{def:Harris}. However, in this method, the local maxima were
-only determined in a 4- or 8-neigbourhood. This works fine in a setting where corner regions are
-very small as they were in \cite{zimmer07}. When using larger regions however, this might create a
-very unique problem.\\
-What we noticed when using the usual 8-neighbourhood non-maximum suppression together with larger
-circular corner regions is that in some
-images where multiple corners were located right next to each other this approach would create
-masks with many overlapping corner regions in a single spot and no regions in other places. To
-counteract this, we introduced \textit{circular non-maximum suppression} (\textbf{CNMS}).\\
-\begin{figure}
+\begin{figure}[t]
     \begin{lstlisting}[language=Python]
 def circular_suppression(harris, (x, y), r, out):
     ''' Circular non-maximum suppression at location (x,y) with radius r.
@@ -207,79 +379,30 @@ def circular_suppression(harris, (x, y), r, out):
     \end{lstlisting}
     \caption{Pseudo-Code for circular non-maximum suppression}
 \end{figure}
-The idea behind this addition is that in larger corner regions, one might have multiple 
-important corners in a single corner region.
-Now, instead of creating a disc around every single one of these corners, we checked if there 
-would be another maximum in an imaginative circle around this corner. 
-If this is the case, we disregard this corner region since the current corner is already 
-contained in another region.
-Using this approach, we were able to create masks with little to no overlap between the
-corner regions. However, this introduced one problem that we were not able to fix properly as
-discussed in section \ref{sec:Discussion}.
-% Examples for circular non-maximum suppression (CNMS) against normal non-maximum suppression
-After circular non-maximum suppression, we applied \textit{percentile thresholding} to make sure,
-that, out of the set of corners we just detected, we only keep the most important corner regions. 
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.31\linewidth]{../Images/trui_corners_cnms.png}
-    \includegraphics[width=0.31\linewidth]{../Images/trui-mask_cnms.png}
-    \includegraphics[width=0.31\linewidth]{../Images/trui-inpaint_cnms.png}\\
-    \vspace{0.2cm}
-    \includegraphics[width=0.31\linewidth]{../Images/trui_corners_non_cnms.png}
-    \includegraphics[width=0.31\linewidth]{../Images/trui-mask_non_cnms.png}
-    \includegraphics[width=0.31\linewidth]{../Images/trui-inpaint_non_cnms.png}
-    \caption{Effect of circular non maximum suppression on spread of corners across the image.
-        \textbf{Top row:} Position of corners, inpainting mask and inpainting results
-        \textbf{with} CNMS.
-\textbf{Bottom row:} Position of corners, inpainting mask and inpainting results \textbf{without} CNMS.
-    Corner detection with Foerstner-Harris corner detector, $\sigma=1,\rho=2.5,R=15$ and a
-percentile of 0.5}
-\end{figure}
+As mentioned previously, overlapping corner regions tend to worsen the estimation of the mask pixel
+density. 
+Furthermore, as Zimmer already stated in \cite{zimmer07} the sparsity of corners in images poses a
+problem for the reconstruction quality. This method is supposed to tackle both of these issues by
+increasing the radius of the local maximum search during the corner detection. In the original
+corner detection method, corners are determined by the local maxima inside an 
+8-neighbourhood of the cornerness measure. The idea is to adapt the radius of the neighbourhood for the
+local maximum search to the mask radius. As experiments showed (see section \ref{sec:Results}), this minimises the overlap in
+corner regions in the final mask and enables a fairly accurate estimation of the mask pixel
+density allowing us to consistently produce masks with similar density. \\
+The other issue that this method tries to solve is the uneven distribution of corners across
+the whole image. \\
+When limiting the amount of corners that are selected into the mask, one should not only care about
+the `cornerness' of a corner, but also about its position. In other words, if a lot of good corners
+are in close proximity to each other, it would be better to choose the ones that encase the most
+good corners around them. That way, we get multiple corners `for the price of one' and can still
+introduce some of the `worse' corners to the mask.
+By minimising the overlap between corner regions through this circular non-maximum suppression, we
+can actually eliminate corners that are already covered by another disk from `a better' corner and
+thus free up some slots for corners that may otherwise not have been selected for being sub-par.\\
+One should note that this is not a perfect solution as certain constellations of corners create
+a corner case in which a corner that is assumed to cover another corner is removed for being in the
+disk of a better corner. This leads to the case where the corner that was formerly assumed to be
+covered is suddenly not covered anymore and disappears from the mask without replacement, so future
+work might be invested into finding a better solution/implementation for this approach.
 
-\TODO{Redo this section for the new thresholding}
-\subsection{Percentile thresholding}\label{sub:Percentile}
-In the classic version of Harris corner detection, an artificial threshold parameter $T$ is
-introduced to weed out `bad' corners. This parameter however is fairly sensible to the input image.
-% Images for corner detection with different images and same threshold to prove the point
- As a workaround to make this parameter a bit more robust, we introduced a percentile
-parameter that is in turn used to compute a more robust threshold.\\
-In statistics, the \textit{n-th percentile} of a set is the value that is larger than $n$ percent
-of all values in this set.
-We computed the percentile using the \textit{nearest-rank method} since this was the easiest
-approach and worked good enough already. In this method, the n-th percentile is just simply
-computed as the value at position $\lceil \frac{n}{100}\cdot N_xN_y\rceil$ of the ordered set of values.\\
-Since in an image, there are more non-corners than actual corners, we have to deal with many zero
-or close-to-zero cornerness values. This is a problem because the percentile computation would be skewed
-heavily if e.g. more than 80 percent of all values are zero already. To solve this, we first filtered
-out all values below a threshold close to zero and then accumulated the remaining values into an
-array of appropriate size. This array is then sorted using an already implemented Quicksort
-algorithm from the C standard library. Subsequently, the new threshold is given as the value at
-the index calculated above.\\
-\begin{figure}[ht]
-    \lstinputlisting[language=C, linerange={537-564,566-576}]{/home/vicky/Uni/Thesis/src/corner_detection.c}
-    \caption{Percentile thresholding}
-\end{figure}
-
-With these two additions we were able to make sure that the resulting masks are not too dense and
-the data is reasonably distributed across the image as seen in the examples in \ref{sec:Results}.
-Another interesting part is that thanks to CNMS, the number of corners detected is now somewhat
-dependent on the size of the corner regions which is a very useful result as it takes care of the
-second problem mentioned in the preface to this chapter on the size of the corner regions which is
-a very useful result as it takes care of the second problem mentioned in the preface to this
-chapter (cf. section \ref{sec:Results}).
-% Before/After images
-\section{Graphical User Interface (GUI)}
-To make experimenting with different parameters and images much simpler, we implemented a Graphical
-User Interface using Python's \texttt{Tkinter} module.
-We wrote wrapper functions that call the compiled C programme from the command line with the given
-parameters.
-\begin{figure}
-    \includegraphics[width=\linewidth]{../Images/gui.png}
-    \caption{GUI for easier testing}
-\end{figure}
-\begin{figure}
-    \includegraphics[width=0.5\linewidth]{../Images/parameters1.png}
-    \includegraphics[width=0.5\linewidth]{../Images/parameters2.png}
-    \caption{Panels to control parameters}
-\end{figure}

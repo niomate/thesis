@@ -9,8 +9,13 @@ def log_thread(*args):
     print(f'[{current_process().name}]', *args)
 
 
+def str_list(l):
+    return list(map(str, l))
+
+
 def inpaint(inim, mask, *args, outim=None):
     log_thread(f'Inpainting {inim}')
+    args = str_list(args)
     if outim is None:
         outim = inpaint_name(inim)
     cmd = ['build/inpainting', inim, mask, *args, '-o', outim]
@@ -21,6 +26,7 @@ def inpaint(inim, mask, *args, outim=None):
 def mask(inim, *args, outim=None):
     ''' Pass all arguments that build/corners accepts '''
     log_thread(f'Mask computation {inim}')
+    args = str_list(args)
     if outim is None:
         outim = mask_name(inim)
     cmd = ['build/corners', inim, '-M', '-o', outim, *args]
@@ -32,6 +38,7 @@ def mask(inim, *args, outim=None):
 def corners(inim, *args, outim=None):
     ''' Pass all arguments that build/corners accepts '''
     log_thread(f'Corner detection {inim}')
+    args = str_list(args)
     if outim is None:
         outim = mask_name(inim)
     cmd = ['build/corners', inim, '-o', outim, *args]

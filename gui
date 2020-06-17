@@ -168,7 +168,11 @@ def inpaint_action():
 def get_params_corner():
     params = []
     for k, v in variables['corner'].items():
-        if isinstance(v.get(), bool):
+        if k == '-c':
+            name = v.get()
+            ind = fields['corner'][k]['entries'].index(name)
+            params.extend([k, str(ind)])
+        elif isinstance(v.get(), bool):
             if v.get():
                 params.append(k)
         else:

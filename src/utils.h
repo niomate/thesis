@@ -33,5 +33,6 @@ long clamp (long, long, long);
 int in_circle(long, long, long, long, float);
 int out_of_bounds(long, long);
 int in_image(long, long, long, long);
+int gauss_circle(float);
 
 #endif // utils_h__

@@ -33,13 +33,13 @@ of the corner detection or inpainting method as seen in section \ref{sec:Results
     \includegraphics[width=0.32\linewidth]{../../images/binary/ellipse.png}
     \includegraphics[width=0.32\linewidth]{../../images/binary/abstract1.png}
     \includegraphics[width=0.32\linewidth]{../../images/binary/checkerboard32.png}
-    \includegraphics[width=0.32\linewidth]{../../images/binary/testlength.png}
     \caption{Binary images used for testing. From left to right and from top to bottom:
         \texttt{cat}, \texttt{rect},
     \texttt{semicircle}, \texttt{ellipse}, \texttt{abstract1}, \texttt{checkerboard32},
 \texttt{testlength}}\label{fig:BinaryImg}
 \end{figure}
-\section{Parameter Selection}
+
+\section{Parameter Selection}\label{sec:Parameters}
 As mentioned earlier, the optimal set of parameters is difficult to choose, that is why we have to
 experiment a lot to find a decent approximation to this optimal set. In the following we will
 therefore explain what the different parameters do, how that influences the image or mask quality
@@ -79,6 +79,10 @@ usually yielded the best results.\\
 The newly introduced percentile parameter regulates the amount of corners that are ultimately being
 detected since the percentile thresholding is applied \textit{after} the CNMS. 
 
+\subsection{Mask radius}
+
+
+
 \subsection{Inpainting}
 The main parameters required by the inpainting process are 
 \begin{itemize}
@@ -101,9 +105,8 @@ integration scale only influences the radius of the structure tensor which is ac
 for this method of inpainting. Thus, this parameter will be fixed to 0.\\
 The parameters $\alpha$ and $\gamma$ are purely numerical parameters that are used to 
 stabilise the algorithm or rather help to ensure that the stencil weights of the discretisation of
-the diffusion process meet certain requirements. A fairly optimal choice for these parameters has
-been proposed in \cite{www13}, namely $\alpha=0.44, \gamma=0.98$.
-In general, one could image the parameter $\alpha$ as a sharpness parameter: the larger the
+the diffusion process meet certain requirements.
+The choice of these parameters was set to $\alpha=0.49,\, \gamma=1.0$. In general, one could image the parameter $\alpha$ as a sharpness parameter: the larger the
 $\alpha$ (but not larger than 0.5), the sharper the image. More on the nature of these two parameters can be read about in
 \cite{www13, weickert96}.\\
 Next up is the contrast parameter $\gamma$ that is required in the diffusivity function
@@ -117,3 +120,20 @@ Last but not least, the noise scale $\sigma$ determines how much the initial ima
 before the computation of the image derivatives. In general, this parameter is always fixed at 1.0
 as it only serves to regularise the differentiation process.
 \section{Results}\label{sec:Results}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.31\linewidth]{../Images/trui_corners_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-mask_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-inpaint_cnms.png}\\
+    \vspace{0.2cm}
+    \includegraphics[width=0.31\linewidth]{../Images/trui_corners_non_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-mask_non_cnms.png}
+    \includegraphics[width=0.31\linewidth]{../Images/trui-inpaint_non_cnms.png}
+    \caption{Effect of circular non maximum suppression on spread of corners across the image.
+        \textbf{Top row:} Position of corners, inpainting mask and inpainting results
+        \textbf{with} CNMS.
+\textbf{Bottom row:} Position of corners, inpainting mask and inpainting results \textbf{without} CNMS.
+    Corner detection with Foerstner-Harris corner detector, $\sigma=1,\rho=2.5,R=15$ and a
+percentile of 0.5}
+\end{figure}

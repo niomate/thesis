@@ -415,10 +415,21 @@ int in_circle(long x, long y, long cx, long cy, float radius) {
   return powf(x - cx, 2.0f) + powf(y - cy, 2.0f) <= radius * radius;
 }
 
-int out_of_bounds(long i, long nx) {
-  return i < 1 || i > nx;
-}
+int out_of_bounds(long i, long nx) { return i < 1 || i > nx; }
 
 int in_image(long i, long j, long nx, long ny) {
   return !out_of_bounds(i, nx) && !out_of_bounds(j, ny);
+}
+
+int gauss_circle(float radius) {
+  long l_max = ceil(radius) + 1;
+  long n = 0;
+  for (long i = -l_max; i <= l_max; ++i) {
+    for (long j = -l_max; j <= l_max; ++j) {
+      if (i * i + j * j <= radius * radius) {
+        ++n;
+      }
+    }
+  }
+  return n;
 }
