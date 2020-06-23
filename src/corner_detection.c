@@ -20,7 +20,7 @@
 /*                  Modified by Daniel Gusenburger for                      */
 /*                use in their bachelor's thesis titled                     */
 /*      "Exploring circular corner regions in PDE-based inpainting"         */
-/*                       (October '19 - May '20)                            */
+/*                       (October '19 - June '20)                           */
 /*--------------------------------------------------------------------------*/
 /*                                                                          */
 /* Modifications include:                                                   */
@@ -95,8 +95,6 @@ int float_cmp(const void *a, const void *b) {
 
 /**
  * \brief Pixel compare function.
- *
- * Compares the values of to pixels
  */
 int pixel_cmp(const void *a, const void *b) {
   const pixel_t v1 = *((const pixel_t *)a);
@@ -122,7 +120,7 @@ int pixel_cmp(const void *a, const void *b) {
  */
 void pillbox_conv(float radius, long nx, long ny, float hx, float hy,
                   float **f) {
-  long i, j, k, l; /* loop variables */
+  long i, j, k, l; /* Loop variables */
   float **help;    /* Copy of the image */
   alloc_matrix(&help, nx + 2, ny + 2);
 
@@ -149,7 +147,7 @@ void pillbox_conv(float radius, long nx, long ny, float hx, float hy,
     }
   }
 
-  float norm = 1 / (float)n;
+  float norm = 1.0 / (float)n;
 
   /* Normalise kernel */
   for (i = 0; i < lmax; ++i) {
@@ -339,8 +337,6 @@ void gauss_conv
 
 } /* gauss_conv */
 
-/* ------------------------------------------------------------------------ */
-
 void struct_tensor
 
     (float **v,   /* image !! gets smoothed on exit !! */
@@ -422,8 +418,6 @@ void struct_tensor
   return;
 
 } /* struct_tensor */
-
-/* ------------------------------------------------------------------------ */
 
 void PA_trans
 
@@ -598,7 +592,6 @@ void non_maximum_suppression(float **w, long nx, long ny, float **v) {
  * @param v: corner map, afterwards contains the values of corners that are
  * being kept, 0 elsewhere
  */
-
 void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
                                     float **v) {
   long i, j, k, l; /* Loop variables */
@@ -919,9 +912,8 @@ void draw_corners_o(float **u, long nx, long ny, float **v) {
     }
   }
 } /* draw_corners */
-int main(int argc, char **argv)
 
-{
+int main(int argc, char **argv) {
   char *in;    /* Filename input image */
   float **u;   /* Input image */
   float **v;   /* Image with corner location */
