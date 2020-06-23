@@ -5,7 +5,7 @@ this increase in disk space usage, people have tried to reduce the sizes of digi
 last decades.\\
 One of the most successful and probably most well known \textit{codecs}
 is \textbf{JPEG}\cite{wallace91} and its lesser known but more advanced successor \textbf{JPEG 2000}\cite{jpeg2000}. Both are lossy image compression methods
-known for fairly high compression rates while still providing a reasonably image quality.\\
+known for fairly high compression rates while still providing a reasonable image quality.\\
 For
 higher compression rates however, the quality deteriorates pretty quickly and the infamous ``block
 artifacts'' are being introduced. As a remedy, a new class of image compression methods based on
@@ -20,8 +20,8 @@ As one can imagine, selecting the right data is a fairly minute process and one 
 select the pixels to keep. Even though there has been a lot of work done in this
 area\cite{belhachmi09, schmaltz14, hoeltgen12}, the
 selection can still be improved.\\
-In the past, almost no method explored how well corners/corner-like features do as candidates for
-the inpainting process. In \cite{zimmer07}, a method for image compression using corners was
+In the past, few methods explored how well corners/corner-like features do as candidates for
+the inpainting process. In~\cite{zimmer07}, a method for image compression using corners was
 proposed, but was not able to come close to the performance of JPEG. However, this method did not
 explore its full potential. One of the main points of criticism is, that the corner localisation
 was not accurate enough, or rather the inaccuracies were not accounted for in the mask
@@ -42,4 +42,4 @@ One of the biggest factors that I had to consider was, that corners and similar 
 rare in images, severely limiting the amount of candidates one can choose from, especially compared to
 approaches like \cite{schmaltz09, hoeltgen12}. 
 I will cover these procedures in \ref{sec:Contribution} while the first goal will be covered in
-\ref{sec:Parameters}.
+\ref{sec:ParameterSelection}.

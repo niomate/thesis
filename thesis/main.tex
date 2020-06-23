@@ -42,15 +42,20 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage[utf8]{inputenc} % Required for inputting international characters
 \usepackage[T1]{fontenc} % Output font encoding for international characters
 \usepackage{amsmath, amssymb}
-%\usepackage{mathpazo} % Use the Palatino font by default
+\usepackage{mathpazo} % Use the Palatino font by default
 
 \usepackage[backend=biber, citestyle=ieee]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
 \addbibresource{references.bib}
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
 \usepackage{listings}
+\usepackage{subcaption} 
 \usepackage{xcolor}
+\usepackage{colortbl} 
+\usepackage{diagbox}
 \usepackage{makeidx}
+\usepackage{array} 
+\usepackage{float} 
 \makeindex
 
 %----------------------------------------------------------------------------------------
@@ -100,6 +105,8 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \newcommand{\del}{\ensuremath{\mathbf{\nabla}}}
 \DeclareMathOperator{\tr}{tr}
 \DeclareMathOperator{\diverg}{div} 
+\DeclareMathOperator{\MSE}{MSE} 
+\DeclareMathOperator{\PSNR}{PSNR} 
 
 
 %----------------------------------------------------------------------------------------

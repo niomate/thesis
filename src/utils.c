@@ -426,7 +426,7 @@ int gauss_circle(float radius) {
   long n = 0;
   for (long i = -l_max; i <= l_max; ++i) {
     for (long j = -l_max; j <= l_max; ++j) {
-      if (i * i + j * j <= radius * radius) {
+      if (in_circle(i, j, 0, 0, radius)) {
         ++n;
       }
     }

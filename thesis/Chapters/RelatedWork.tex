@@ -4,7 +4,7 @@ In this chapter I will discuss some publications that are closely related to my 
 In the first part I will give a short recap of the evolution of PDE-based image compression from
 the first mention to today to
 give more context about the overall field of research this thesis resides in.
-Afterwards I am going to adress two publications in the more narrow field of image compression
+Afterwards I am going to adress some publications in the more narrow field of image compression
 using semantic features like edges and corners, one of which is subject to improvement in
 that is discussed in this thesis.
 
@@ -23,13 +23,14 @@ diffusion (or short EED), which has since then established itself as the prime c
 compression. The approach they presented relies on efficiently storing a pixel mask that is later
 on used to reconstruct the image by filling in the missing regions using the aforementioned process
 of edge-enhancing diffusion and lays the groundwork for later publications building on the codec
-defined herein. \\
+defined therein. \\
 As already mentioned, the codec relies on computing a pixel mask from the original image. However,
 this process is a balancing act. On one hand, one wants to get a mask that yields a perfect
-reconstruction of the original image but on the other hand, one also wants to create a mask that
+or at least close to perfect reconstruction of the original image but on the other hand, one 
+also wants to create a mask that
 can be encoded and stored efficiently, i.e. using the smallest amount of \textit{bits-per-pixel
-(bpp)} possible. This step of mask computation is still topic of ongoing research which proves the
-difficulty of this problem.\\
+(bpp)} possible. This step of mask computation is still topic of ongoing research which gives a
+good idea of the difficulty of this problem.\\
 In the initial codec, also called the \textbf{BTTC-EED} codec, the mask was
 computed by means of an adaptive sparsification scheme relying on B-tree triangular coding (BTTC)
 that was already introduced by Distasi et al\cite{distasi97} back in 1997. This fairly simple
@@ -40,7 +41,7 @@ of constructing a mask using BTTC lies in the binary tree structure of the subdi
 efficiently by a simple binary string. Furthermore, grey values are encoded using a straight
 forward entropy
 coding method like Huffman coding\cite{huffman}.
-With this fairly simple approach they were already able to outperform JPEG visually for high
+With this approach they were already able to outperform JPEG visually for high
 compression rates and comic-style images~\cite{galic05}.\\
 
 In \cite{schmaltz09}, this approach was further improved by the addition of several optimisation
@@ -48,7 +49,7 @@ steps. They found that by replacing the triangular subdivision by an adaptive re
 subdivision procedure, the quality of the reconstructed images could be improved. Furthermore
 instead of the simple Huffman encoding, they switched to a more advanced entropy coding standard
 called \textit{PAQ}\cite{paq}. \\
-Additional optimisation that they introduced include a brightness rescaling
+Additional optimisations they introduced include a brightness rescaling
 step, a reconstruction parameter optimisation step and finally a step they called `interpolation
 swapping'.
 In the brightness rescaling step, the grey value range of mask pixels was adjusted to use up the 
@@ -62,7 +63,12 @@ pixels and inpainted pixels are reversed for a final diffusion step to smooth ou
 that may occur on the boundary between known and unknown pixels during the decompression phase.\\
 With all these additions, this new codec called \textbf{R-EED} can outperform the
 successor to the JPEG codec, namely JPEG2000 even for high compression rates.
-
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../Images/tree_trui.png}
+    \caption{Examples for rectangular subdivision in the \textbf{R-EED} codec.
+    Source:\cite{schmaltz09}}
+\end{figure}
 In \cite{hoeltgen12}, an alternative approach to the rectangular subdivision used in
 \cite{schmaltz09} was proposed. They considered two different methods. First, they used the results
 from \cite{belhachmi09} to derive an \textit{analytical approach} by calculating the \textit{Laplacian of a
@@ -71,14 +77,14 @@ halftoning\cite{electrostatic} in order to get a binary point mask.\\
 The second method they proposed is called \textit{probabilistic sparsification}. It works by
 iteratively selecting a set percentage of pixels from the original image into the mask,
 reconstructing the image using the same inpainting operator as in the decompression step, then
-calculating the reconstruction error for each pixel in the inpainting mask and then throwing out a
+calculating the reconstruction error for each pixel in the inpainting mask and then throwing out
 the pixels with the largest reconstruction error. This is repeated until a predefined pixel
 density in the mask is reached. However, the authors stated that this method is not guaranteed to
 give an optimal solution because of its greedy nature. To improve the mask they derived in the
 earlier step, they introduced the so called \textit{nonlocal pixel exchange}. It aims to solve the
 problem that the greediness of the probabilistic sparsification poses, more specifically that
 pixels that were removed once are not considered again at a later point in time even though they
-could probably positively influence the quality of the final mask.\\
+could possibly positively influence the quality of the final mask.\\
 The nonlocal pixel exchange randomly selects a subset of non-mask pixels, from which the pixel with
 the largest reconstruction error is put in the mask in exchange for a random mask pixel.
 If the overall reconstruction quality improves with the new mask, the mask is updated to the new
@@ -140,7 +146,7 @@ possible solution.\\
 
 In \cite{mainberger09, mainberger10}, the authors implemented a diffusion based reconstruction
 using mainly edges as the inpainting mask. For the mask construction they used the Marr-Hildreth
-edge detector combined with \textit{hysteresis thresholding} as proposed by Canny\cite{canny86}.
+edge detector\cite{marr80} combined with \textit{hysteresis thresholding} as proposed by Canny\cite{canny86}.
 They stated however, that they were not locked in on the Marr-Hildreth edge detector and that
 others such as the classical Canny edge detector could also be used, especially for images that
 contain a larger amount of blurry edges. The addition of hysteresis thresholding yielded closed and
@@ -155,17 +161,6 @@ values of the mask pixels. Another improvement was the use of an advanced method
 linear systems arising from the inpainting problem. In contrast to the earlier publications a fast
 \textit{full multigrid scheme} was implemented to speed up the decoding phase significantly to 
 a point where the codec is now realtime capable.\\
-
-In \cite{kanters05}, a method is presented that uses extrema and saddle points in the Gaussian
-scale space of an image as a basis for reconstruction using a linear reconstruction scheme proposed
-in \cite{janssen05}.\\
-In \cite{weinzaepfel11}, the authors explore the reconstruction of an image using only its local
-descriptors. They use a classical image indexing software to retrieve descriptors like
-SIFT\cite{sift}, then query an image database to find patches that are similar to these descriptors
-retrieved from the image. These patches are then transformed to fit the geometry in the original
-image and stitched together afterwards in a seamless fashion.
-
-\textbf{ \emph{ Image compression with edge based inpainting } }\cite{dong07}\\
 
 In \cite{peter15}, region of interest(ROI) coding was first introduced for the R-EED codec. Previously,
 it was not possible to specify certain regions of an image to be reconstructed with higher detail.
@@ -184,6 +179,16 @@ capable of realtime video decoding and playback which sets a milestone on the wa
 publication, or rather the extensions presented therein, mark the first step of an evolution of
 PDE-based compression codecs from the proof-of-concept stage to fully grown codecs with relevance
 for practical applications.\cite{peter15}\\
+
+In \cite{kanters05}, a method is presented that uses extrema and saddle points in the Gaussian
+scale space of an image as a basis for reconstruction using a linear reconstruction scheme proposed
+in \cite{janssen05}.\\
+In \cite{weinzaepfel11}, the authors explore the reconstruction of an image using only its local
+descriptors. They use a classical image indexing software to retrieve descriptors like
+SIFT\cite{sift}, then query an image database to find patches that are similar to these descriptors
+retrieved from the image. These patches are then transformed to fit the geometry in the original
+image and stitched together afterwards in a seamless fashion.\\
+
 
 \section{Outline}
 So far, we have reviewed some of the work that is closely related to my work and 

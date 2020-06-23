@@ -1,0 +1,60 @@
+rect_tinyr1m1inpaint.pgm
+# PSNR: 4.764576
+rect_tinyr1m2inpaint.pgm
+# PSNR: 6.266452
+rect_tinyr1m3inpaint.pgm
+# PSNR: 7.221073
+rect_tinyr1m4inpaint.pgm
+# PSNR: 19.829703
+rect_tinyr1m5inpaint.pgm
+# PSNR: 23.082257
+rect_tinyr1m6inpaint.pgm
+# PSNR: 24.646914
+rect_tinyr2m1inpaint.pgm
+# PSNR: 1.938204
+rect_tinyr2m2inpaint.pgm
+# PSNR: 9.716590
+rect_tinyr2m3inpaint.pgm
+# PSNR: 19.415036
+rect_tinyr2m4inpaint.pgm
+# PSNR: 22.865813
+rect_tinyr2m5inpaint.pgm
+# PSNR: 24.541555
+rect_tinyr2m6inpaint.pgm
+# PSNR: 25.631793
+rect_tinyr3m1inpaint.pgm
+# PSNR: 1.938204
+rect_tinyr3m2inpaint.pgm
+# PSNR: 9.716590
+rect_tinyr3m3inpaint.pgm
+# PSNR: 19.415036
+rect_tinyr3m4inpaint.pgm
+# PSNR: 22.865813
+rect_tinyr3m5inpaint.pgm
+# PSNR: 24.541555
+rect_tinyr3m6inpaint.pgm
+# PSNR: 25.631793
+rect_tinyr4m1inpaint.pgm
+# PSNR: 1.938204
+rect_tinyr4m2inpaint.pgm
+# PSNR: 1.938201
+rect_tinyr4m3inpaint.pgm
+# PSNR: 9.515440
+rect_tinyr4m4inpaint.pgm
+# PSNR: 21.298843
+rect_tinyr4m5inpaint.pgm
+# PSNR: 25.357472
+rect_tinyr4m6inpaint.pgm
+# PSNR: 26.599426
+rect_tinyr5m1inpaint.pgm
+# PSNR: 1.938204
+rect_tinyr5m2inpaint.pgm
+# PSNR: 1.938201
+rect_tinyr5m3inpaint.pgm
+# PSNR: 1.938200
+rect_tinyr5m4inpaint.pgm
+# PSNR: 14.391046
+rect_tinyr5m5inpaint.pgm
+# PSNR: 24.034491
+rect_tinyr5m6inpaint.pgm
+# PSNR: 26.810175

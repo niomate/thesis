@@ -1650,15 +1650,8 @@ float MSE(float **u, float **v, long nx, long ny) {
 }
 
 float PSNR(float **u, float **v, long nx, long ny) {
-  float max = -INFINITY;
   float mse = MSE(u, v, nx, ny);
-  for (long i = 1; i <= nx; ++i) {
-    for (long j = 1; j <= ny; ++j) {
-      if (u[i][j] > max)
-        max = u[i][j];
-    }
-  }
-  return 20 * log10(max) - 10 * log10(mse);
+  return 10 * log10(powf(255.0f, 2.0f) / mse);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1808,7 +1801,7 @@ int main(int argc, char **argv)
   for (i = 1; i <= nx; ++i) {
     for (j = 1; j <= ny; ++j) {
       if (a[i][j] <= 0.00001) {
-        f[i][j] = 128.0;
+        f[i][j] = 128;
       }
     }
   }

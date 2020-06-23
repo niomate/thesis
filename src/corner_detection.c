@@ -1,4 +1,3 @@
-#include "mask.h"
 #include "utils.h"
 #include <assert.h>
 #include <math.h>
@@ -78,7 +77,7 @@ options_t OPTIONS =
     (options_t){false, false, false, GAUSSIAN}; /*<! Default options */
 
 /**
- * Struct containing informatin about a pixel. Contains position and value.
+ * Struct containing information about a pixel. Contains position and value.
  * Used in total_pixel_percentage_thresholding to get a more accurate result.
  */
 typedef struct {
@@ -489,6 +488,52 @@ void PA_trans
 } /* PA_trans */
 
 /**
+ * \brief Computes the inpainting mask for the given image.
+ *
+ * Given the corner map v and a radius, draw the circular corner regions onto
+ * the image u.
+ *
+ * @param u: the original image, altered afterwards
+ * @param nx: size of the image in x direction
+ * @param ny: size of the image in x direction
+ * @param radius: radius of the corner regions
+ * @param v: corner map
+ *
+ */
+void mask(float **u, long nx, long ny, int radius, float **v) {
+  long i, j, k, l; /* loop variables */
+
+  int r = radius + 2; /* To create a circle, we have to start the iteration
+                         outside of it to not get a weird looking rectangle */
+
+  for (i = 1; i <= nx; ++i) {
+    for (j = 1; j <= ny; ++j) {
+      u[i][j] = 0.0f;
+    }
+  }
+
+  for (i = 1; i <= nx; ++i) {
+    for (j = 1; j <= ny; j++) {
+      if (v[i][j] != 255.0) {
+        /* Not a corner */
+        continue;
+      } else {
+        /* Create a circle of radius r around the current pixel */
+        for (k = i - r; k <= i + r; k++) {
+          for (l = j - r; l <= j + r; l++) {
+            if (out_of_bounds(k, nx) || out_of_bounds(l, ny) ||
+                !in_circle(k, l, i, j, radius)) {
+              continue;
+            }
+            u[k][l] = 255.0f;
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * \brief Search for the local maxima of the cornerness measure.
  *
  * Given a map of cornerness values, find the local maxima inside an
@@ -557,6 +602,7 @@ void non_maximum_suppression(float **w, long nx, long ny, float **v) {
  * @param v: corner map, afterwards contains the values of corners that are
  * being kept, 0 elsewhere
  */
+
 void non_maximum_suppression_circle(float **w, long nx, long ny, long radius,
                                     float **v) {
   long i, j, k, l; /* Loop variables */
@@ -618,10 +664,14 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
   long n_total = nx * ny;
   pixel_t vals[n_total];
 
-  /* Compute the area explicitly to get the most accurate result. */ 
+  /* Compute the area explicitly to get the most accurate result. */
   float max_area_p_corner = gauss_circle(radius);
 
-  long n_corners = ceil((perc * n_total) / max_area_p_corner);
+  long n_corners = floor((perc * n_total) / max_area_p_corner);
+  printf("Area in pixels per corner: %f\n", max_area_p_corner);
+  printf("Maximum number of corners allowed: %ld\n", n_corners);
+  printf("Maximum percentage possible: %f\n",
+         100.0f * (max_area_p_corner * n_corners) / n_total);
 
   /* Flatten cornerness map and prepare for sorting */
   long idx = 0;
@@ -643,11 +693,15 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
   }
 
   /* Keep best corners */
+  long nums = 0;
   for (i = idx - 1; i >= MAX(idx - n_corners, 0); --i) {
     long x = vals[i].i;
     long y = vals[i].j;
     u[x][y] = 255.0f;
+    nums++;
   }
+
+  printf("Inserted %ld corners\n", nums);
 }
 
 /**
@@ -667,33 +721,6 @@ void total_pixel_percentage_thresholding(float **u, long nx, long ny,
  * @param perc: percentage of corners that should be kept
  */
 void percentile_thresholding(float **u, long nx, long ny, float perc) {
-  /*long i, j;           [> Loop variables <]*/
-  /*float vals[nx * ny]; [> Array for threshold computation <]*/
-  /*long n_vals = 0;     [> Number of elements in the array <]*/
-
-  /*[> Flatten cornerness map and prepare for sorting <]*/
-  /*for (i = 1; i <= nx; ++i) {*/
-  /*for (j = 1; j <= ny; ++j) {*/
-  /*[> Preliminary thresholding to weed out outliers <]*/
-  /*if (fabs(u[i][j]) < 0.01) {*/
-  /*continue;*/
-  /*} else {*/
-  /*vals[n_vals++] = u[i][j];*/
-  /*}*/
-  /*}*/
-  /*}*/
-
-  /*qsort(vals, n_vals, sizeof(float), float_cmp);*/
-
-  /*for (i = 0; i < n_vals; ++i) {*/
-  /*printf("%f ", vals[i]);*/
-  /*}*/
-  /*printf("\n");*/
-
-  /*long index = clamp((long)ceil(n_vals * perc), 0, n_vals);*/
-
-  /*float thresh = vals[index];*/
-
   long i, j;
   long n_total = nx * ny;
   pixel_t vals[n_total];
@@ -711,11 +738,6 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
   long index = clamp((long)ceil(idx * perc), 0, idx);
   qsort(vals, idx, sizeof(pixel_t), pixel_cmp);
 
-  /*for (i = 0; i < idx; ++i) {*/
-  /*printf("%f ", vals[i].val);*/
-  /*}*/
-  /*printf("\n");*/
-
   /* Initialize */
   for (i = 1; i <= nx; i++) {
     for (j = 1; j <= ny; j++) {
@@ -727,7 +749,6 @@ void percentile_thresholding(float **u, long nx, long ny, float perc) {
   for (i = idx - 1; i >= MAX(idx - index, 0); --i) {
     long x = vals[i].i;
     long y = vals[i].j;
-    printf("(%ld, %ld), ", x, y);
     u[x][y] = 255.0f;
   }
 }
@@ -838,7 +859,7 @@ void corner_detection(float **f, float **v, long nx, long ny, float hx,
 /*--------------------------------------------------------------------------*/
 
 /**
- * \brief Highlight corner locations in the original image by drawing a cross at 
+ * \brief Highlight corner locations in the original image by drawing a cross at
  * the corner location.
  *
  * @param u original image, highlighted corner locations afterwards
@@ -846,7 +867,7 @@ void corner_detection(float **f, float **v, long nx, long ny, float hx,
  * @param ny size of image in y direction
  * @param v corner locations
  */
-void draw_corners(float **u, long nx, long ny, float **v) {
+void draw_corners_x(float **u, long nx, long ny, float **v) {
   long i, j; /* loop variables */
   long k, l; /* loop variables */
 
@@ -869,6 +890,39 @@ void draw_corners(float **u, long nx, long ny, float **v) {
   }
 } /* draw_corners */
 
+/**
+ * \brief Highlight corner locations in the original image by drawing a black
+ * and white circle at the corner location.
+ *
+ * @param u original image, highlighted corner locations afterwards
+ * @param nx size of image in x direction
+ * @param ny size of image in y direction
+ * @param v corner locations
+ */
+void draw_corners_o(float **u, long nx, long ny, float **v) {
+  long i, j; /* loop variables */
+  long k, l; /* loop variables */
+
+  dummies(u, nx, ny);
+
+  for (i = 5; i <= nx - 4; i++) {
+    for (j = 5; j <= ny - 4; j++) {
+      if (v[i][j] == 255.0) {
+        /* draw corner */
+        for (k = i - 4; k <= i + 4; k++) {
+          for (l = j - 4; l <= j + 4; l++) {
+            /* black outer circle */
+            if ((k - i) * (k - i) + (l - j) * (l - j) <= 20)
+              u[k][l] = 0.0;
+            /* white interior */
+            if ((k - i) * (k - i) + (l - j) * (l - j) <= 6)
+              u[k][l] = 255.0;
+          }
+        }
+      }
+    }
+  }
+} /* draw_corners */
 int main(int argc, char **argv)
 
 {
@@ -886,6 +940,7 @@ int main(int argc, char **argv)
   float rho = 2.5;               /* Integration scale */
   float mask_factor = 0; /* Factor to scale integration scale with to obtain
                             radius of corner regions */
+  char display_type = 'x';
 
   printf("\n");
   printf("CORNER DETECTION WITH THE STRUCTURE TENSOR\n\n");
@@ -927,6 +982,13 @@ int main(int argc, char **argv)
     case 'M':
       OPTIONS.display_mask = true;
       break;
+    case 'd':
+      if (*optarg != 'x' || *optarg != 'o') {
+        fprintf(stderr, "Invalid corner display type! Defaulting to circle\n");
+      } else {
+        display_type = *optarg;
+      }
+      break;
     default:
       abort();
     }
@@ -957,7 +1019,7 @@ int main(int argc, char **argv)
   }
 
   /* Compute mask radius in dependence of rho */
-  float mask_radius = mask_factor * rho;
+  float mask_radius = mask_factor; // mask_factor * rho;
 
   printf("Using parameters:\n");
   printf("  Corner detector:    %-s\n", CORNER_DETECTOR_NAMES[type]);
@@ -977,8 +1039,6 @@ int main(int argc, char **argv)
   printf("\n");
 
   corner_detection(u, v, nx, ny, 1.0, 1.0, type, q, mask_radius, sigma, rho);
-  /*corner_detection(u, nx, ny, 1.0, 1.0, type, q, mask_radius, enable_cnms,*/
-  /*enable_tppt, sigma, rho, v);*/
 
   long n_corners = 0;
   for (long i = 1; i <= nx; ++i) {
@@ -1008,7 +1068,10 @@ int main(int argc, char **argv)
            100.0f * ((float)n_mask_pixels) / (nx * ny));
   } else {
     /* Insert corner marks into the image */
-    draw_corners(u, nx, ny, v);
+    if (display_type == 'x')
+      draw_corners_x(u, nx, ny, v);
+    else 
+      draw_corners_o(u, nx, ny, v);
   }
 
   write_pgm(u, nx, ny, out, NULL);

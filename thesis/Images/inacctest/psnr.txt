@@ -1,0 +1,60 @@
+cornerr1m1inpaint.pgm
+# PSNR: 4.832639
+cornerr1m2inpaint.pgm
+# PSNR: 10.972379
+cornerr1m3inpaint.pgm
+# PSNR: 15.708751
+cornerr1m4inpaint.pgm
+# PSNR: 20.397504
+cornerr1m5inpaint.pgm
+# PSNR: 22.714117
+cornerr1m6inpaint.pgm
+# PSNR: 23.586705
+cornerr2m1inpaint.pgm
+# PSNR: 1.250408
+cornerr2m2inpaint.pgm
+# PSNR: 7.898751
+cornerr2m3inpaint.pgm
+# PSNR: 17.310881
+cornerr2m4inpaint.pgm
+# PSNR: 21.489746
+cornerr2m5inpaint.pgm
+# PSNR: 23.459861
+cornerr2m6inpaint.pgm
+# PSNR: 24.137431
+cornerr3m1inpaint.pgm
+# PSNR: 1.250408
+cornerr3m2inpaint.pgm
+# PSNR: 7.898751
+cornerr3m3inpaint.pgm
+# PSNR: 17.310881
+cornerr3m4inpaint.pgm
+# PSNR: 21.489746
+cornerr3m5inpaint.pgm
+# PSNR: 23.459861
+cornerr3m6inpaint.pgm
+# PSNR: 24.137431
+cornerr4m1inpaint.pgm
+# PSNR: 1.250468
+cornerr4m2inpaint.pgm
+# PSNR: 1.249609
+cornerr4m3inpaint.pgm
+# PSNR: 7.219502
+cornerr4m4inpaint.pgm
+# PSNR: 16.916816
+cornerr4m5inpaint.pgm
+# PSNR: 22.928971
+cornerr4m6inpaint.pgm
+# PSNR: 24.340093
+cornerr5m1inpaint.pgm
+# PSNR: 1.250552
+cornerr5m2inpaint.pgm
+# PSNR: 1.249638
+cornerr5m3inpaint.pgm
+# PSNR: 1.249413
+cornerr5m4inpaint.pgm
+# PSNR: 7.848156
+cornerr5m5inpaint.pgm
+# PSNR: 17.960576
+cornerr5m6inpaint.pgm
+# PSNR: 22.824759

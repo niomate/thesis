@@ -14,5 +14,5 @@ set(CMAKE_C_STANDARD 11)
 # Link math library
 link_libraries(m)
 
-add_executable(corners src/corner_detection.c src/utils.c src/mask.c)
+add_executable(corners src/corner_detection.c src/utils.c)
 add_executable(inpainting src/inpainting.c)

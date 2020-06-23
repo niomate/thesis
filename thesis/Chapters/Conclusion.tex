@@ -1,10 +1,81 @@
-\chapter{Conclusion and Outlook}
+\chapter{Conclusion and Outlook}\label{ch:Conclusion}
 
-\label{ch:Conclusion}
+\section{What has been done?}
 
-\section{Discussion}\label{sec:Discussion}
-\subsection{What works well\dots}
-\subsection{\dots and what does not}
-\section{Future Work}
-\subsection{Improvements that can be done}
-\subsection{Implications for image compression}
+To summarise, I have adapted the method proposed in~\cite{zimmer07} by introducing circular corner
+regions and explored their potential for PDE based inpainting and compression approaches.\\
+I used a simple structure tensor based approach for corner detection, namely the Förstner-Harris
+corner detector to find corner candidates. Using the new additional procedures called
+\textit{circular non-maximum suppression} and \textit{total pixel percentile thresholding}, these
+candidates were filtered to get a mask that satisfies a pre-defined pixel density criterion. With
+these additions, aside from special cases, it was possible to construct masks of similar pixel
+densities quite consistently. However, one should mention that both methods are pretty naive
+approaches far from perfect.\\
+I tested the hypothesis that the mask radius should be chosen in dependence of the integration
+scale during the computation of the structure tensor. Moreover, the hypothesis stated that the mask
+radius should always be larger than the integration scale in order to cover the possible inaccuracy
+in the localisation of the corner. The experiments yielded reasonable evidence that this is the
+case. 
+All in all it was shown that by increasing the size of corner regions one can cover the uncertainty
+introduced during the corner detection process and improve the reconstruction quality compared to
+the method proposed in~\cite{zimmer07}.
+
+\section{Pros and Cons}
+
+The method examined herein is pretty well suited for reconstruction/compression of binary images
+with little to no texture. The problem in the compression of highly textured grey value images lies in the 
+fact that due to the large corner regions, if one wants to cover highly textured regions, either
+one chooses the corner regions fairly small to cover as much of the texture as possible, similar to
+a subdivision based or stochastic approach. The downside here is that for small mask radii the
+inaccuracy in the corner detection might influence the outcome. Another possibility is to choose
+the corner regions larger such that more corners are covered by a single region. By doing this
+however, the mask will become so dense that it will be suboptimal in a compression context.
+Another point to mention, that also Zimmer's method\cite{zimmer07} struggled with, is the sparsity
+of corners in images. While corners are semantically important features, they are pretty seldom in
+organic images. (see the image \texttt{lena512} or \texttt{trui}).\\
+Something to consider as well is the compression of noisy images. Here one has to pose the question
+whether the decompressed version of these images should contain noise or not. On one hand, noise in
+images is mostly a degradation that one wants to remove. On the other hand, image compression
+mostly aims at reconstructing the images that were compressed. By applying PDE based inpainting
+approaches in this context, most noise is removed due to the nature of these algorithms as we saw
+in Section~\ref{sec:Results}, so the image that is decompressed is not the same as the one that was
+compressed. While in most cases this could be considered a benefit of the procedure, one could
+think of examples where such an inherent denoising would be considered unwanted behaviour (images
+of white noise?).\\
+
+\section{Future Work}\label{sec:FutureWork}
+
+Lastly, we will discuss some possible improvements to corner region based inpainting/compression
+approaches.
+
+\subsection*{Improvement of the corner detection}
+
+As we saw in Section~\ref{sec:CornerEx}, the accuracy of the corner localisation is key to a good
+inpainting result. While the Förstner-Harris method is pretty accurate, one could think of other
+methods that suggest higher, even sub-pixel accuracy. A possible method could be one proposed by
+Alvarez et al.\cite{amss} in 1997. The method is based on a scale-space approach that is supposed
+to be able to trace back the origin of a corner to its actual location with subpixel accuracy.
+
+\subsection*{Optimising corner region radius}
+
+Something that one could investigate further would be the optimal corner region radius and whether
+it would be sensible to make it variable in space. The idea behind that is, that in regions where
+corners are sparse, one could increase the radius to include more context from around the corner.
+Similarly, in textured regions the radius could be decreased in order to get a mask that looks more
+like a mask from a probabilistic sparsification or subdivision based approach.
+
+\subsection*{Combination with ideas from other approaches}
+
+Since it is pretty difficult to produce good inpainting masks, i.e. masks that result in
+reconstructions with a high PSNR, only using corners and corner regions, one could consider
+applying methods from other approaches to corner based mask creation. One method that comes into
+mind would be probabilistic sparsification\cite{hoeltgen12, schmaltz14} applied to corner regions.\\
+Seeing what impact tonal optimisation had\cite{hoeltgen12, schmaltz14}, one could also consider
+applying this to a corner region based approach.
+
+\subsection*{Possible application to region of interest(ROI) coding}
+
+On a more unrelated note, corner regions could see application in region of interest coding as
+proposed in~\cite{peter15}. Inpainting masks based on corner regions could be used as weighting
+masks for the subdivision approach to be able to better reconstruct regions of higher semantic
+importance as indicated by a higher density of corners.

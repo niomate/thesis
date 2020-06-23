@@ -1,0 +1,6 @@
+house-inpaint2.pgm
+# PSNR: 18.011427
+house-inpaint3.pgm
+# PSNR: 18.685073
+house-inpaint.pgm
+# PSNR: 21.116169

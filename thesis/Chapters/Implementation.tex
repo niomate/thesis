@@ -23,7 +23,7 @@ been much more troublesome.
 That is why we rather develop a continuous theory and then discretise it later to actually
 implement the ideas as algorithms.
 
-\subsection{Discrete images}
+\subsection{Discrete images}\label{sub:DiscreteImages}
 Let $f:\Omega \rightarrow \R$ be an image where $\Omega
 := (0, n_x)\times(0, n_y) \subset \R^2$ as defined in section \ref{sec:Basics}. To
 \textit{sample} the image, i.e. to discretise the image domain, we assume that all pixels lie on a
@@ -46,7 +46,7 @@ to discretise the \textit{co-domain} or \textit{grey-value-domain}. In theory ou
 is just $\R$, but since this is rather unpractical, we limit it to $[0, 255]$. This step of
 the discretisation process is also called \textit{quantisation}.
 
-\subsection{Numerical differentiation}
+\subsection{Numerical differentiation}\label{sub:NumDiff}
 
 Image derivatives are essential to image processing as seen in the previous chapter. Therefore we
 need a way to compute them even on discrete images. To compute the gradient or in the simpler case
@@ -148,7 +148,7 @@ order out of all three.
     f_i' &= \frac{f_i - f_{i-1}}{h} + \mathcal{O}(h)&\textnormal{(backward differences)}\notag\\
     f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
 \end{align}
-\subsection{Numerical schemes for diffusion}
+\subsection{Numerical schemes for diffusion}\label{sub:NumSchemesDiffusion}
 As discretisation for the inpainting process, the non-standard discretisation scheme that was
 derived in \cite{www13} was used. The actual derivation of the scheme is fairly complex so I will
 just explain the basics and then refer the interested reader to \cite{www13} and \cite{weickert96}
@@ -299,7 +299,7 @@ array of appropriate size. This array is then sorted using an already implemente
 algorithm from the C standard library. Subsequently, the new threshold is given as the value at
 the index calculated above.
 \begin{figure}[ht]
-    \lstinputlisting[language=C, linerange={617-651}]{/home/daniel/Uni/Thesis/src/corner_detection.c}
+    \lstinputlisting[language=C, linerange={664-670,675-703}]{/home/daniel/Uni/Thesis/src/corner_detection.c}
     \caption{Total pixel percentage thresholding}
 \end{figure}\\
 While this approach works a bit better than the original version using the fixed threshold, it is
@@ -330,7 +330,7 @@ chose the naive way by just iterating through a loop and count the numbers insid
 in \ref{fig:PixelRegion}. 
 I could have also chosen to use an upper bound and estimate the number of pixels this way, but this
 would not have been as accurate.
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \lstinputlisting[language=C, linerange={424-435}]{/home/daniel/Uni/Thesis/src/utils.c}
     \caption{Computation of number of pixels in disk}
@@ -360,22 +360,20 @@ cornerness value as mask candidates.
 \subsection{Circular non-maximum suppression}\label{sub:Suppression}
 \begin{figure}[t]
     \begin{lstlisting}[language=Python]
-def circular_suppression(harris, (x, y), r, out):
-    ''' Circular non-maximum suppression at location (x,y) with radius r.
-    Parameters:
-        -harris: Harris measure map
-        -(x, y): current location
-        -r: radius of corner regions
-        -out: map of accepted corners after suppression
-    '''
-    for x', y' in circle(x, y, r):
-        if harris[x',y'] > harris[x,y]:
+# Circular non-maximum suppression at x with radius r.
+# Parameters:
+#    -harris: Harris measure map
+#    -x: current location as tuple
+#    -r: radius of corner regions
+#    -out: map of accepted corners after suppression
+def circular_suppression(harris, x, r, out):
+    for y in circle(x, r):
+        if harris[y] > harris[x]:
             # The current location is not a maximum
-            out[x, y] = 0
+            out[x] = 0
             return
     # Current location is a maximum, keep the region around it
-    out[x, y] = harris[x, y]
-    return 
+    out[x] = harris[x]
     \end{lstlisting}
     \caption{Pseudo-Code for circular non-maximum suppression}
 \end{figure}

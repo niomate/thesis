@@ -37,7 +37,7 @@
             ]
         },
         "-m": {
-            "label": "Mask radius factor",
+            "label": "Mask radius",
             "style": "slider",
             "limits": [
                 0,

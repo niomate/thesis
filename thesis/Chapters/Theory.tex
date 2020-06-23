@@ -1,10 +1,8 @@
-\newcommand{\TODO}[1]{\ \\ \textbf{\textcolor{red}{!! #1 !!}}\\}
 \chapter{Prerequisites}\label{ch:Theory}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Basics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Basics}\label{sec:Basics}
 The concepts used in this thesis require some prior knowledge about basic calculus and linear
 algebra as well as some more advanced topics that will be introduced in the following sections.
-But before introducing corner detection and diffusion, we have to first define what an image is
+But before explaining corner detection and diffusion, we have to first define what an image is
 mathematically.\\
 A \textit{grey value image} is defined as a function $f: \Omega \rightarrow \R$ where
 $\Omega \subset \R^2$ is a rectangular subset of $\R^2$ of size $n_x\times n_y$,
@@ -32,8 +30,15 @@ variable.
     \textbf{grad}(f) = \del f := \left(f_x, f_y\right)^\top\label{def:Grad}
 \end{equation}
 The gradient always points in the direction of the steepest ascent/descent, it is the tangent
-vector to the surface at the given location\cite{mfi3}.
-Note that the gradient of a function is a vector-valued function and not a vector.
+vector to the surface at the given location\cite{mfi3}. Furthermore, a vector that is
+\textit{orthogonal} to the gradient always points into the direction of the smallest absolute
+change at the given position.\\
+Two vectors $x,y\in\R^n$ are called \textit{orthogonal} to eachother if the euclidean dot product defined by 
+\begin{equation}
+    \langle\mathbf{x}, \mathbf{y}\rangle = \sum_{i=1}^n x_iy_i
+\end{equation}
+vanishes or in other words becomes zero.
+The geometric interpretation for this property is that the angle between both vectors is 90°.
 
 \subsection{Convolution}
 Another operation from calculus that we will need is the \textit{convolution operator}.\\
@@ -45,11 +50,11 @@ The \textit{discrete} convolution of two vectors $(f_i)_{i\in\Z}, (g_i)_{i\in\Z}
     (f*g)_i := \sum_{j\in\Z} f_{i-j}g_i
 \end{equation}
 In both definitions, the function/vector $g$ is normally called the \textit{convolution kernel}.
-Convolution is especially useful in image and signal processing to design so called linear filters
-such as a moving average or smoothing operation\cite{ipcv,dic}. 
+%Convolution is especially useful in image and signal processing to design so called linear filters
+%such as a moving average or smoothing operation\cite{ipcv,dic}. 
 In praxis though, discrete convolution has to be used as dealing with continuous functions in a
 computational context is strictly not possible. This is why continuous convolution is only used to
-develop a theory, that is later on \textit{discretised}, that is, transformed to the digital
+develop a theory, that is later on \textit{discretised}, i.e. transformed to the digital
 domain.\\
 Discrete convolution kernels are usually described in the so called \textit{stencil notation}, for
 example, a convolution filter that computes the average of 3 pixels is defined by the stencil
@@ -84,24 +89,48 @@ The continuous Gaussian convolution kernel is basically just a Gaussian function
             x\rVert_2^2}{2\sigma^2}\right)
 \end{equation}
 where $\lVert \cdot \rVert_2$ denotes the \textit{Euclidean norm}.
+\begin{equation}
+    \lVert \mathbf{x} \lVert_2 = \sqrt{\langle \mathbf{x}, \mathbf{x} \rangle}
+\end{equation}
 For the rest of this thesis, an image $f$ convolved with a Gaussian with standard deviation $\sigma$
 will be denoted by \[f_\sigma := K_\sigma * f\]
 
 Convolution inhibits some very important properties that I will not cover here, since they are not
 inherently necessary to understand the rest of the thesis. The interested reader can find more
-information about convolution in \cite{dspguide}\cite{ipcv}
+information about convolution in~\cite{dspguide}\cite{ipcv}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Structure Tensor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Error measures}\label{sec:ErrorMeasure}
+
+The difference between two images is often measured as the sum of the individual pixel errors. 
+One of the most widely used error measures of this kind is the \textit{mean squared error(MSE)}. It is
+defined as 
+\begin{equation}
+    \MSE(f, g) = \frac{1}{nm}\cdot\sum_{i=1}^{n}\sum_{j=1}^{m} (f_{i,j} - g_{i,j})^2
+\end{equation}
+Obviously, two images are more similar to each other, the lower the mean squared error is.
+Another measure that is widely used and that will also be used in this thesis to evaluate the
+quality of an inpainted image, is the so called \textit{peak signal to noise ratio (PSNR)}. 
+It is usually defined in terms of the MSE:
+\begin{equation}
+    \PSNR(f, g) = 10 \cdot \log_{10}\left({\frac{255^2}{\MSE(f, g)}}\right)
+\end{equation}
+Since the PSNR is defined in terms of the inverse of the MSE, we observe that
+\begin{equation}
+    \lim_{\lVert f-g \rVert^2\to 0}\PSNR(f, g) = \infty
+\end{equation}
+So for the PSNR, a larger value is a better one unlike the MSE, where 0 is the best value one can
+possibly reach.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Structure Tensor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The Structure Tensor}\label{sec:Structure}
 For some applications only the gradient of an image does not give us enough information. The
 gradient on its own is mostly just used as an edge detector, hence we need to come up with
 something else for e.g.\ corner detection\cite{ipcv}. One option is the so called \textit{structure tensor}, a
 matrix that contains information about the surrounding region at a specific position. With the
-structure tensor, or rather its eigenvalues (cf.~\ref{sub:Corner}), one is able to
+structure tensor, or rather its eigenvalues (see Section~\ref{sub:Corner}), one is able to
 distinguish between flat regions, edges and corners.
 
 \subsection{Definition}
-\TODO{Reconsider the definition, maybe rewrite this paragraph later}
 The structure tensor is defined as a matrix whose eigenvectors tell us the direction of
 both the largest and smallest grey value change. Mathematically, we can model this
 as an optimisation problem:\\
@@ -115,17 +144,27 @@ function
     &= \mathbf{n}^\top \left(\int\limits_{B_\rho(\boldsymbol x)} \del u \del
         u^\top d\boldsymbol x' \right) \mathbf{n}\label{eq:QuadForm}
 \end{align}
+where
+\begin{equation}
+    B_\rho( \mathbf{x} ) = \left\lbrace \mathbf{y}\in\R^2\ \vert\ \lVert \mathbf{x} - \mathbf{y}
+    \rVert_2^2 \leq \rho^2 \right\rbrace
+\end{equation}
+is a \textit{disk with radius $\rho$ and origin $ \mathbf{x}$}.
 This function is also called the \textit{local autocorrelation function/local average
     contrast}\cite{harris88, ipcv}.
 Since~\eqref{eq:QuadForm} is a quadratic form of the matrix
-\[M_\rho(\del u) := \int\limits_{B_\rho(\boldsymbol x)} \del u \del
-    u^\top d\boldsymbol x'\]
+\begin{equation}
+    M_\rho(\del u) := \int\limits_{B_\rho(\boldsymbol x)} \del u \del
+    u^\top d\boldsymbol x'
+\end{equation}
 such an optimal unit vector is by definition also the eigenvector to the smallest/largest
 eigenvalue of $M_\rho(\del u)$\cite{ipcv}.
 The matrix $M_\rho(\del u)$ can also be seen as a component-wise convolution with the indicator
 function
-\[b_\rho(\boldsymbol x) = \begin{cases} 1 & \lVert \boldsymbol x\rVert_2^2 \leq \rho^2\\ 0 & \text{else} \end{cases}\]
-However, as the author stated in \cite{harris88}, using this \textit{binary window function} leads
+\begin{equation}
+    b_\rho(\boldsymbol x) = \begin{cases} 1 & \lVert \boldsymbol x\rVert_2^2 \leq \rho^2\\ 0 & \text{else} \end{cases}
+\end{equation}
+However, as the author stated in~\cite{harris88}, using this \textit{binary window function} leads
 to a noisy response and they therefore suggest using a \textit{Gaussian window function} with standard
 deviation $\rho$. This parameter is also
 called the \textit{integration scale} and determines how localised the structure information
@@ -145,9 +184,9 @@ To keep things simpler, I will omit the brackets and just simply use $\mathbf{J}
 structure tensor.\\
 \subsection{Usage in Corner Detection}\label{sub:Corner}
 The structure tensor is a symmetric matrix and thus possesses orthonormal eigenvectors $\boldsymbol v_1,
-\boldsymbol v_2$ with real-valued eigenvalues $\lambda_1, \lambda_2 \geq 0$. \cite{ipcv} As
+\boldsymbol v_2$ with real-valued eigenvalues $\lambda_1, \lambda_2 \geq 0$.~\cite{ipcv} As
 mentioned in the preface to this section, we can use these eigenvalues to distinguish between
-corners, edges and flat regions as seen in figure \ref{fig:Structure}.
+corners, edges and flat regions as seen in figure~\ref{fig:Structure}.
 In total, we have to deal with 3 different cases:
 \begin{enumerate}
     \item $\lambda_1, \lambda_2$ are both small $\rightarrow$ flat region
@@ -167,27 +206,42 @@ corner.\\
     \centering
     \includegraphics[width=0.6\linewidth]{../Images/structure_tensor.png}
     \caption{Visualisation of distinction of image features using the eigenvalues of the structure
-        tensor. $\alpha, \beta$ are equivalent to the eigenvalues $\lambda_1, \lambda_2$. Source: \cite{harris88}}\label{fig:Structure}
+        tensor. $\alpha, \beta$ are equivalent to the eigenvalues $\lambda_1, \lambda_2$. Source:~\cite{harris88}}\label{fig:Structure}
 \end{figure}
 There are several approaches to find out which case applies at the current position. The biggest
 challenge here is to differentiate between edges and corners, i.e. we have to find out whether both
 eigenvalues are meaningfully larger than 0 and if one is larger than the other.\\
-The most intuitive approach is the one by Tomasi and Kanade, sometimes also called Shi-Tomasi
+The most intuitive approach is the one by Tomasi and Kanade\cite{tomasi91}, sometimes also called Shi-Tomasi
 corner detector. It simply compares the smaller eigenvalue against some artificial
 threshold. The set of local maxima is then the set of corners for the image\cite{shitomasi94}.
 However, this approach requires to compute both eigenvalues and can thus be fairly expensive.\\
-\TODO{Find sources for Rohr and Förstner}
-A cheaper approach would be to either threshold the trace \[tr(\mathbf{J}_\rho) := j_{1, 1} + j_{2,
-        2} = \lambda_1 + \lambda_2\] as proposed by Rohr, 1987 or the determinant \[det(\mathbf{J}_\rho) := j_{1, 1}j_{2, 2} -
-    j_{1, 2}^2 = \lambda_1\lambda_2\] as proposed by Harris and F\"orstner, 1988 and 1986
-respectively\cite{harris88}. Both of these approaches do not need to explicitly compute the eigenvalues of
+A cheaper approach would be to either threshold the trace 
+\begin{equation}
+    \tr(\mathbf{J}_\rho) := j_{1, 1} + j_{2,
+    2} = \lambda_1 + \lambda_2\label{def:Rohr}
+\end{equation} 
+as proposed by Rohr, 1991\cite{rohr91} or the determinant 
+\begin{equation}
+    \det(\mathbf{J}_\rho) := j_{1, 1}j_{2, 2} -
+    j_{1, 2}^2 = \lambda_1\lambda_2\label{def:Harris}
+\end{equation} 
+as proposed by Harris\cite{harris88} and
+Förstner\cite{foerstner87}, 1988 and 1987
+respectively. Both of these approaches do not need to explicitly compute the eigenvalues of
 the structure tensor and are thus not as computationally invested. Another difference between both 
-approaches is that the first one requires the trace by itself to be a local maximum whereas in the
-second approach, $(det(\mathbf{J}_\rho))/(tr(\mathbf{J}_\rho))$ needs to be a local maximum.\\
+approaches is that~\eqref{def:Rohr} requires 
+\begin{equation}
+    \tr(\mathbf{J}_\rho)
+\end{equation}
+by itself to be a local maximum whereas in~\eqref{def:Harris}
+\begin{equation}
+    \frac{\det(\mathbf{J}_\rho)}{\tr(\mathbf{J}_\rho)}
+\end{equation} 
+needs to be a local maximum.\\
 
 For the detection of relevant corners in the data selection phase, I mainly used the approach of F\"orstner/Harris as well as
 the approach of Rohr even though the Tomasi-Kanade approach was an option and has also been
-tested as we will see later in chapter \ref{ch:Experiments}. However, it has not proven as successful
+tested as we will see later in chapter~\ref{ch:Experiments}. However, it has not proven as successful
 as the other two methods during the initial testing phase.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Diffusion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Diffusion}\label{sec:Diffusion}
@@ -198,7 +252,7 @@ natural sciences to finance and economics. In this chapter, we will see how diff
 image processing and what benefits we gain from it. Furthermore, I will go over some basic ideas to
 introduce diffusion mathematically and subsequently explain different types of diffusion commonly
 found and used in image processing.
-\subsection{A short note on scale spaces}
+\subsection{A short note on scale spaces}\label{sub:ScaleSpaces}
 Before we begin to talk about diffusion, I will use this opportunity to shortly introduce scale
 spaces and explain how they are useful to diffusion processes in image processing and image
 processing in general.\\
@@ -268,13 +322,13 @@ is the \textit{divergence operator}
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\linewidth]{../Images/divergence2.png}
-    \caption{Visualisation of the divergence operator. Original image \cite{img-divergence}
+    \caption{Visualisation of the divergence operator. Original image~\cite{img-divergence}
     edited with GIMP}\label{fig:Divergence}
 \end{figure}
 In simple terms, the divergence of the flux measures whether the concentration at the current
 location diverges, i.e. diffuses away from the current location, or converges, i.e. moves in
 towards the current location.
-Together, equations~\eqref{eq:Fick} and \eqref{eq:Conservation} then form the general \textit{diffusion
+Together, equations~\eqref{eq:Fick} and~\eqref{eq:Conservation} then form the general \textit{diffusion
     equation}\cite{dic, weickert96}
 \begin{equation}
     \partial_t u = \textnormal{div}(\boldsymbol D\cdot\del u)\label{eq:Diffusion}
@@ -321,7 +375,7 @@ depends continuously on the input image.
 \end{align}
 The diffusivity function determines how much the image should be smoothed at the current location.
 The most well known choice for a diffusivity function was proposed by Perona and Malik 
-\cite{perona-malik}
+~\cite{perona-malik}
 \begin{equation}
     g(s^2) = \frac{1}{1 + s^2/\lambda^2}\label{def:Diffusivity}
 \end{equation}
@@ -340,11 +394,11 @@ which in this particular case comes down to
 \begin{figure}
     \includegraphics[width=\linewidth]{../Images/diffflux.png}
     \caption{\textbf{Left:} Diffusivity mentioned in~\eqref{def:Diffusivity}. \textbf{Right:} Flux
-    function\eqref{def:Flux}. Source: \cite{dic}}\label{fig:DiffFlux}
+    function\eqref{def:Flux}. Source:~\cite{dic}}\label{fig:DiffFlux}
 \end{figure}
 As we already know, the flux describes the change in concentration at each position. The edge
 enhancing effect comes from the so called \textit{backwards diffusion} which happens when the
-gradient magnitude surpasses the contrast parameter as seen in \ref{fig:DiffFlux}. Backwards
+gradient magnitude surpasses the contrast parameter as seen in~\ref{fig:DiffFlux}. Backwards
 diffusion is basically the opposite from `normal' diffusion in a sense that it sharpens image
 features instead of smoothing them.
 If we look at the derivative of the flux function this will become more obvious:
@@ -354,7 +408,7 @@ If we look at the derivative of the flux function this will become more obvious:
 \end{equation}
 As we see, we have a maximum in the flux function at $s = \lambda$. Furthermore we can extract from
 the above equation that $\Phi'(s) < 0$ for $s < \lambda$ and $\Phi'(s) > 0$ for $s > \lambda$. This
-can also be seen in \ref{fig:DiffFlux}. This distinction between an increasing and decreasing flux
+can also be seen in~\ref{fig:DiffFlux}. This distinction between an increasing and decreasing flux
 function for values left and right from the contrast parameter causes the previously mentioned
 edge enhancing effect.
 However, this particular process is not \textit{well-posed}\cite{weickert96}, i.e. it is very
@@ -386,7 +440,7 @@ We define the eigenvectors to be
     \lambda_1 &= g(\lVert\del u_\sigma\rVert_2^2) &\lambda_2 &= 1
 \end{align}
 There are different viable choices for a diffusivity function that supports backwards diffusion.
-First, there is the already mentioned Perona-Malik diffusivity \eqref{def:Diffusivity}. Another
+First, there is the already mentioned Perona-Malik diffusivity~\eqref{def:Diffusivity}. Another
 option is the diffusivity function introduced by Weickert\cite{weickert96}
 \begin{equation}
     g(s^2) = \begin{cases}
@@ -394,17 +448,17 @@ option is the diffusivity function introduced by Weickert\cite{weickert96}
         1 - \textnormal{exp}\left(\frac{-3.31488}{(s/\lambda)^8}\right) & s^2 > 0
     \end{cases}\label{def:WeickertDiff}
 \end{equation}
-According to \cite{dic}, diffusivities of this type, i.e. rapidly decreasing diffusivities,
+According to~\cite{dic}, diffusivities of this type, i.e. rapidly decreasing diffusivities,
 lead to more segmentation-like results.
 Finally, the diffusivity that was mainly used for inpainting in this work is the
-\textit{Charbonnier diffusivity} \cite{charbonnier}
+\textit{Charbonnier diffusivity}~\cite{charbonnier}
 \begin{equation}
     g(s^2) = \frac{1}{\sqrt{1 + s^2 / \lambda^2}}\label{def:CharbonnierDiff}
 \end{equation}
 \begin{figure}[ht]
     \centering
     \includegraphics[width=\linewidth]{../Images/diffusivities.png}
-    \caption{Weickert \eqref{def:WeickertDiff} and Charbonnier \eqref{def:CharbonnierDiff} diffusivities for $\lambda = 1$. Graph created with Matplotlib}
+    \caption{Weickert~\eqref{def:WeickertDiff} and Charbonnier~\eqref{def:CharbonnierDiff} diffusivities for $\lambda = 1$. Graph created with Matplotlib}
 \end{figure}
 \begin{figure}[ht]
     \centering
@@ -412,19 +466,24 @@ Finally, the diffusivity that was mainly used for inpainting in this work is the
     \caption{Denoising capabilities of the different types of diffusion. \textbf{Top Left:} Original
     image. \textbf{Top Right:} Linear isotropic diffusion. \textbf{Bottom Left:} Nonlinear
 isotropic diffusion. \textbf{Bottom Right:} Edge-enhancing diffusion. Source:
-\cite{weickert96}}\label{fig:DiffExamples}
+~\cite{weickert96}}\label{fig:DiffExamples}
 \end{figure}
-As we see in figure \ref{fig:DiffExamples}, EED possesses great restorative and denoising
-capabilities. But as already mentioned in Related Work (\ref{ch:RelatedWork}), edge-ehancing is not
-only suited for image denoising\cite{galic05}\cite{weickert96}, but also one of the best methods for inpainting based on partial
-differential equations\cite{schmaltz09}\cite{galic08}\cite{schmaltz14}.
+Overall, we can write the EED equation as
+\begin{equation}
+    \partial_t u = \diverg(g(\del u_\sigma\del u_\sigma^\bot)\del u)\label{eq:EED}
+\end{equation}
+As we see in figure~\ref{fig:DiffExamples}, EED possesses great restorative and denoising
+capabilities. But as already mentioned in Related Work (\ref{ch:RelatedWork}), edge-enhancing
+diffusion is not
+only suited for image denoising\cite{galic05, weickert96}, but also one of the best methods for inpainting based on partial
+differential equations\cite{schmaltz09, galic08, schmaltz14}.
 
 \section{Inpainting}\label{sec:Inpainting}
 Inpainting itself originated as a technique used by image restorators and conservators and has
 been in use for many decades, centuries even. The main objective of inpainting is
 to restore damaged regions in an image or even filling in areas that are missing
 completely. In the analog or physical world, inpainting is often done in multiple steps as
-described in \cite{bertalmio00}:\\
+described in~\cite{bertalmio00}:\\
 First, the lines defining the structure surrounding the blank area are continued inside the area.
 The smaller areas that result by drawing in the structure lines are then filled in with colours that
 match the colours outside the blank area.
@@ -435,7 +494,7 @@ translate this process to the digital domain.
 
 \subsection{The origin of digital inpainting}
 In 2000, a first method to digitize this technique was proposed by Bertalmio et al.
-\cite{bertalmio00}. The idea behind their algorithm was to iteratively continue so called \textit{isophote
+~\cite{bertalmio00}. The idea behind their algorithm was to iteratively continue so called \textit{isophote
 lines}, i.e.\ lines of equal brightness, inside the missing areas. 
 This was implemented by an image evolution described by 
 \begin{equation}
@@ -451,7 +510,7 @@ The direction $n$ is given by the vector
         u_y\\-u_x
     \end{pmatrix}
 \end{equation}
-which is orthogonal to the image gradient $\del u$ as defined in \ref{def:Grad}.
+which is orthogonal to the image gradient $\del u$ as defined in~\ref{def:Grad}.
 The formula can also be written as 
 \begin{equation}
     \partial_t u = \langle \del L(u), \del u^\bot\rangle
@@ -468,13 +527,13 @@ direction of a line of equal brightness.\\
 This propagation is then complemented by a (\textit{anisotropic}) diffusion process that is performed regularly to
 \textit{periodically curve the lines to keep them from crossing each other}\cite{bertalmio00}.
 By alternatingly applying the prolongation and diffusion process, the inpainting regions are
-shrinked progressively until they vanish as can be seen in \ref{fig:InpaintingProgress}.
+shrinked progressively until they vanish as can be seen in~\ref{fig:InpaintingProgress}.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\linewidth]{../Images/inpainting_progress.png}
     \caption{Results of the inpainting process at different stages showing the progressive
-    shrinking of the inpainting regions. Source: \cite{bertalmio00}}
+    shrinking of the inpainting regions. Source:~\cite{bertalmio00}}
     \label{fig:InpaintingProgress}
 \end{figure}
 
@@ -489,7 +548,7 @@ shrinked progressively until they vanish as can be seen in \ref{fig:InpaintingPr
 
 The general idea behind inpainting methods based on partial differential equations  is to
 retrieve an image in the form of an unknown function $v: \Omega \rightarrow \R$ as described in
-\cite{galic05}. Let
+~\cite{galic05}. Let
 $\Omega_1\subset\Omega$ be the subset of locations where the values of $v$ are 
 known from the original image. The
 \textit{inpainting domain}, that is, the locations where we want to reconstruct the image, is then
@@ -534,33 +593,33 @@ The so called \textit{steady state equation}
     (1 - c(x))Lu(x,t)- c(x)(u(x, t) - f(x)) = 0\label{eq:SteadyState}
 \end{align}
 determines the behaviour of the evolution as $t\to\infty$ and therefore defines the desired
-function $u$. Namely, for $x\in\Omega_1$, \eqref{eq:SteadyState} implies that 
+function $u$. Namely, for $x\in\Omega_1$,~\eqref{eq:SteadyState} implies that 
 \[ u(x,t) = f(x) \]
 by using $c(x) = 1$ and similarly we get for $x\in\Omega\backslash\Omega_1$, that $c(x) = 0$ and
 thus
 \[ Lu(x, t) = 0 \]
-Using this, one can rewrite the original equation \eqref{eq:Evolution} in a simpler way by
+Using this, one can rewrite the original equation~\eqref{eq:Evolution} in a simpler way by
 introducing \textit{Dirichlet boundary conditions} given by the subset $\Omega_1$ of known values on the 
 inpainting domain and solving the evolution equation
 \begin{equation}
     \partial_t u(x,t) = Lu(x, t)
 \end{equation}
 The choice of the differential operator $L$ is still an active topic of
-research, but it was shown in \cite{schmaltz14}, that edge-enhancing diffusion is the best choice
+research, but it was shown in~\cite{schmaltz14}, that edge-enhancing diffusion~\eqref{eq:EED} is the best choice
 among those tested.
 The authors' explanation of the `favourable' performance of this operator in the context of
 inpainting is, that the inherent anisotropic behaviour of the operator allows it to create sharp
 edges while still being able to propagate directional information to outside of the known area.
 They explain this ability to propagate information by the Gaussian smoothing that is found in the
-definition of the diffusion tensor \eqref{eq:DiffTensor}.
-Other candidates that were being tested in \cite{schmaltz14} include the \textit{biharmonic
+definition of the diffusion tensor~\eqref{eq:DiffTensor}.
+Other candidates that were being tested in~\cite{schmaltz14} include the \textit{biharmonic
 and triharmonic operator} respectively defined as
 \begin{eqnarray*}
     Lu = -\Delta^2u\\
     Lu = \Delta^3u
 \end{eqnarray*}
-a nonlinear isotropic diffusion operator as described in \eqref{eq:NonIsoDiff} and simple
-homogeneous diffusion \eqref{eq:IsoDiff}.
+a nonlinear isotropic diffusion operator as described in~\eqref{eq:NonIsoDiff} and simple
+homogeneous diffusion~\eqref{eq:IsoDiff}.
 \begin{figure}[h]
     \centering
     \includegraphics[width=\linewidth]{../Images/diffops_compare.png}
@@ -568,5 +627,5 @@ homogeneous diffusion \eqref{eq:IsoDiff}.
     Source:\cite{schmaltz14}}
     \label{fig:DiffOpsCompare}
 \end{figure}
-In figure \ref{fig:DiffOpsCompare}, (f) and (e) refer to the nonlinear isotropic diffusion defined
-in \eqref{eq:NonIsoDiff} and the regularised version also mentioned in \ref{sub:NonIsoDiff}.
+In figure~\ref{fig:DiffOpsCompare}, (f) and (e) refer to the nonlinear isotropic diffusion defined
+in~\eqref{eq:NonIsoDiff} and the regularised version also mentioned in~\ref{sub:NonIsoDiff}.
