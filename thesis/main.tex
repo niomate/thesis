@@ -42,7 +42,7 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage[utf8]{inputenc} % Required for inputting international characters
 \usepackage[T1]{fontenc} % Output font encoding for international characters
 \usepackage{amsmath, amssymb}
-\usepackage{mathpazo} % Use the Palatino font by default
+%\usepackage{mathpazo} % Use the Palatino font by default
 
 \usepackage[backend=biber, citestyle=ieee]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
 \addbibresource{references.bib}
@@ -204,16 +204,23 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 %\cleardoublepage
 
 %----------------------------------------------------------------------------------------
-%   QUOTATION PAGE
-%----------------------------------------------------------------------------------------
-
-
-%----------------------------------------------------------------------------------------
 %   ABSTRACT PAGE
 %----------------------------------------------------------------------------------------
 
 \begin{abstract}
-    \addchaptertocentry{\abstractname} % Add the abstract to the table of contents
+    \addchaptertocentry{\abstractname} 
+    Over the last years, a new class of image compression codecs has been developed making use of
+    novel inpainting techniques. These newly developed methods have been shown to have the
+    potential to surpass common codecs like JPEG and JPEG2000. The idea behind them is to store a
+    sparse subset of pixels and fill in the missing information with a digital image inpainting 
+    algorithm. The challenge with such an approach is the choice of pixels that serve as the basis 
+    to reconstruct the image. While the most successful ideas are based on stochastic or
+    subdivision based methods, semantic approaches have barely been explored.
+    In this thesis I build on results from a previous publication and further explore the potential 
+    of the reconstruction of images by only using a set of corners from the image. I examine how 
+    the accuracy of the corner detection influences the reconstruction quality and lastly introduce 
+    additional procedures that aim to make the mask calculation a bit more robust with respect to
+    the pixel density of the inpainting mask.
 \end{abstract}
 
 %----------------------------------------------------------------------------------------
