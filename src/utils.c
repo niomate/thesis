@@ -8,6 +8,12 @@
 
 #define _USE_MATH_DEFINES
 
+/**
+ * \brief Allocate a float array of size n
+ *
+ * @param vector: pointer to the float array
+ * @param n: size of the array to be located
+ */
 void alloc_vector(float **vector, long n) {
   *vector = (float *)malloc(n * sizeof(float));
   if (*vector == NULL) {
@@ -17,14 +23,13 @@ void alloc_vector(float **vector, long n) {
   return;
 }
 
-void alloc_vector_long
-
-    (long **vector, /* vector */
-     long n)        /* size */
-
-/* allocates storage for a vector of size n and type long */
-
-{
+/**
+ * \brief Allocate a long array of size n
+ *
+ * @param vector: pointer to the long array
+ * @param n: size of the array to be located
+ */
+void alloc_vector_long(long **vector, long n) {
   *vector = (long *)malloc(n * sizeof(long));
   if (*vector == NULL) {
     printf("alloc_vector_long: not enough storage available\n");
@@ -33,6 +38,13 @@ void alloc_vector_long
   return;
 }
 
+/**
+ * \brief Allocate a float matrix of size nx*ny
+ *
+ * @param vector: pointer to the matrix
+ * @param nx: size in x dimension
+ * @param ny: size in y dimension
+ */
 void alloc_matrix(float ***matrix, long nx, long ny) {
   long i;
 
@@ -51,6 +63,14 @@ void alloc_matrix(float ***matrix, long nx, long ny) {
   return;
 }
 
+/**
+ * \brief Allocate a float cubix of size nx*ny*nz
+ *
+ * @param vector: pointer to the cubix
+ * @param nx: size in x dimension
+ * @param ny: size in y dimension
+ * @param nz: size in z dimension
+ */
 void alloc_cubix(float ****cubix, long nx, long ny, long nz) {
   long i, j;
 
@@ -76,11 +96,24 @@ void alloc_cubix(float ****cubix, long nx, long ny, long nz) {
   return;
 }
 
+/**
+ * \brief Free an array of size n starting at position of pointer vector
+ *
+ * @param vector: start of the array
+ * @param n: size of the array
+ */
 void disalloc_vector(float *vector, long n) {
   free(vector);
   return;
 }
 
+/**
+ * \brief Free a matrix of size n starting at position of pointer matrix
+ *
+ * @param vector: start of the array
+ * @param nx: size in x dimension
+ * @param ny: size in y dimension
+ */
 void disalloc_matrix(float **matrix, long nx, long ny) {
   long i;
   for (i = 0; i < nx; i++)
@@ -89,6 +122,14 @@ void disalloc_matrix(float **matrix, long nx, long ny) {
   return;
 }
 
+/**
+ * \brief Free a matrix of size n starting at position of pointer cubix
+ *
+ * @param vector: start of the array
+ * @param nx: size in x dimension
+ * @param ny: size in y dimension
+ * @param nz: size in z dimension
+ */
 void disalloc_cubix(float ***cubix, long nx, long ny, long nz) {
   long i, j;
   for (i = 0; i < nx; i++)
@@ -100,79 +141,59 @@ void disalloc_cubix(float ***cubix, long nx, long ny, long nz) {
   return;
 }
 
-/*--------------------------------------------------------------------------*/
-
-void read_string
-
-    (char *v) /* string to be read */
-
-/*
- reads a long value v
-*/
-
-{
+/**
+ * \brief Read a string of size 80 into v from stdin
+ *
+ * @param v: buffer that is read into from stdin
+ */
+void read_string(char *v) {
   fgets(v, 80, stdin);
   if (v[strlen(v) - 1] == '\n')
     v[strlen(v) - 1] = 0;
-  return;
 }
 
-/*--------------------------------------------------------------------------*/
-
-void read_long
-
-    (long *v) /* value to be read */
-
-/*
- reads a long value v
-*/
-
-{
-  char row[80]; /* string for reading data */
-
+/**
+ * \brief Read long from stdin
+ *
+ * @param v: afterwards, contains number from stdin
+ */
+void read_long(long *v) {
+  char row[80];
   fgets(row, 80, stdin);
   if (row[strlen(row) - 1] == '\n')
     row[strlen(row) - 1] = 0;
   sscanf(row, "%ld", &*v);
-  return;
 }
 
-/*--------------------------------------------------------------------------*/
-
-void read_float
-
-    (float *v) /* value to be read */
-
-/*
- reads a float value v
-*/
-
-{
-  char row[80]; /* string for reading data */
-
+/**
+ * \brief Read float from stdin
+ *
+ * @param v: afterwards, contains number from stdin
+ */
+void read_float(float *v) {
+  char row[80];
   fgets(row, 80, stdin);
   if (row[strlen(row) - 1] == '\n')
     row[strlen(row) - 1] = 0;
   sscanf(row, "%f", &*v);
-  return;
 }
 
-void read_pgm_and_allocate_memory
-
-    (const char *file_name, /* name of pgm file */
-     long *nx,              /* image size in x direction, output */
-     long *ny,              /* image size in y direction, output */
-     float ***u)            /* image, output */
-
-/*
-  reads a greyscale image that has been encoded in pgm format P5;
-  allocates memory for the image u;
-  adds boundary layers of size 1 such that
-  - the relevant image pixels in x direction use the indices 1,...,nx
-  - the relevant image pixels in y direction use the indices 1,...,ny
-*/
-
-{
+/**
+ * \brief Read a pgm image and store it in u
+ *
+ * Reads a greyscale image that has been encoded in pgm format P5 and
+ * allocates memory for the image u.
+ * Afterwards, adds boundary layers of size 1 such that
+ * the relevant image pixels in x direction use the indices 1,...,nx
+ * and the relevant image pixels in y direction use the indices 1,...,ny.
+ *
+ * @param file_name: name of the image file
+ * @param nx: size of the image in x dimension
+ * @param ny: size of the image in y dimension
+ * @param u: pointer to the image buffer
+ */
+void read_pgm_and_allocate_memory(const char *file_name, long *nx, long *ny,
+                                  float ***u) {
   FILE *inimage; /* input file */
   char row[80];  /* for reading data */
   long i, j;     /* loop variables */
@@ -202,28 +223,22 @@ void read_pgm_and_allocate_memory
 
   /* close file */
   fclose(inimage);
+}
 
-  return;
-
-} /* read_pgm_and_allocate_memory */
-
-/*--------------------------------------------------------------------------*/
-
-void comment_line
-
-    (char *comment,    /* comment string (output) */
-     char *lineformat, /* format string for comment line */
-     ...)              /* optional arguments */
-
-/*
-  Add a line to the comment string comment. The string line can contain plain
-  text and format characters that are compatible with sprintf.
-  Example call: print_comment_line(comment,"Text %f %d",float_var,int_var);
-  If no line break is supplied at the end of the input string, it is added
-  automatically.
-*/
-
-{
+/**
+ * \brief Add a line to the comment string.
+ *
+ * Add a line to the comment string comment. The string line can contain plain
+ * text and format characters that are compatible with sprintf.
+ * Example call: print_comment_line(comment,"Text %f %d",float_var,int_var);
+ * If no line break is supplied at the end of the input string, it is added
+ * automatically.
+ *
+ * @param comment: comment string
+ * @param lineform: format string
+ * @param ...: optional arguments
+ */
+void comment_line(char *comment, char *lineformat, ...) {
   char line[80];
   va_list arguments;
 
@@ -244,24 +259,20 @@ void comment_line
   va_end(arguments);
 
   return;
+}
 
-} /* comment_line */
-
-/*--------------------------------------------------------------------------*/
-
-void write_pgm
-
-    (float **u,       /* image, unchanged */
-     long nx,         /* image size in x direction */
-     long ny,         /* image size in y direction */
-     char *file_name, /* name of pgm file */
-     char *comments)  /* comment string (set 0 for no comments) */
-
-/*
-  writes a greyscale image into a pgm P5 file;
-*/
-
-{
+/**
+ * \brief Write image buffer to file.
+ *
+ * Write the given image buffer to the given file and include comments
+ *
+ * @param u: image buffer, unchanged
+ * @param nx: size of the image in x dimension
+ * @param ny: size of the image in y dimension
+ * @param file_name: name of the image file
+ * @param comments: comment string, NULL for no comments
+ */
+void write_pgm(float **u, long nx, long ny, char *file_name, char *comments) {
   FILE *outimage;     /* output file */
   long i, j;          /* loop variables */
   float aux;          /* auxiliary variable */
@@ -276,8 +287,9 @@ void write_pgm
 
   /* write header */
   fprintf(outimage, "P5\n"); /* format */
-  if (comments != 0)
-    fprintf(outimage, comments);          /* comments */
+  if (comments != 0) {
+    fprintf(outimage, comments); /* comments */
+  }
   fprintf(outimage, "%ld %ld\n", nx, ny); /* image size */
   fprintf(outimage, "255\n");             /* maximal value */
 
@@ -296,22 +308,16 @@ void write_pgm
 
   /* close file */
   fclose(outimage);
+}
 
-  return;
-
-} /* write_pgm */
-
-/*--------------------------------------------------------------------------*/
-
-void dummies
-
-    (float **u, /* image matrix */
-     long nx,   /* size in x direction */
-     long ny)   /* size in y direction */
-
-/* creates dummy boundaries by mirroring */
-
-{
+/**
+ * \brief Create reflecting boundary conditions.
+ *
+ * @param u: image buffer
+ * @param nx: size of the image in x dimension
+ * @param ny: size of the image in y dimension
+ */
+void dummies(float **u, long nx, long ny) {
   long i, j; /* loop variables */
 
   for (i = 1; i <= nx; i++) {
@@ -323,49 +329,40 @@ void dummies
     u[0][j] = u[1][j];
     u[nx + 1][j] = u[nx][j];
   }
-
-  return;
 }
 
-/*--------------------------------------------------------------------------*/
-
-float sgn(float x)
-
-/*
- sign function
-*/
-
-{
+/**
+ * \brief Sign function. -1 if negative, 1 if positive, 0 if 0
+ *
+ * @param x: number which sign should be calculated
+ */
+float sgn(float x) {
   float sign;
-
   if (x > 0.0)
     sign = 1.0;
   else if (x < 0)
     sign = -1.0;
   else
     sign = 0.0;
-
-  return (sign);
+  return sign;
 }
 
-/*--------------------------------------------------------------------------*/
-
-void analyse_grey
-
-    (float **u,   /* image, unchanged */
-     long nx,     /* pixel number in x direction */
-     long ny,     /* pixel number in y direction */
-     float *min,  /* minimum, output */
-     float *max,  /* maximum, output */
-     float *mean, /* mean, output */
-     float *std)  /* standard deviation, output */
-
-/*
- computes minimum, maximum, mean, and standard deviation of a greyscale
- image u
-*/
-
-{
+/**
+ * \brief Compute statistics for the given image.
+ *
+ *  Compute minimum, maximum, mean and standard deviation of the greyscale
+ *  image u.
+ *
+ * @param u: image buffer
+ * @param nx: size of the image in x dimension
+ * @param ny: size of the image in y dimension
+ * @param min: minimum of u, output
+ * @param max: maximum of u, output
+ * @param mean: mean of u, output
+ * @param std: standard deviation, output
+ */
+void analyse_grey(float **u, long nx, long ny, float *min, float *max,
+                  float *mean, float *std) {
   long i, j;    /* loop variables */
   double help1; /* auxiliary variable */
   float help2;  /* auxiliary variable */
@@ -390,11 +387,17 @@ void analyse_grey
       *std = *std + help2 * help2;
     }
   *std = sqrt(*std / (nx * ny));
+}
 
-  return;
-
-} /* analyse_grey */
-
+/**
+ * \brief Clamp the given number between lo and hi
+ *
+ * Returns lo if n < lo, hi if n > hi and n else
+ *
+ * @param n: number to be clamped
+ * @param lo: lower bound
+ * @param hi: higher bound
+ */
 long clamp(long n, long lo, long hi) {
   if (n > hi)
     return hi;
@@ -403,6 +406,14 @@ long clamp(long n, long lo, long hi) {
   return n;
 }
 
+/**
+ * \brief Copy image from src to dest
+ *
+ * @param src: source image
+ * @param dest: destination buffer
+ * @param nx: size of the image in x dimension
+ * @param ny: size of the image in y dimension
+ */
 void imgcpy(float **src, float **dest, size_t nx, size_t ny) {
   for (size_t i = 0; i < nx; ++i) {
     for (size_t j = 0; j < ny; ++j) {
@@ -411,16 +422,49 @@ void imgcpy(float **src, float **dest, size_t nx, size_t ny) {
   }
 }
 
+/**
+ * \brief Check if (x,y) is in a circle of a given radius with centre
+ * (cx, cy)
+ *
+ * Returns 1 if (x-cx)^2 + (y-cy)^2 <= radius^2, 0 else
+ *
+ * @param x: x coordinate
+ * @param y: y coordinate
+ * @param cx: x coordinate of the centre of the circle
+ * @param cy: y coordinate of the centre of the circle
+ * @param radius: radius of the circle
+ */
 int in_circle(long x, long y, long cx, long cy, float radius) {
   return powf(x - cx, 2.0f) + powf(y - cy, 2.0f) <= radius * radius;
 }
 
+/**
+ * \brief Check if the value is inside the bound.
+ *
+ * The value is inside the bound if i>=1 and i<=nx
+ *
+ * @param i: value to be checked
+ * @param nx: maximum value
+ */
 int out_of_bounds(long i, long nx) { return i < 1 || i > nx; }
 
+/**
+ * \brief Check if the coordinate is inside the image bounds.
+ *
+ * @param i: x coordinate of the value to be checked
+ * @param j: y coordinate of the value to be checked
+ * @param nx: maximum value in x dimension
+ * @param ny: maximum value in y dimension
+ */
 int in_image(long i, long j, long nx, long ny) {
   return !out_of_bounds(i, nx) && !out_of_bounds(j, ny);
 }
 
+/**
+ * \brief Calculate the number of pixels inside a circle
+ *
+ * @param radius: radius of the circle
+ */
 int gauss_circle(float radius) {
   long l_max = ceil(radius) + 1;
   long n = 0;

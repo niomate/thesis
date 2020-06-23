@@ -31,10 +31,6 @@
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
 
-#ifndef max
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#endif
-
 /**
  * Enum for convolution types for better readability */
 typedef enum {
@@ -1070,7 +1066,7 @@ int main(int argc, char **argv)
     /* Insert corner marks into the image */
     if (display_type == 'x')
       draw_corners_x(u, nx, ny, v);
-    else 
+    else
       draw_corners_o(u, nx, ny, v);
   }
 
