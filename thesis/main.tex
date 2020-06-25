@@ -31,7 +31,7 @@ onehalfspacing, % Single line spacing, alternatives: onehalfspacing or doublespa
 %draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
 %nolistspacing, % If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
 %liststotoc, % Uncomment to add the list of figures/tables/etc to the table of contents
-%toctotoc, % Uncomment to add the main table of contents to the table of contents
+toctotoc, % Uncomment to add the main table of contents to the table of contents
 %parskip, % Uncomment to add space between paragraphs
 %nohyperref, % Uncomment to not load the hyperref package
 headsepline, % Uncomment to get a line under the header
@@ -44,7 +44,7 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage{amsmath, amssymb}
 %\usepackage{mathpazo} % Use the Palatino font by default
 
-\usepackage[backend=biber, citestyle=ieee]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
+\usepackage[backend=biber, sorting=none]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
 \addbibresource{references.bib}
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
@@ -53,10 +53,18 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage{xcolor}
 \usepackage{colortbl} 
 \usepackage{diagbox}
-\usepackage{makeidx}
 \usepackage{array} 
-\usepackage{float} 
-\makeindex
+\usepackage{float}
+
+
+% To get rid of widows and clubs.
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+% Fix wrong hyphenations
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
 
 %----------------------------------------------------------------------------------------
 %   LISTING SETTINGS
@@ -85,6 +93,7 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
     tabsize=2
 }
 \lstset{style=mystyle}
+
 %----------------------------------------------------------------------------------------
 %   MARGIN SETTINGS
 %----------------------------------------------------------------------------------------
@@ -96,7 +105,6 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
     bindingoffset=.5cm, % Binding offset
     top=1.5cm, % Top margin
     bottom=1.5cm, % Bottom margin
-    %showframe, % Uncomment to show how the type block is set on the page
 }
 
 % Custom commands ---------------------------------------------------------------
@@ -114,11 +122,10 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 %----------------------------------------------------------------------------------------
 
 \thesistitle{Exploring Circular Corner Regions as Seed Points for PDE-based Inpainting} % Your thesis title, this is used in the title and abstract, print it elsewhere with \ttitle
-\supervisor{Prof. Dr. Joachim Weickert} % Your supervisor's name, this is used in the title page, print it elsewhere with \supname
-\examiner{} % Your examiner's name, this is not currently used anywhere in the template, print it elsewhere with \examname
+\supervisor{Prof.\ Dr.\ Joachim Weickert} % Your supervisor's name, this is used in the title page, print it elsewhere with \supname
+\examiner{Dr.\ Pascal Peter} % Your examiner's name, this is not currently used anywhere in the template, print it elsewhere with \examname
 \degree{Bachelor of Science} % Your degree name, this is used in the title page and abstract, print it elsewhere with \degreename
 \author{Daniel Gusenburger} % Your name, this is used in the title page and abstract, print it elsewhere with \authorname
-\addresses{} % Your address, this is not currently used anywhere in the template, print it elsewhere with \addressname
 
 \subject{Computer Science} % Your subject area, this is not currently used anywhere in the template, print it elsewhere with \subjectname
 \keywords{} % Keywords for your thesis, this is not currently used anywhere in the template, print it elsewhere with \keywordnames
@@ -157,15 +164,15 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
         \begin{minipage}[t]{0.4\textwidth}
             \begin{flushleft} \large
                 \emph{Author:}\\
-                \authorname % Author name - remove the \href bracket to remove the link
+                \authorname
             \end{flushleft}
         \end{minipage}
         \begin{minipage}[t]{0.5\textwidth}
             \begin{flushright} \large
                 \emph{Supervisor/Advisor/Reviewer:} \\
-                \supname \\[0.3cm]
+                \supname\\[0.3cm]
                 \emph{Second reviewer:}\\
-                Dr. Pascal Peter
+                \examname\\
             \end{flushright}
         \end{minipage}\\[1cm]
         \large \textit{A thesis submitted in fulfillment of the requirements\\ for the degree of \degreename}\\[0.3cm] % University requirement text
@@ -181,27 +188,38 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 %   DECLARATION PAGE
 %----------------------------------------------------------------------------------------
 
-%\begin{declaration}
-%    \addchaptertocentry{\authorshipname} % Add the declaration to the table of contents
-%    \noindent I, \authorname, declare that this thesis titled, \enquote{\ttitle} and the work presented in it are my own. I confirm that:
+\begin{declaration}
+    \addchaptertocentry{Declaration of Authorship}
+    \noindent I declare that this thesis titled, \enquote{\ttitle} and the work 
+    presented in it are my own. I confirm that this thesis is my own work and that I have
+    documented all sourced used.\\
 
-%    \begin{itemize}
-%        \item This work was done wholly or mainly while in candidature for a research degree at this University.
-%        \item Where any part of this thesis has previously been submitted for a degree or any other qualification at this University or any other institution, this has been clearly stated.
-%        \item Where I have consulted the published work of others, this is always clearly attributed.
-%        \item Where I have quoted from the work of others, the source is always given. With the exception of such quotations, this thesis is entirely my own work.
-%        \item I have acknowledged all main sources of help.
-%        \item Where the thesis is based on work done by myself jointly with others, I have made clear exactly what was done by others and what I have contributed myself.\\
-%    \end{itemize}
+    \noindent Signed:\\
+    \rule[0.5em]{25em}{0.5pt} % This prints a line for the signature
 
-%    \noindent Signed:\\
-%    \rule[0.5em]{25em}{0.5pt} % This prints a line for the signature
+    \noindent Date:\\
+    \rule[0.5em]{25em}{0.5pt} % This prints a line to write the date
+\end{declaration}
 
-%    \noindent Date:\\
-%    \rule[0.5em]{25em}{0.5pt} % This prints a line to write the date
-%\end{declaration}
+\cleardoublepage
 
-%\cleardoublepage
+\begin{acknowledgements}
+    \addchaptertocentry{\acknowledgementname}
+    Firstly, I want to thank Prof.\ Dr.\ Joachim Weickert for his support and professional insight
+    on the topic as well as for providing me with an interesting topic for my thesis. He always
+    had an open ear for technical questions even despite the difficult situation that was
+    Covid-19.\\
+\\
+    \noindent Naturally, I also want to thank Dr.\ Pascal Peter for accepting my
+    request to be the second reviewer on such fairly short notice.\\
+\\
+    \noindent Moreover, I want to express my gratitude towards my friends and family for being 
+    so supportive of me during the time of writing this thesis and for proof-reading early
+    draft versions.\\
+\\
+    \noindent Last but certainly not least, I want to acknowledge my supervisor at work for 
+    giving me the necessary time off to finish my thesis.
+\end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
 %   ABSTRACT PAGE
@@ -227,10 +245,6 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 %   ACKNOWLEDGEMENTS
 %----------------------------------------------------------------------------------------
 
-%\begin{acknowledgements}
-%    \addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-%\end{acknowledgements}
-
 %----------------------------------------------------------------------------------------
 %   LIST OF CONTENTS/FIGURES/TABLES PAGES
 %----------------------------------------------------------------------------------------
@@ -240,49 +254,6 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 %\listoffigures % Prints the list of figures
 
 %\listoftables % Prints the list of tables
-
-%----------------------------------------------------------------------------------------
-%   ABBREVIATIONS
-%----------------------------------------------------------------------------------------
-
-%\begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
-%    EED & Edge-enhancing diffusion\\
-%\end{abbreviations}
-
-%----------------------------------------------------------------------------------------
-%   PHYSICAL CONSTANTS/OTHER DEFINITIONS
-%----------------------------------------------------------------------------------------
-
-%\begin{constants}{lr@{${}={}$}l} % The list of physical constants is a three column table
-
-%% The \SI{}{} command is provided by the siunitx package, see its documentation for instructions on how to use it
-
-%Speed of Light & $c_{0}$ & \SI{2.99792458e8}{\meter\per\second} (exact)\\
-%%Constant Name & $Symbol$ & $Constant Value$ with units\\
-
-%\end{constants}
-
-%----------------------------------------------------------------------------------------
-%   SYMBOLS
-%----------------------------------------------------------------------------------------
-
-%\begin{symbols}{lll} % include a list of symbols (a three column table)
-
-%$a$ & distance & \si{\meter} \\
-%$p$ & power & \si{\watt} (\si{\joule\per\second}) \\
-%%symbol & name & unit \\
-
-%\addlinespace % gap to separate the roman symbols from the greek
-
-%$\omega$ & angular frequency & \si{\radian} \\
-
-%\end{symbols}
-
-%----------------------------------------------------------------------------------------
-%   dedication
-%----------------------------------------------------------------------------------------
-
-%\dedicatory{dedicated to my cat}
 
 %----------------------------------------------------------------------------------------
 %   thesis content - chapters
@@ -308,15 +279,6 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 %----------------------------------------------------------------------------------------
 
 \appendix % Cue to tell LaTeX that the following "chapters" are Appendices
-
-% Include the appendices of the thesis as separate files from the Appendices folder
-% Uncomment the lines as you write the Appendices
-
-%\include{Appendices/AppendixA}
-%\include{Appendices/AppendixB}
-%\include{Appendices/AppendixC}
-
-\printindex
 
 %----------------------------------------------------------------------------------------
 %   BIBLIOGRAPHY

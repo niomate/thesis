@@ -1,6 +1,6 @@
 \chapter{Implementation}\label{ch:Implementation} 
 In this chapter, I will present my contributions to this work and go over the technical side of
-things. First off, we need to discretise the theory introduced in chapter \ref{ch:Theory} in order
+things. First off, we need to discretise the theory introduced in Chapter~\ref{ch:Theory} in order
 to implement the corner detection and inpainting algorithms. To do that, we need to talk about
 discrete images and the method of finite differences to approximate image derivatives.
 After that we shortly talk about discretisation of diffusion processes which we need to implement
@@ -15,7 +15,7 @@ to me courtesy of Joachim Weickert.
 \section{Discretisation}\label{sec:Discretisation}
 
 Since reality is not infinitely fine, things such as infinitesimal calculations as seen in 
-calculus, e.g. differentation of functions, can not be applied to the real world directly.
+calculus, e.g.\ differentation of functions, can not be applied to the real world directly.
 This is a problem, because digital images are inherently not continuous as they contain only a
 finite number of pixels. 
 We could have also solved the theoretical problem in a discrete domain but that would have 
@@ -23,21 +23,23 @@ been much more troublesome.
 That is why we rather develop a continuous theory and then discretise it later to actually
 implement the ideas as algorithms.
 
-\subsection{Discrete images}\label{sub:DiscreteImages}
+\subsection{Discrete Images}\label{sub:DiscreteImages}
 Let $f:\Omega \rightarrow \R$ be an image where $\Omega
-:= (0, n_x)\times(0, n_y) \subset \R^2$ as defined in section \ref{sec:Basics}. To
-\textit{sample} the image, i.e. to discretise the image domain, we assume that all pixels lie on a
+:= (0, n_x)\times(0, n_y) \subset \R^2$ as defined in Section~\ref{sec:Basics}. To
+\textit{sample} the image, i.e.\ to discretise the image domain, we assume that all pixels lie on a
 rectangular equidistant grid inside $\Omega$, where each cell in the grid has a size of $h_x
 \times h_y$.
 That yields $N_x := n_x/h_x$ pixels in x- and $N_y := n_y/h_y$ pixels in
 y-direction.
-That being said, we define the pixel $u_{i,j}$ at grid location $(i, j)^\top$ as
+That being said, we define the pixel $u_{i,j}$ at grid location ${(i, j)}^\top$ as
 \begin{equation}
     u_{i, j} := u(ih_x, jh_y)\qquad \forall(i ,j) \in \{1,\dots,N_x\}\times\{1,\dots,N_y\}
 \end{equation}
 With that approach, the pixels are defined to lie on the crossing of the grid lines.
-An alternative idea defines the pixels to lie in the centre of each cell, i.e. at location 
-$((i-\frac{1}{2})h_x,\ (j- \frac{1}{2})h_y)^\top$.
+An alternative idea defines the pixels to lie in the centre of each cell, i.e.\ at location 
+\begin{equation}
+    {\left(\left(i-\frac{1}{2}\right)h_x,\ \left(j- \frac{1}{2}\right)h_y\right)}^\top
+\end{equation}.
 As a sidenote, the cell sizes in either direction are pretty much always assumed to be 1 in 
 practice. 
 But to keep the theory as universal as possible, we will use $h_x$ and $h_y$ instead.\\
@@ -46,7 +48,7 @@ to discretise the \textit{co-domain} or \textit{grey-value-domain}. In theory ou
 is just $\R$, but since this is rather unpractical, we limit it to $[0, 255]$. This step of
 the discretisation process is also called \textit{quantisation}.
 
-\subsection{Numerical differentiation}\label{sub:NumDiff}
+\subsection{Numerical Differentiation}\label{sub:NumDiff}
 
 Image derivatives are essential to image processing as seen in the previous chapter. Therefore we
 need a way to compute them even on discrete images. To compute the gradient or in the simpler case
@@ -62,7 +64,7 @@ where $\mathcal{O}(h^{n+1})$ describes the magnitude of the leading error term a
 \textit{approximation quality} of the Taylor series.
 The actual Taylor series is defined as
 \begin{equation}
-    T_n(x, x_0) = \sum\limits_{k=0}^{n} \frac{(x-x_0)^k}{k!}f^{(k)}(x_0)
+    T_n(x, x_0) = \sum\limits_{k=0}^{n} \frac{{(x-x_0)}^k}{k!}f^{(k)}(x_0)
     \footnote{$f^{(k)}$ denotes the $k$-th derivative of the function $f$}
 \end{equation}
 A finite difference scheme generally uses a weighted sum of neighbouring values to compute the
@@ -75,8 +77,8 @@ We can now describe $f_{i-1}$ and $f_{i+1}$ in terms of their Taylor expansion a
 \begin{align}
     f_{i-1} &= f((i-1)h) \notag\\
             &= T_n((i-1)h, ih) + \mathcal{O}(h^{n+1})\notag\\
-            &= \sum\limits_{k=0}^{n}\frac{(-h)^k}{k!}f_i^{(k)}+ \mathcal{O}(h^{n+1})\\
-    f_{i+1} &= \dots = \sum\limits_{k=0}^{n}\frac{h^k}{k!}f_i^{(k)}+ \mathcal{O}(h^{n+1})
+            &= \sum\limits_{k=0}^{n}\frac{{(-h)}^k}{k!}f_i^{(k)}+ \mathcal{O}(h^{n+1})\\
+    f_{i+1} &= \cdots = \sum\limits_{k=0}^{n}\frac{h^k}{k!}f_i^{(k)}+ \mathcal{O}(h^{n+1})
 \end{align}
 If we now choose a concrete value for $n$ (here $n=5$) we can actually compute the approximation:
 \begin{align}
@@ -85,9 +87,8 @@ If we now choose a concrete value for $n$ (here $n=5$) we can actually compute t
     f_{i+1} &= f_i + hf_i' + \frac{h^2}{2}f_i'' + \frac{h^3}{6}f_i''' + \frac{h^4}{24}f_i'''' +
     \frac{h^5}{120}f_i''''' + \mathcal{O}(h^6)\label{eq:fi+1}
 \end{align}
-The next step is the \textit{comparison of coefficients}, we insert
-\eqref{eq:fi-1} and \eqref{eq:fi+1} into the equation 
-and solve the arising linear system of equations for $\alpha,\beta,\gamma$.
+The next step is the \textit{comparison of coefficients}, we insert~\eqref{eq:fi-1} and~\eqref{eq:fi+1}
+into the equation and solve the arising linear system of equations for $\alpha,\beta,\gamma$.
 \begin{align}
     0\cdot f_i + 1\cdot f_i' + 0\cdot f_i'' \overset{!}{=} \alpha f_{i-1} + \beta f_i + \gamma
     f_{i+1}
@@ -123,7 +124,7 @@ This yields the approximation
 \begin{equation}
     f_i'\approx\frac{f_{i+1} - f_{i-1}}{2h}
 \end{equation}
-To find out how good this scheme is, we re-insert \eqref{eq:fi-1} and \eqref{eq:fi+1} to get
+To find out how good this scheme is, we re-insert~\eqref{eq:fi-1} and~\eqref{eq:fi+1} to get
 \begin{align}
     \frac{f_{i+1} - f_{i-1}}{2h}= -&\frac{1}{2h}\left(f_i - hf_i' + \frac{h^2}{2}f_i'' - \frac{h^3}{6}f_i''' + \frac{h^4}{24}f_i'''' -
     \frac{h^5}{120}f_i''''' + \mathcal{O}(h^6)\right) + \notag\\
@@ -148,12 +149,12 @@ order out of all three.
     f_i' &= \frac{f_i - f_{i-1}}{h} + \mathcal{O}(h)&\textnormal{(backward differences)}\notag\\
     f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
 \end{align}
-\subsection{Numerical schemes for diffusion}\label{sub:NumSchemesDiffusion}
+\subsection{Numerical Schemes for Diffusion}\label{sub:NumSchemesDiffusion}
 As discretisation for the inpainting process, the non-standard discretisation scheme that was
-derived in \cite{www13} was used. The actual derivation of the scheme is fairly complex so I will
-just explain the basics and then refer the interested reader to \cite{www13} and \cite{weickert96}
+derived in~\cite{www13} was used. The actual derivation of the scheme is fairly complex so I will
+just explain the basics and then refer the interested reader to~\cite{www13} and~\cite{weickert96}
 for more information on numerical schemes for diffusion processes in general.\\
-We remember the defining equation of EED:
+We remember the defining equation of EED\@:
 \begin{equation}
     \partial_t u = \diverg(\underbrace{g(\del u_\sigma\del u_\sigma^\top)}_{=:D}\del
     u)\label{eq:EED}
@@ -164,7 +165,7 @@ To discretise this equation, we first write the diffusion tensor $D$ as a symmet
         a&b\\b&c
     \end{pmatrix}
 \end{equation}
-Resubstituting this into \eqref{eq:EED}, we get 
+Resubstituting this into~\eqref{eq:EED}, we get 
 \begin{equation}
 \partial_t u = \diverg \begin{pmatrix}
     a\cdot \partial_x u+b\cdot \partial_y u\\
@@ -172,11 +173,12 @@ Resubstituting this into \eqref{eq:EED}, we get
 \end{pmatrix} = a\cdot\partial_{xx} u + 2b\cdot \partial_{xy}u+ c\cdot \partial_{yy} u
 \end{equation}
 These second order derivatives can easily be discretised using central differences. This leads to a
-fairly complex stencil that the interested reader can look up in \cite{weickert96}.
+fairly complex stencil that the interested reader can look up in~\cite{weickert96}.
 The problem with this discretisation is that it is not guaranteed to satisfy the
 \textit{nonnegativity requirement} or \textit{stability in the maximum norm}\cite{weickert96}. This requirement is
 an important theoretical requirement as it is needed to guarantee the well-posedness of the
-diffusion process, which in turn guarantees the numerical stability of the algorithm. \cite{weickert96}
+diffusion process, which in turn guarantees the numerical stability of the
+algorithm~\cite{weickert96}.
 To enable this discretisation to fulfill this requirement, one has to impose the restriction that
 the \textit{spectral condition number $\kappa$}, which is the ratio between the smallest and
 largest eigenvalue of the matrix $D$, is bounded by 
@@ -189,10 +191,10 @@ However, this requirement also puts a restriction on the anisotropy of the diffu
 ratio between the largest and smallest eigenvalue of the diffusion tensor is now bounded from
 above, which is why one might consider another discretisation, that is not necessarily stable in
 the maximum norm.
-In \cite{www13}, a whole framework for discretisations stable in the
+In~\cite{www13}, a whole framework for discretisations stable in the
 \textit{euclidean or 2-norm} was derived. This framework embeds a series of 8 different
 stencils that are dependent on 2 parameters $\alpha, \beta$. Let us now denote such a spatial
-discretisation of \eqref{eq:EED} by 
+discretisation of~\eqref{eq:EED} by 
 \begin{equation}
     \frac{d\mathbf{u}}{dt} = \mathbf{A}(\mathbf{u})\mathbf{u}
 \end{equation}
@@ -224,7 +226,7 @@ as
 The upper index $k$ denotes the `time level' of $u$.
 Stability for this scheme can be guaranteed, if 
 \begin{equation}
-    \rho(I + \tau\mathbf{A}(u^k)) \leq 1\ \Leftrightarrow\ \tau \leq \frac{2}{\rho(\mathbf{A}(u^k)))}
+    \rho(I + \tau\mathbf{A}(u^k)) \leq 1\ \Leftrightarrow\ \tau \leq \frac{2}{\rho(\mathbf{A}(u^k))}
 \end{equation}
 where $\rho$ denotes the \textit{spectral norm} or \textit{modulus of the largest
 eigenvalue}.\cite{www13}
@@ -241,41 +243,42 @@ $\mathbf{A}(u^k)$ since one can show, that because of the negative semidefiniten
 larger than 1.
 This all shows that the semi-implicit scheme given by 
 \begin{equation}
-    u^{k+1} = (I- \mathbf{A}(u^k))^{-1}u^k
+    u^{k+1} = {(I- \mathbf{A}(u^k))}^{-1}u^k
 \end{equation}
 is stable in the 2-norm for every time step size $\tau$.
 
 Furthemore, the semi-implicit scheme the next iteration can not be computed explicitly (as the name
 suggests) as is the case with the explicit scheme. Instead one has to solve
-the linear system of equations given by \eqref{eq:SemiImpl}. This is usually done with an iterative
-solver like Gauss-Seidel or conjugate gradients(CG) \cite{conjugateGradients}. I will not explain these solvers as this is way
+the linear system of equations given by~\eqref{eq:SemiImpl}. This is usually done with an iterative
+solver like Gauss-Seidel or conjugate gradients (CG)~\cite{conjugateGradients}. I will not explain these solvers as this is way
 beyond the scope of this thesis.
 The only thing important to know, is that for the evaluation of the inpainting masks in my thesis,
 I used a semi-implicit scheme with a conjugate gradients solver and a timestep size of 1000.
 
-\section{Circular corner regions}\label{sec:Contribution}
+\section{Circular Corner Regions}\label{sec:Contribution}
 As mentioned in the beginning, the main concern for the approach of Zimmer\cite{zimmer07} was that the 
 corner localisation is not accurate enough that we can just keep a 4 or 8-neighbourhood 
 of pixels. The implication is that the regions they inserted into the mask were were too small to
 cover the potential uncertainty in the corner localisation process stemming from the Gaussian
-smoothing in the computation of the structure tensor (see \ref{sec:Structure}). Specifically
+smoothing in the computation of the structure tensor (see~\ref{sec:Structure}). Specifically
 because in order to limit the amount of corners detected, they chose to vary the integration scale
 parameter increasing the uncertainty in the localisation, this poses a problem.
 That is why I want to explore increasing the neighbourhood of pixels that is kept around each
 corner. A disk-shaped neighbourhood with radius $r$ and origin point $(x, y)$ (also called a
 \textit{(circular) corner region} in the following) is defined as 
 \begin{equation}
-    B_r(x, y) = \lbrace (x',y') \in \Omega\ \vert\ (x'-x)^2 + (y'-y)^2 \leq r^2\rbrace
+    B_r(x, y) = \lbrace (x',y') \in \Omega\ \vert\ {(x'-x)}^2 + {(y'-y)}^2 \leq r^2\rbrace
 \end{equation}
-The optimal choice for the radius of the corner disks is discussed in section \ref{sec:Parameters}.
+The optimal choice for the radius of the corner disks is discussed in
+Section~\ref{sec:ParameterSelection}.
 Increasing the radius of the corner regions obviously leads to denser masks if one does not adjust
 the limit of corner regions that are put in the mask. Since doing this manually for every picture
 would not be practical at all in the context of a codec, we have to come up with a way to make sure
 the masks that are produced are always similar in pixel density.\\
 One way to achieve this would be to introduce a percentile parameter instead of using the constant
-threshold introduced in the corner detection method described in \ref{sub:Corner}.
+threshold introduced in the corner detection method described in~\ref{sub:Corner}.
 
-\subsection{Percentile thresholding}\label{sub:Percentile}
+\subsection{Percentile Thresholding}\label{sub:Percentile}
 In the classic version of Harris corner detection, an artificial threshold parameter $T$ is
 introduced to weed out `bad' corners. This parameter however is fairly sensible to the input image.
 
@@ -288,12 +291,12 @@ I computed the percentile using the \textit{nearest-rank method} since this was 
 approach and worked good enough already. In this method, the n-th percentile is just simply
 computed as the value at position 
 \[
-\lceil \frac{n}{100}\cdot N_xN_y\rceil
+\lceil \frac{n}{100}\cdot N_{x}N_{y}\rceil
 \] 
 of the ordered set of values\cite{percentile}.\\
 Since in an image, there are more non-corners than actual corners, we have to deal with many zero
 or close-to-zero cornerness values. This is a problem because the percentile computation would be skewed
-heavily if e.g. more than 80 percent of all values are zero already. To solve this, I first filtered
+heavily if e.g.\ more than 80 percent of all values are zero already. To solve this, I first filtered
 out all values below a threshold close to zero and then accumulated the remaining values into an
 array of appropriate size. This array is then sorted using an already implemented Quicksort
 algorithm from the C standard library. Subsequently, the new threshold is given as the value at
@@ -305,7 +308,7 @@ the index calculated above.
 While this approach works a bit better than the original version using the fixed threshold, it is
 still not perfect. For example, if one uses a percentile of $0.5$, meaning that we want to throw
 out $50\%$ of all corners, we could still get wildly different results for two different input
-images as we can see in \ref{fig:PercExample}.
+images as we can see in~\ref{fig:PercExample}.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.4\linewidth]{../Images/example_rect_50.png}
@@ -315,7 +318,7 @@ images as we can see in \ref{fig:PercExample}.
 \end{figure}\\
 To tackle this issue, I propose a new method I call \textit{Total Pixel Percentage
 Thresholding}. The idea behind this method is, that one makes the amount of corners that are kept
-in the masks dependent on the mask radius, i.e. the radius of a corner region in the inpainting
+in the masks dependent on the mask radius, i.e.\ the radius of a corner region in the inpainting
 mask. In other words, one specifies the desired mask pixel density and depending on the mask
 radius, the maximum number of corners that can be inserted into the mask is calculated.
 The problem of calculating the number of pixels inside a disc of radius $r$ is also known as
@@ -327,20 +330,19 @@ by\cite{hilbert96}
 \end{equation}
 but since this is an infinite sum, the exact solution can not be computed this way. This is why I
 chose the naive way by just iterating through a loop and count the numbers inside the disk as seen
-in \ref{fig:PixelRegion}. 
+in~\ref{fig:PixelRegion}. 
 I could have also chosen to use an upper bound and estimate the number of pixels this way, but this
 would not have been as accurate.
 \begin{figure}[ht]
     \centering
     \lstinputlisting[language=C, linerange={424-435}]{/home/daniel/Uni/Thesis/src/utils.c}
-    \caption{Computation of number of pixels in disk}
-    \label{fig:PixelRegion}
+    \caption{Computation of number of pixels in disk}\label{fig:PixelRegion}
 \end{figure}
 
 After computing the area per corner region we can simple calculate how many regions can be inserted
 into the mask without exceeding the pixel density threshold.
 \begin{equation}
-    N_{corners} = \left\lceil \frac{q \cdot N_xN_y}{N_{disc}} \right\rceil,\qquad0\leq q\leq 1 
+    N_{corners} = \left\lceil \frac{q \cdot N_{x}N_{y}}{N_{disc}} \right\rceil,\qquad0\leq q\leq 1 
 \end{equation}
 where $q$ is the percentile parameter, $N_x, N_y$ the number of pixels in the respective direction
 and $N_{disc}$ the amount of pixels per corner region. $N_{corners}$ is then an upper bound on the
@@ -352,12 +354,12 @@ computation of this upper bound, since there would have been no easy way to dete
 overlapping pixels a priori.
 Instead, I introduced another method tackling the issue of potentially overlapping corner regions
 called \textit{Circular non-maximum suppression}. We will see how this method
-works in the next section \ref{sub:Suppression}.
+works in the next Section~\ref{sub:Suppression}.
 Another thing to mention is that the amount of pixels in the mask using this approach is limited by
 the number of corners detected since I do not even consider pixels that have a sufficiently small
 cornerness value as mask candidates.
 
-\subsection{Circular non-maximum suppression}\label{sub:Suppression}
+\subsection{Circular Non Maximum Suppression}\label{sub:Suppression}
 \begin{figure}[t]
     \begin{lstlisting}[language=Python]
 # Circular non-maximum suppression at x with radius r.
@@ -380,12 +382,12 @@ def circular_suppression(harris, x, r, out):
 
 As mentioned previously, overlapping corner regions tend to worsen the estimation of the mask pixel
 density. 
-Furthermore, as Zimmer already stated in \cite{zimmer07} the sparsity of corners in images poses a
+Furthermore, as Zimmer already stated in~\cite{zimmer07} the sparsity of corners in images poses a
 problem for the reconstruction quality. This method is supposed to tackle both of these issues by
 increasing the radius of the local maximum search during the corner detection. In the original
 corner detection method, corners are determined by the local maxima inside an 
 8-neighbourhood of the cornerness measure. The idea is to adapt the radius of the neighbourhood for the
-local maximum search to the mask radius. As experiments showed (see section \ref{sec:Results}), this minimises the overlap in
+local maximum search to the mask radius. As experiments showed (see Section~\ref{sec:Results}), this minimises the overlap in
 corner regions in the final mask and enables a fairly accurate estimation of the mask pixel
 density allowing us to consistently produce masks with similar density. \\
 The other issue that this method tries to solve is the uneven distribution of corners across

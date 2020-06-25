@@ -51,14 +51,13 @@ corners.\cite{weickert96}
     \includegraphics[width=0.4\linewidth]{../Images/rect/rect_8_corner.png}
     \caption{Location of corners with different values for $\rho$.\\
 \textbf{Top left:} $\rho=2$, \textbf{Top right:} $\rho=4$, \textbf{Bottom left:}
-$\rho=6$, \textbf{Bottom right} $\rho=8$}. Original image: rect\_tiny.pgm (50x50), created with
-GIMP
-    \label{fig:Integration}
+$\rho=6$, \textbf{Bottom right} $\rho=8$. Original image: rect\_tiny.pgm (50$\times$50), created with
+GIMP~\cite{gimp}}\label{fig:Integration}
 \end{figure}
-This demonstrates the issue mentioned in chapter~\ref{ch:RelatedWork} with Zimmer's approach~\cite{zimmer07} quite nicely. 
+This demonstrates the issue mentioned in Chapter~\ref{ch:RelatedWork} with Zimmer's approach~\cite{zimmer07} quite nicely. 
 We can see that with increasing integration scale, the inaccuracy increases
 steadily with it. The problem with Zimmer's approach is that they did not adress these inaccuracies in
-their mask generation. They fixed the mask radius to be just a small neighbourhood of 4-8 pixels.
+their mask generation. They fixed the mask radius to be just a small neighbourhood of 4 to 8 pixels.
 To adjust the amount of corners introduced into the mask, they adapted the integration scale.
 Obviously this introduces the aforementioned inaccuracies and combined with the fixed neighbourhood
 size, can lead to the actual corner not even being included in the final mask. (see figure
@@ -71,8 +70,7 @@ size, can lead to the actual corner not even being included in the final mask. (
     \caption{Position of corner regions for examples from figure~\ref{fig:PixelRegion}.
         Position of the corner in white. Size of the corner region: 9px (8-neighbourhood)
     \textbf{Left:} $\rho=2$, \textbf{Right:} $\rho=4$ (Corner regions in grey for visualisation
-purposes, not the actual mask)}        
-    \label{fig:Inacc}
+purposes, not the actual mask)}\label{fig:Inacc}
 \end{figure}
 We will discuss the optimal choice for the mask radius in the next section (\ref{sec:MaskEx}), but
 first I will show some examples demonstrating the ideas behind the methods introduced in
@@ -80,7 +78,7 @@ Section~\ref{sub:Percentile} and~\ref{sub:Suppression}. As we can see in
 figure~\ref{fig:CNMSExample}, CNMS allows us to distribute the corner regions in the mask more
 evenly across the whole image. While in the example without CNMS, most of the corners are
 overlapping and grouped up in the lower half of the image, using CNMS, the overlapping corners are
-removed and free up slots for corners with a lower cornerness measure, i.e. less sharp corners in
+removed and free up slots for corners with a lower cornerness measure, i.e.\ less sharp corners in
 the upper half. Later in Figure~\ref{fig:AbstractExamples}, we can also observe that thanks to
 CNMS a few extra slots are freed up to be used in other regions.\\
 \begin{figure}
@@ -94,11 +92,11 @@ CNMS a few extra slots are freed up to be used in other regions.\\
     \includegraphics[width=0.31\linewidth]{../Images/trui/trui-inpaint_non_cnms.png}
     \caption{Effect of circular non maximum suppression on spread of corners across the image.
         \textbf{Top row:} Position of corners, inpainting mask and inpainting results
-        \textbf{with} CNMS.
-\textbf{Bottom row:} Position of corners, inpainting mask and inpainting results \textbf{without} CNMS.
+        \textbf{with} CNMS\@.
+\textbf{Bottom row:} Position of corners, inpainting mask and inpainting results \textbf{without}
+CNMS\@.
     Corner detection with Foerstner-Harris corner detector, $\sigma=1,\rho=2.5,R=15$ and a
-percentile of 0.5}
-    \label{fig:CNMSExample}
+percentile of 0.5}\label{fig:CNMSExample}
 \end{figure}
 \begin{figure}[h]
     \centering
@@ -108,22 +106,20 @@ percentile of 0.5}
     \includegraphics[width=0.4\linewidth]{../Images/abstract/abstract1_small-mask_no_cnms.png}\hspace{0.2cm}
     \includegraphics[width=0.4\linewidth]{../Images/abstract/abstract1_small-inpaint_no_cnms.png}\\
     \caption{Demonstration of the effects of CNMS on the spread of corner regions.
-\textbf{Top row:} $\sigma=1,\rho=1,R=4,q=0.02$, with CNMS, Pixel density: 1.96\%, PSNR:
+\textbf{Top row:} $\sigma=1,\rho=1,R=4,q=0.02$, with CNMS, Pixel density: 1.96\%, PSNR\@:
 31.45
 \textbf{Bottom row:} $\sigma=1,\rho=1,R=4,q=0.02$, without CNMS, Pixel density:
-1.51\%, PSNR: 21.12
+1.51\%, PSNR\@: 21.12
 Inpainting parameters: $\sigma=2,\lambda=0.1,\alpha=0.49,\gamma=1,N=1000$
-Original image: abstract1\_small.pgm }
-\label{fig:AbstractCNMSExamples}
+Original image: abstract1\_small.pgm }\label{fig:AbstractCNMSExamples}
 \end{figure}
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.3\linewidth]{../Images/tppt_ex/abstract1_small4.png}
     \includegraphics[width=0.3\linewidth]{../Images/tppt_ex/abstract1_small8.png}
     \includegraphics[width=0.3\linewidth]{../Images/tppt_ex/abstract1_small12.png}
-    \caption{Effect of TPPT. Upper bound on the pixel density: 2\%. Actual values:
-    1.95\%, 1.97\%, 1.96\%}
-    \label{fig:TPPTEx}
+    \caption{Effect of TPPT\@. Upper bound on the pixel density: 2\%. Actual values:
+    1.95\%, 1.97\%, 1.96\%}\label{fig:TPPTEx}
 \end{figure}
 In Figure~\ref{fig:TPPTEx}, we can also see that TPPT actually produces masks of a
 similar size, bound by the percentage given by the parameter $p$. What I also noticed is that the
@@ -139,7 +135,7 @@ squared error (allow overshoots).
 
 \subsection{Inpainting}\label{sec:InpaintingEx}
 As already mentioned, we are using an EED-based inpainting algorithm with a Charbonnier diffusivity
-as explained in section~\ref{sec:Inpainting}.
+as explained in Section~\ref{sec:Inpainting}.
 The main parameters required by the inpainting process are 
 \begin{itemize}
     \item the noise scale $\sigma$,
@@ -158,7 +154,7 @@ In this work I fixed these parameters to $\alpha=0.49,\, \gamma=1.0$\cite{conver
 $\alpha$ (but not larger than 0.5), the sharper the image. More on the nature of these two parameters can be read about in
 ~\cite{www13, weickert96}.\\
 More interesting is the contrast parameter $\gamma$ that is required in the diffusivity function
-~\eqref{def:Diffusivity}. As already explained in section~\ref{sec:Structure}, this parameter helps to
+~\eqref{def:Diffusivity}. As already explained in Section~\ref{sec:Structure}, this parameter helps to
 distinguish between edges and non-edges. For the EED inpainting this is especially important since
 it basically determines how strongly edges will be continued into inpainting regions. 
 The caveat with this parameter is, that even though a smaller $\lambda\ (\leq0.1)$ yields very sharp
@@ -168,7 +164,7 @@ topic of current research, I had to experiment a little to find the best choice.
 suggested that the optimal $\lambda$ depends on the input image~\cite{schmaltz14}. 
 The noise scale $\sigma$ was always chosen to be somewhere between 1 and 4 as this seemed to give
 the best results.
-\section{Mask radius}\label{sec:MaskEx}
+\section{Mask Radius}\label{sec:MaskEx}
 By introducing the mask radius as an additional parameter, we now have to pose the question of what
 radius would yield the best result. One hypothesis\cite{conversation} was that it would be best to compute the the
 mask radius in dependence of the integration scale $\rho$ in order to account for the inaccuracies
@@ -195,8 +191,7 @@ mentioned in Section~\ref{sec:CornerEx}. \\
     \includegraphics[width=0.2\linewidth]{../Images/disctest/flatcorner5mask.png}\hspace{0.2cm}
     \includegraphics[width=0.2\linewidth]{../Images/disctest/flatcorner5inpaint.png}\\
     \caption{Experiment with identical mask radius $R=4$ and varying integration scale. $\rho$ from top to bottom:
-    1, 2, 3, 4, 5. PSNR from top to bottom: 12.49, 12.49, 12.49, 11.31, 8.09}
-    \label{fig:MaskEx}
+    1, 2, 3, 4, 5. PSNR from top to bottom: 12.49, 12.49, 12.49, 11.31, 8.09}\label{fig:MaskEx}
 \end{figure}
 
 The hypothesis was tested by switching out the Gaussian
@@ -295,8 +290,7 @@ could result in smaller mask sizes and ultimately better compression rates.
           &
         \addheight{\includegraphics[width=0.12\linewidth]{../Images/inacctest/cornerr5m6mask.png}}\\\hline
     \end{tabular}
-    \caption{Inpainting masks for image corner.pgm for varying integration scale and mask radius.}
-    \label{fig:InaccTestMask}
+    \caption{Inpainting masks for image corner.pgm for varying integration scale and mask radius.}\label{fig:InaccTestMask}
 \end{figure}
 \begin{figure}[H]
     \centering
@@ -366,8 +360,7 @@ could result in smaller mask sizes and ultimately better compression rates.
     \end{tabular}
     \caption{Inpainting results for mask shown in Figure~\ref{fig:InaccTestMask}. Inpainting
     parameters: $\sigma=2,\lambda=0.4,\alpha=0.49,\gamma=1$. (Original image see
-Figure~\ref{fig:BinaryImages})}
-    \label{fig:InaccTestInpaint}
+Figure~\ref{fig:BinaryImages})}\label{fig:InaccTestInpaint}
 \end{figure}
 \begin{figure}[H]
     \centering
@@ -384,8 +377,7 @@ Figure~\ref{fig:BinaryImages})}
     \end{tabular}
     \caption{PSNR values of the reconstructed images in
     Figure~\ref{fig:InaccTestInpaint}. Highlighted values are the best in the respective column.
-Gray cells are cells where the $R$ and $\rho$ are equal.}
-    \label{fig:InaccTestPSNR}
+Gray cells are cells where the $R$ and $\rho$ are equal.}\label{fig:InaccTestPSNR}
 \end{figure}
 \begin{figure}[H]
     \centering
@@ -453,8 +445,7 @@ Gray cells are cells where the $R$ and $\rho$ are equal.}
           &
         \addheight{\includegraphics[width=0.12\linewidth]{../Images/rect_inacc/rect_tinyr5m6mask.png}}\\\hline
     \end{tabular}
-    \caption{Inpainting masks for image rect\_tiny.pgm for varying integration scale and mask radius.}
-    \label{fig:RectInaccTestMask}
+    \caption{Inpainting masks for image rect\_tiny.pgm for varying integration scale and mask radius.}\label{fig:RectInaccTestMask}
 \end{figure}
 \begin{figure}[H]
     \centering
@@ -524,8 +515,7 @@ Gray cells are cells where the $R$ and $\rho$ are equal.}
     \end{tabular}
     \caption{Inpainting results for mask shown in Figure~\ref{fig:RectInaccTestMask}. Inpainting
     parameters: $\sigma=2,\lambda=0.4,\alpha=0.49,\gamma=1$. Original image see
-Figure~\ref{fig:BinaryImages}}
-    \label{fig:RectInaccTestInpaint}
+Figure~\ref{fig:BinaryImages}}\label{fig:RectInaccTestInpaint}
 \end{figure}
 \begin{figure}[H]
     \centering
@@ -540,8 +530,7 @@ Figure~\ref{fig:BinaryImages}}
     \end{tabular}
     \caption{PSNR values of the reconstructed images in
         Figure~\ref{fig:RectInaccTestInpaint}. Highlighted values are the best in the respective column.
-Gray cells are cells where the $R$ and $\rho$ are equal.}
-\label{fig:RectInaccTestPSNR}
+Gray cells are cells where the $R$ and $\rho$ are equal.}\label{fig:RectInaccTestPSNR}
 \end{figure}
 \section{Examples}\label{sec:Results}
 Finally, I will present some results of the reconstruction process using only corner regions as
@@ -567,7 +556,7 @@ deteriorates further which is to be expected.
     \includegraphics[width=0.4\linewidth]{../Images/abstract/abstract1_small-mask_larger_radius.png}\hspace{0.2cm}
     \includegraphics[width=0.4\linewidth]{../Images/abstract/abstract1_small-inpaint_larger_radius.png}
     \caption{Inpainting of image \texttt{abstract1\_small}. $\sigma=1,\rho=1,R=7,q=0.02$, Pixel
-        density: 1.99\%, PSNR: 24.57, Inpainting parameters:
+        density: 1.99\%, PSNR\@: 24.57, Inpainting parameters:
         $\sigma=2,\lambda=0.1,\alpha=0.49,\gamma=1,N=1000$, Original image: abstract1\_small.pgm
 }\label{fig:AbstractInpainting}
 \end{figure}
@@ -578,7 +567,7 @@ deteriorates further which is to be expected.
     \includegraphics[width=0.29\linewidth]{../Images/abstract/abstract1_less_noise-inpaint.png}
     \caption{Example of inpainting with noise degradation. Corner detection parameters:
     $\sigma=1.5,\rho=2.0,R=6,q=0.02$, Pixel density: 1.88\%, Inpainting parameters:
-$\sigma=2,\lambda=0.2,\alpha=0.49,\gamma=1$, PSNR: 20.74}\label{fig:AbstractNoise1}
+$\sigma=2,\lambda=0.2,\alpha=0.49,\gamma=1$, PSNR\@: 20.74}\label{fig:AbstractNoise1}
 \end{figure}
 \begin{figure}[ht]
     \centering
@@ -587,7 +576,7 @@ $\sigma=2,\lambda=0.2,\alpha=0.49,\gamma=1$, PSNR: 20.74}\label{fig:AbstractNois
     \includegraphics[width=0.29\linewidth]{../Images/abstract/abstract1_noise-inpaint.png}
     \caption{Example of inpainting with noise degradation. Corner detection parameters:
     $\sigma=1.5,\rho=2.0,R=6,q=0.02$, Pixel density: 1.88\%, Inpainting parameters:
-$\sigma=2,\lambda=0.2,\alpha=0.49,\gamma=1$, PSNR: 16.25}\label{fig:AbstractNoise2}
+$\sigma=2,\lambda=0.2,\alpha=0.49,\gamma=1$, PSNR\@: 16.25}\label{fig:AbstractNoise2}
 \end{figure}                                       
 If we now look to more textured 8-bit grey value images like \texttt{house} and \texttt{bank}, we
 see that the inpainting results become a bit worse compared to the binary images. This is primarily
@@ -607,7 +596,7 @@ underrepresented.
     \caption{Inpaining of \texttt{bank}. Corner detection parameters:
         $\sigma=1,\rho=2,R=4,q=0.11$,TPPT+CNMS,
     Pixel density: 10.76\%, Inpainting parameters: $\sigma=2,\lambda=0.5,\alpha=0.49,\gamma=1$\\
-PSNR: 18.37}\label{fig:BankEx}
+PSNR:\@18.37}\label{fig:BankEx}
 \end{figure}
 
 
@@ -621,8 +610,7 @@ PSNR: 18.37}\label{fig:BankEx}
     \fbox{\includegraphics[width=0.2\linewidth]{../../images/binary/ellipse_small.png}}
     \caption{Binary test images. From top left to bottom right: \texttt{rect\_tiny},
     \texttt{flatcorner1}, \texttt{corner}, \texttt{abstract1\_small}, \texttt{cat},
-\texttt{ellipse\_small}}
-    \label{fig:BinaryImages}
+\texttt{ellipse\_small}}\label{fig:BinaryImages}
 \end{figure}
 \begin{figure}[h]
     \centering
@@ -638,7 +626,7 @@ PSNR: 18.37}\label{fig:BankEx}
     \includegraphics[width=0.4\linewidth]{../Images/cat/cat-inpaint1510.png}
     \caption{Mask and inpainted result for cat.pgm. Corner detection parameters:
     $\sigma=1,\rho=1,R=10$, pixel density: 4.74\%, Inpainting parameters: $\sigma=2,\lambda=0.2$,
-PSNR: 18.35}\label{fig:CatExample}
+PSNR:\@18.35}\label{fig:CatExample}
 \end{figure}
 \begin{figure}[h]
     \centering
@@ -646,10 +634,8 @@ PSNR: 18.35}\label{fig:CatExample}
     \includegraphics[width=0.2\linewidth]{../Images/ellipse_small-inpaint.png}
     \caption{Example for the image ellipse\_small (see Figure~\ref{fig:BinaryImages}). Corner
     detection parameters: $\sigma=1,\rho=,R=4$. Inpainting parameters:
-$\sigma=2,\lambda=0.1,\alpha=0.49,\gamma=1$. PSNR: 26.64}
-    \label{fig:EllipseSmallExample}
+$\sigma=2,\lambda=0.1,\alpha=0.49,\gamma=1$. PSNR\@: 26.64}\label{fig:EllipseSmallExample}
 \end{figure}
-
 
 \begin{figure}[ht]
     \centering
@@ -659,8 +645,8 @@ $\sigma=2,\lambda=0.1,\alpha=0.49,\gamma=1$. PSNR: 26.64}
     \includegraphics[width=0.4\linewidth]{../Images/house/house-inpaint3.png}
     \caption{Mask and inpainting results of the image \texttt{house}. 
         \textbf{Top row: }Corner detection parameters: $\sigma=1,\rho=1,R=5,q=0.1, \text{CNMS}$, Pixel density: 9.23\%, Inpainting parameters:
-    $\sigma=3,\lambda=0.2,\alpha=0.49,\gamma=1$, PSNR: 21.11\\
+    $\sigma=3,\lambda=0.2,\alpha=0.49,\gamma=1$, PSNR\@: 21.11\\
     \textbf{Bottom row: }Corner detection parameters: $\sigma=1,\rho=1.5,R=5,q=0.1, \text{no
     CNMS}$, Pixel density: 7.71\%, Inpainting parameters:
-    $\sigma=2,\lambda=0.4,\alpha=0.49,\gamma=1$, PSNR: 18.68}\label{fig:HouseEx}
+    $\sigma=2,\lambda=0.4,\alpha=0.49,\gamma=1$, PSNR\@: 18.68}\label{fig:HouseEx}
 \end{figure}

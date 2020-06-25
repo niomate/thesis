@@ -258,7 +258,8 @@ def clear_presets():
     cache = listdir(PRESET_FOLDER)
     num_cache = len(cache)
 
-    if messagebox.askyesno('Clear presets?', f'Do you want to remove all {num_cache} presets ?'):
+    if messagebox.askyesno('Clear presets?',
+                           f'Do you want to remove all {num_cache} presets ?'):
         for file in cache:
             remove(join(PRESET_FOLDER, file))
         messagebox.showinfo('Info', 'Presets deleted!')
@@ -268,7 +269,9 @@ def clear_cache():
     cache = listdir(TEMP_FOLDER.name)
     num_cache = len(cache)
 
-    if messagebox.askyesno('Clear cache?', f'Do you want to remove all {num_cache} files in the cache ?'):
+    if messagebox.askyesno('Clear cache?',
+                           f'Do you want to remove all {num_cache} files in the\
+                           cache ?'):
         for file in cache:
             remove(join(TEMP_FOLDER.name, file))
         messagebox.showinfo('Info', 'Cache cleared!')
@@ -294,7 +297,8 @@ def save_image():
 
         if not exists(imgpath):
             messagebox.showerror(
-                'Error!', f'Image {imgpath} does not exist! Please run the algorithm first!')
+                'Error!', f'Image {imgpath} does not exist! \
+                Please run the algorithm first!')
 
         shutil.copy(imgpath, filename)
 
@@ -316,11 +320,13 @@ def save_image():
             initialfile=f'{img_name}-inpaint.pgm')
 
         imgpath = temp(
-            img_name, *[*get_params_corner(), *get_params_inpaint()], suffix='inpaint')
+            img_name, *[*get_params_corner(), *get_params_inpaint()],
+            suffix='inpaint')
 
         if not exists(imgpath):
             messagebox.showerror(
-                'Error!', f'Image {imgpath} does not exist! Please run the algorithm first!')
+                'Error!', f'Image {imgpath} does not exist! \
+                Please run the algorithm first!')
 
         shutil.copy(imgpath, filename)
 
@@ -350,7 +356,8 @@ corner_button = tk.Button(buttonframe, text='Show corners',
 mask_button = tk.Button(buttonframe, text='Compute mask',
                         command=mask_action, state=tk.DISABLED)
 inpaint_button = tk.Button(
-    buttonframe, text='Inpaint from mask', command=inpaint_action, state=tk.DISABLED)
+    buttonframe, text='Inpaint from mask', command=inpaint_action,
+    state=tk.DISABLED)
 quit_button = tk.Button(buttonframe, text='Quit', command=root.quit)
 
 
