@@ -1,4 +1,6 @@
 build/
+bin/
+obj/
 corners.pgm
 w.pgm
 .tmp
