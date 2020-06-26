@@ -43,6 +43,7 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage[T1]{fontenc} % Output font encoding for international characters
 \usepackage{amsmath, amssymb}
 \usepackage{babel}
+\usepackage{pdfpages}
 %\usepackage{mathpazo} % Use the Palatino font by default
 
 \usepackage[backend=biber, sorting=none]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
@@ -187,18 +188,20 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 %   DECLARATION PAGE
 %----------------------------------------------------------------------------------------
 
-\begin{declaration}
-    \addchaptertocentry{Declaration of Authorship}
-    \noindent I declare that this thesis titled, \enquote{\ttitle} and the work 
-    presented in it are my own. I confirm that this thesis is my own work and that I have
-    documented all sourced used.\\
+\includepdf{Images/statement.pdf}
 
-    \noindent Signed:\\
-    \rule[0.5em]{25em}{0.5pt} % This prints a line for the signature
+%\begin{declaration}
+    %\addchaptertocentry{Declaration of Authorship}
+    %\noindent I declare that this thesis titled, \enquote{\ttitle} and the work 
+    %presented in it are my own. I confirm that this thesis is my own work and that I have
+    %documented all sourced used.\\
 
-    \noindent Date:\\
-    \rule[0.5em]{25em}{0.5pt} % This prints a line to write the date
-\end{declaration}
+    %\noindent Signed:\\
+    %\rule[0.5em]{25em}{0.5pt} % This prints a line for the signature
+
+    %\noindent Date:\\
+    %\rule[0.5em]{25em}{0.5pt} % This prints a line to write the date
+%\end{declaration}
 
 \cleardoublepage
 

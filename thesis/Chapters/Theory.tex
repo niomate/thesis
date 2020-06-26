@@ -135,7 +135,7 @@ distinguish between flat regions, edges and corners.
 \subsection{Definition}
 The structure tensor is defined as a matrix whose eigenvectors tell us the direction of
 both the largest and smallest grey value change. Mathematically, we can model this
-as an optimisation problem:\newpage\noindent
+as an optimisation problem (as demonstrated in~\cite{ipcv}):\newpage\noindent
 Let $u$ be a grey value image.
 We want to find a unit vector $\mathbf{n} \in \R^2$ that is `most parallel' or `most orthogonal' to the
 gradient $\del u$ within a circle of radius $\rho > 0$, i.e.\ one wants to optimise the
@@ -161,8 +161,8 @@ Since~\eqref{eq:QuadForm} is a quadratic form of the matrix
 \end{equation}
 such an optimal unit vector is by definition also the eigenvector to the smallest and largest
 eigenvalue of $M_\rho(\del u)$~\cite{ipcv}.
-The matrix $M_\rho(\del u)$ can also be seen as a component-wise convolution with the indicator
-function
+The matrix $M_\rho(\del u)$ can also be seen as a component-wise convolution of 
+$\del u\del u^\top$ with the indicator function
 \begin{equation}
     b_\rho(\boldsymbol x) = \begin{cases} 1 & \lVert \boldsymbol x\rVert_2^2 \leq \rho^2\\ 0 & \text{else} \end{cases}
 \end{equation}

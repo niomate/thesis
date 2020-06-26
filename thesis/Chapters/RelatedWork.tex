@@ -137,9 +137,9 @@ increases the larger the integration scale is chosen, as we will see in Chapter~
 where I will also adress how to approach this problem and provide a possible solution.\\
 \\
 In~\cite{mainberger09, mainberger10}, the authors implemented a diffusion based reconstruction
-using mainly edges as the inpainting mask. For the mask construction they used the Marr-Hildreth
-edge detector~\cite{marr80} combined with \textit{hysteresis thresholding} as proposed by
-Canny~\cite{canny86}.
+using mainly edges as the inpainting mask. For the mask construction they used the \textit{\enquote{Marr-Hildreth
+edge detector~\cite{marr80} combined with hysteresis thresholding as proposed by
+Canny~\cite{canny86}}}~\cite{mainberger09}
 However, they stated that they were not locked in on the Marr-Hildreth edge detector and that
 others such as the classical Canny edge detector could also be used, especially for images that
 contain a larger amount of blurry edges. The addition of hysteresis thresholding yielded closed and
@@ -169,9 +169,9 @@ that has not fully loaded the image data yet, and gradually refine the represent
 becomes available. Last but certainly not least, they showed that their PDE-based codec is also
 capable of realtime video decoding and playback which sets a milestone in proving the
 \textit{suitability of R-EED for real-world applications}~\cite{peter15}. In their words, this
-publication, or rather the extensions presented therein, mark the first step of an evolution of
-PDE-based compression codecs from the proof-of-concept stage to fully grown codecs with relevance
-for practical applications~\cite{peter15}.\\
+publication, or rather the extensions presented therein, \textit{\enquote{mark the first step of an evolution of
+    PDE-based compression codecs from the proof-of-concept stage to fully grown codecs with relevance
+for practical applications~\cite{peter15}}}.\\
 \\
 In~\cite{kanters05}, a method is presented that uses extrema and saddle points in the Gaussian
 scale space of an image as a basis for reconstruction using a linear reconstruction scheme proposed
