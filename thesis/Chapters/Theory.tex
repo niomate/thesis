@@ -1,8 +1,12 @@
 \chapter{Prerequisites}\label{ch:Theory}
-\section{Basics}\label{sec:Basics}
 The concepts used in this thesis require some prior knowledge about basic calculus and linear
 algebra as well as some more advanced topics that will be introduced in the following sections.
-But before explaining corner detection and diffusion, we have to first define what an image is
+Firstly, we will review some of the basic ideas that are needed to understand the rest of the
+theory.
+Afterwards, I am introducing the so called \textit{structure tensor} as well as the 
+theory of diffusion and inpainting.
+\section{Basics}\label{sec:Basics}
+Before explaining corner detection and diffusion, we have to first define what an image is
 mathematically.\\
 A \textit{grey value image} is defined as a function $f: \Omega \rightarrow \R$ where
 $\Omega \subset \R^2$ is a rectangular subset of $\R^2$ of size $n_x\times n_y$,
@@ -22,7 +26,7 @@ synonymously as $\partial_x f$ and defined as
     f_x(x, y) = \partial_x f (x, y) = \frac{\partial f}{\partial x} (x, y) := \lim_{h \to 0}\frac{f(x+h, y) -f(x, y)}{h} 
 \end{equation}
 The \textit{gradient} of an image $f$ at position $(x, y)$ is the vector containing both partial
-image derivatives at this position.
+image derivatives at this position.\newpage\noindent
 In multivariable calculus, the gradient of a function is an important tool to find the (both local
 and global) extrema of a function similar to the first derivative for a function with a single
 variable.
@@ -131,7 +135,7 @@ distinguish between flat regions, edges and corners.
 \subsection{Definition}
 The structure tensor is defined as a matrix whose eigenvectors tell us the direction of
 both the largest and smallest grey value change. Mathematically, we can model this
-as an optimisation problem:\\
+as an optimisation problem:\newpage\noindent
 Let $u$ be a grey value image.
 We want to find a unit vector $\mathbf{n} \in \R^2$ that is `most parallel' or `most orthogonal' to the
 gradient $\del u$ within a circle of radius $\rho > 0$, i.e.\ one wants to optimise the
@@ -199,14 +203,14 @@ In the case that one is much larger than the other one, there is an edge in dire
 eigenvector of the larger value since the largest grey value shift follows this direction.
 For the last case it should be obvious why this refers to a corner region. When both eigenvalues
 are large, there is a large grey value shift in either direction, therefore there has to be a
-corner.\\
+corner.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\linewidth]{../Images/structure_tensor.png}
+    \includegraphics[width=0.6\linewidth]{structure_tensor.png}
     \caption{Visualisation of distinction of image features using the eigenvalues of the structure
         tensor~\cite{harris88}. $\alpha, \beta$ are equivalent to the eigenvalues $\lambda_1, \lambda_2$}\label{fig:Structure}
 \end{figure}
-There are several approaches to find out which case applies at the current position. The biggest
+\noindent There are several approaches to find out which case applies at the current position. The biggest
 challenge here is to differentiate between edges and corners, i.e.\ we have to find out whether both
 eigenvalues are meaningfully larger than 0 and if one is larger than the other.\\
 The most intuitive approach is the one by Tomasi and Kanade~\cite{tomasi91}, sometimes also called Shi-Tomasi
@@ -225,7 +229,8 @@ as proposed by Rohr~\cite{rohr91} or the determinant
 \end{equation} 
 as proposed by Harris~\cite{harris88} and Förstner~\cite{foerstner87}. Both of these approaches do 
 not need to explicitly compute the eigenvalues of the structure tensor and are thus not as 
-computationally invested. Another difference between both approaches is that~\eqref{def:Rohr} 
+computationally invested.\newpage\noindent
+Another difference between both approaches is that~\eqref{def:Rohr} 
 requires 
 \begin{equation}
     \tr(\mathbf{J}_\rho)
@@ -235,7 +240,8 @@ by itself to be a local maximum whereas in~\eqref{def:Harris}
     \frac{\det(\mathbf{J}_\rho)}{\tr(\mathbf{J}_\rho)}
 \end{equation} 
 needs to be a local maximum.\\
-For the detection of relevant corners in the data selection phase, I mainly used the approach of F\"orstner/Harris as well as
+For the detection of relevant corners in the data selection phase, I mainly used the approach of
+Förstner and Harris as well as
 the approach of Rohr even though the Tomasi-Kanade approach was an option and has also been
 tested as we will see later in Chapter~\ref{ch:Experiments}. However, it has not proven as successful
 as the other two methods during the initial testing phase.
@@ -258,7 +264,7 @@ features do only exist at a specific scale or a range of scales and that it is t
 to the understanding of an image to basically have a hierarchy of features.\\
 Mathematically, a scale
 space needs to meet certain requirements like the semi-group property, maximum-minimum principles
-and others.
+and others.\newpage\noindent
 A full explanation of all the scale space requirements would be beyond the scope of this thesis
 and is frankly not needed to understand the following sections.\\
 To embed an image $f:\R^2 \rightarrow \R$ in a scale space, we need a smoothing
@@ -322,11 +328,11 @@ location diverges, i.e.\ diffuses away from the current location, or converges, 
 towards the current location.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\linewidth]{../Images/divergence2.png}
+    \includegraphics[width=0.5\linewidth]{divergence2.png}
     \caption{Visualisation of the divergence operator~\cite{img-divergence}. Original image edited
     with GIMP~\cite{gimp}}\label{fig:Divergence}
 \end{figure}
-Together, equations~\eqref{eq:Fick} and~\eqref{eq:Conservation} then form the general \textit{diffusion
+\noindent Together, equations~\eqref{eq:Fick} and~\eqref{eq:Conservation} then form the general \textit{diffusion
     equation}~\cite{dic, weickert96}
 \begin{equation}
     \partial_t u = \textnormal{div}(\boldsymbol D\cdot\del u)\label{eq:Diffusion}
@@ -371,8 +377,8 @@ The most well known choice for a diffusivity function was proposed by Perona and
 \end{equation}
 The interesting part about this diffusivity function is that it distinguishes between edges and
 non-edges or flat areas according to the \textit{contrast parameter} $\lambda$ using the gradient
-magnitude $\lVert\del u\rVert_2^2$ as a \textit{fuzzy edge detector}~\cite{dic}. An important part
-of understanding why this leads to an edge enhancing effect is the flux function
+magnitude $\lVert\del u\rVert_2^2$ as a \textit{fuzzy edge detector}~\cite{dic}. \\
+An important part of understanding why this leads to an edge enhancing effect is the flux function
 arising from this specific diffusivity. In general, the flux function is simply defined as 
 \begin{equation}
     \Phi(s) = sg(s^2)
@@ -382,7 +388,7 @@ which in this particular case comes down to
     \Phi(s) =\frac{s}{1 + s^2/\lambda^2}\label{def:Flux}
 \end{equation}
 \begin{figure}
-    \includegraphics[width=\linewidth]{../Images/diffflux.png}
+    \includegraphics[width=\linewidth]{diffflux.png}
     \caption{\textbf{Left:} Diffusivity mentioned in~\eqref{def:Diffusivity}. \textbf{Right:} Flux
     function~\eqref{def:Flux}~\cite{dic}.}\label{fig:DiffFlux}
 \end{figure}
@@ -449,11 +455,11 @@ Finally, the diffusivity that was mainly used for inpainting in this work is the
 \end{equation}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{../Images/diffusivities.png}
+    \includegraphics[width=\linewidth]{diffusivities.png}
     \caption{Weickert~\eqref{def:WeickertDiff} and Charbonnier~\eqref{def:CharbonnierDiff}
     diffusivities for $\lambda = 1$. Graph created with Matplotlib~\cite{matplotlib}}
 \end{figure}
-Overall, we can write the EED equation as
+\noindent Overall, we can write the EED equation as
 \begin{equation}
     \partial_t u = \diverg(g(\del u_\sigma\del u_\sigma^\bot)\del u)\label{def:EED}
 \end{equation}
@@ -464,7 +470,7 @@ only suited for image denoising~\cite{galic05, weickert96}, but also one of the 
 differential equations~\cite{schmaltz09, galic08, schmaltz14}.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{../Images/diff_examples.png}
+    \includegraphics[width=0.8\linewidth]{diff_examples.png}
     \caption{Denoising capabilities of the different types of diffusion~\cite{weickert96}. \textbf{Top Left:} Original
         image. \textbf{Top Right:} Linear isotropic diffusion. \textbf{Bottom Left:} Nonlinear
     isotropic diffusion. \textbf{Bottom Right:} Edge-enhancing diffusion.}\label{fig:DiffExamples}
@@ -521,11 +527,11 @@ By alternatingly applying the prolongation and diffusion process, the inpainting
 shrinked progressively until they vanish as can be seen in~\ref{fig:InpaintingProgress}.
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{../Images/inpainting_progress.png}
+    \includegraphics[width=\linewidth]{inpainting_progress.png}
     \caption{Results of the inpainting process at different stages showing the progressive
     shrinking of the inpainting regions~\cite{bertalmio00}.}\label{fig:InpaintingProgress}
 \end{figure}
-
+\newpage\noindent
 \subsection{PDE-based Inpainting}
 The general idea behind inpainting methods based on partial differential equations  is to
 retrieve an image in the form of an unknown function $v: \Omega \rightarrow \R$ as described 
@@ -562,6 +568,7 @@ initial state of the evolution given by
         0&\text{elsewhere}
     \end{cases} 
 \end{equation}
+\newpage\noindent
 On the boundary $\partial\Omega$ of the image domain, homogeneous Neumann boundary conditions are
 applied, which can be expressed mathematically as 
 \begin{equation*}
@@ -599,12 +606,12 @@ and triharmonic operator} respectively defined as
     Lu = \Delta^3u
 \end{eqnarray*}
 a nonlinear isotropic diffusion operator as described in~\eqref{eq:NonIsoDiff} and simple
-homogeneous diffusion~\eqref{eq:IsoDiff}.
+homogeneous diffusion~\eqref{eq:IsoDiff}.\newpage\noindent
+In Figure~\ref{fig:DiffOpsCompare}, (f) and (e) refer to the nonlinear isotropic diffusion defined
+in~\eqref{eq:NonIsoDiff} and the regularised version also mentioned in~\ref{sub:NonIsoDiff}.
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{../Images/diffops_compare.png}
+    \includegraphics[width=\linewidth]{diffops_compare.png}
     \caption{Comparison of different differential operators for PDE-based
     inpainting~\cite{schmaltz14}.}\label{fig:DiffOpsCompare}
 \end{figure}
-In figure~\ref{fig:DiffOpsCompare}, (f) and (e) refer to the nonlinear isotropic diffusion defined
-in~\eqref{eq:NonIsoDiff} and the regularised version also mentioned in~\ref{sub:NonIsoDiff}.

@@ -42,6 +42,7 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage[utf8]{inputenc} % Required for inputting international characters
 \usepackage[T1]{fontenc} % Output font encoding for international characters
 \usepackage{amsmath, amssymb}
+\usepackage{babel}
 %\usepackage{mathpazo} % Use the Palatino font by default
 
 \usepackage[backend=biber, sorting=none]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
@@ -56,15 +57,13 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage{array} 
 \usepackage{float}
 
+\graphicspath{{/home/daniel/Uni/Thesis/thesis/Images/}{/home/daniel/Uni/Thesis/images/}}
+
 
 % To get rid of widows and clubs.
 \clubpenalty=10000
 \widowpenalty=10000
 \displaywidowpenalty=10000
-
-% Fix wrong hyphenations
-\hyphenpenalty=10000
-\exhyphenpenalty=10000
 
 %----------------------------------------------------------------------------------------
 %   LISTING SETTINGS
@@ -178,7 +177,7 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
         \large \textit{A thesis submitted in fulfillment of the requirements\\ for the degree of \degreename}\\[0.3cm] % University requirement text
         \textit{in the}\\[0.3cm]
         \groupname\\\deptname\\[1cm] % Research group name and department name
-        \includegraphics[height=4cm]{Images/Logo-Universität_des_Saarlandes.png} \\[1cm]
+        \includegraphics[height=4cm]{Logo-Universität_des_Saarlandes.png} \\[1cm]
         \vfill
         {\large \today}
     \end{center}
@@ -235,7 +234,7 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
     to reconstruct the image. While the most successful ideas are based on stochastic or
     subdivision based methods, semantic approaches have barely been explored.
     In this thesis I build on results from a previous publication and further explore the potential 
-    of the reconstruction of images by only using a set of corners from the image. I examine how 
+    of reconstructing images by using only a set of corners from the image. I examine how 
     the accuracy of the corner detection influences the reconstruction quality and lastly introduce 
     additional procedures that aim to make the mask calculation a bit more robust with respect to
     the pixel density of the inpainting mask.
