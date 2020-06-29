@@ -1,5 +1,9 @@
 \chapter{Conclusion and Outlook}\label{ch:Conclusion}
 
+In this last chapter, I will shortly recap the work in this thesis and afterwards discuss the
+advantages and shortcomings of the approach.
+Lastly, I will talk about possible additions and improvements one could touch on in future work in Section~\ref{sec:FutureWork}.
+
 \section{What has been done?}
 
 To summarise, I have adapted the method proposed in~\cite{zimmer07} by introducing circular corner
@@ -8,9 +12,8 @@ I used a simple structure tensor based approach for corner detection, namely the
 corner detector to find corner candidates. Using the new additional procedures called
 \textit{circular non-maximum suppression} and \textit{total pixel percentile thresholding}, these
 candidates were filtered to get a mask that satisfies a pre-defined pixel density criterion. With
-these additions, aside from special cases, it was possible to construct masks of similar pixel
-densities quite consistently. However, one should mention that both methods are pretty naive
-approaches far from perfect.\\
+these additions, it was possible to construct masks of similar pixel densities fairly consistently.
+However, one should mention that both methods are pretty naive approaches and far from perfect.\\
 I tested the hypothesis that the mask radius should be chosen in dependence of the integration
 scale during the computation of the structure tensor. Moreover, the hypothesis stated that the mask
 radius should always be larger than the integration scale in order to cover the possible inaccuracy
@@ -22,17 +25,19 @@ the method proposed in~\cite{zimmer07}.
 
 \section{Discussion}
 
-The method examined herein is pretty well suited for reconstruction/compression of binary images
-with little to no texture. The problem in the compression of highly textured grey value images lies in the 
-fact that due to the large corner regions, if one wants to cover highly textured regions, either
-one chooses the corner regions fairly small to cover as much of the texture as possible, similar to
-a subdivision based or stochastic approach. The downside here is that for small mask radii the
+The method examined herein is pretty well suited for reconstruction and compression of binary images
+with little to no texture. 
+The problem of the compression of highly textured images lies in the choice of the mask radius:
+In order to cover textured regions, one could choose a small mask radius to obtain results similar
+to subdivision based or stochastic approaches, which have been proven to reconstruct such areas
+fairly well.
+The downside here is that for small mask radii the
 inaccuracy in the corner detection might influence the outcome. Another possibility is to choose
-the corner regions larger such that more corners are covered by a single region. By doing this
+the corner regions larger so that more corners are covered by a single region. By doing this
 however, the mask will become so dense that it will be suboptimal in a compression context.
-Another point to mention, that also Zimmer's method~\cite{zimmer07} struggled with, is the sparsity
+Another point to mention, that Zimmer's method~\cite{zimmer07} struggled with as well, is the sparsity
 of corners in images. While corners are semantically important features, they are pretty seldom in
-organic images. (see the image \texttt{lena512} or \texttt{trui}).\\
+organic images like portraits.\\
 Something to consider as well is the compression of noisy images. Here one has to pose the question
 whether the decompressed version of these images should contain noise or not. On one hand, noise in
 images is mostly a degradation that one wants to remove. On the other hand, image compression
@@ -40,20 +45,21 @@ mostly aims at reconstructing the images that were compressed. By applying PDE b
 approaches in this context, most noise is removed due to the nature of these algorithms as we saw
 in Section~\ref{sec:Results}, so the image that is decompressed is not the same as the one that was
 compressed. While in most cases this could be considered a benefit of the procedure, one could
-think of examples where such an inherent denoising would be considered unwanted behaviour (images
-of white noise?).\\
+think of examples where such an inherent denoising would be considered unwanted behaviour (e.g.\ images
+of white noise).
 
 \section{Future Work}\label{sec:FutureWork}
 
-Lastly, we will discuss some possible improvements to corner region based inpainting/compression
-approaches.
+Lastly, we will discuss some possible improvements to corner region based inpainting and
+compression approaches.
 
 \subsection*{Improvement of the corner detection}
 
 As we saw in Section~\ref{sec:CornerEx}, the accuracy of the corner localisation is key to a good
 inpainting result. While the Förstner-Harris method is pretty accurate, one could think of other
 methods that suggest higher, even sub-pixel accuracy. A possible method could be one proposed by
-Alvarez et al.~\cite{amss} in 1997. The method is based on a scale-space approach that is supposed
+Alvarez et al.~\cite{amss} in 1997. \\
+The method is based on a scale-space approach that is supposed
 to be able to trace back the origin of a corner to its actual location with subpixel accuracy.
 
 \subsection*{Optimising corner region radius}

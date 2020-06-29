@@ -183,7 +183,7 @@ differentiation~\cite{ipcv}. The definition then becomes
     u_\sigma^\top)\label{def:StructTensor}
 \end{equation}
 To keep things simpler, I will omit the brackets and just simply use $\mathbf{J}_\rho$ as the
-structure tensor.\\
+structure tensor.
 \subsection{Usage in Corner Detection}\label{sub:Corner}
 The structure tensor is a symmetric matrix and thus possesses orthonormal eigenvectors $\boldsymbol v_1,
 \boldsymbol v_2$ with real-valued eigenvalues $\lambda_1, \lambda_2 \geq 0$~\cite{ipcv}. As
@@ -261,10 +261,10 @@ processing in general.\\
 A scale space is generally defined as a family of images with a time parameter $t$ that become
 increasingly `simpler' as $t \to \infty$. The point of a structure like this is that certain image
 features do only exist at a specific scale or a range of scales and that it is therefore beneficial
-to the understanding of an image to basically have a hierarchy of features.\\
+to the understanding of an image to basically have a hierarchy of features~\cite{lindeberg94}.\\
 Mathematically, a scale
 space needs to meet certain requirements like the semi-group property, maximum-minimum principles
-and others.\newpage\noindent
+and others~\cite{weickert96, alvarez93}.\newpage\noindent
 A full explanation of all the scale space requirements would be beyond the scope of this thesis
 and is frankly not needed to understand the following sections.\\
 To embed an image $f:\R^2 \rightarrow \R$ in a scale space, we need a smoothing
@@ -305,7 +305,9 @@ diffusion}):
 Here, the flow from high to low concentration areas is modelled by a flow whose direction is
 proportional to the inverse direction of the largest change in concentration, i.e.\ the gradient.
 While most of the time, the gradient determines the direction of the flux, the so called
-\textit{diffusion tensor} $\boldsymbol D$ determines its strength. In general, this diffusion
+\textit{diffusion tensor} $\boldsymbol D$ determines its strength. \\
+
+\noindent In general, this diffusion
 tensor is defined as a
 $2\times2$ positive definite matrix, but as we will see later, it can be reduced to a scalar 
 valued function in more simple cases.
@@ -378,7 +380,8 @@ The most well known choice for a diffusivity function was proposed by Perona and
 The interesting part about this diffusivity function is that it distinguishes between edges and
 non-edges or flat areas according to the \textit{contrast parameter} $\lambda$ using the gradient
 magnitude $\lVert\del u\rVert_2^2$ as a \textit{fuzzy edge detector}~\cite{dic}. \\
-An important part of understanding why this leads to an edge enhancing effect is the flux function
+\\ \\ 
+\noindent An important part of understanding why this leads to an edge enhancing effect is the flux function
 arising from this specific diffusivity. In general, the flux function is simply defined as 
 \begin{equation}
     \Phi(s) = sg(s^2)
@@ -406,7 +409,7 @@ As we see, we have a maximum in the flux function at $s = \lambda$. Furthermore 
 the above equation that $\Phi'(s) < 0$ for $s < \lambda$ and $\Phi'(s) > 0$ for $s > \lambda$. This
 can also be seen in~\ref{fig:DiffFlux}. This distinction between an increasing and decreasing flux
 function for values left and right from the contrast parameter causes the previously mentioned
-edge enhancing effect.
+edge enhancing effect.\newpage\noindent
 However, this particular process is not \textit{well-posed}~\cite{weickert96}, i.e.\ it is very
 sensitive to high frequent noise. To solve this, it was proposed to use Gaussian smoothing for
 \textit{regularisation}, that means to convolve the original image with a Gaussian kernel to damp the high
@@ -415,8 +418,7 @@ frequencies that cause numerical instabilities~\cite{catte-lions-morel92}.
 \subsection{Anisotropic Diffusion}
 But we can still go one step further and even make the direction of the smoothing process dependent
 on the local structure. For example, one might want to prevent smoothing across edges and rather
-smooth parallel to them further embracing the edge-preserving nature of nonlinear diffusion.
-
+smooth parallel to them further embracing the edge-preserving nature of nonlinear diffusion.\\
 The diffusion tensor in this case is constructed from its eigenvectors $\boldsymbol v_1,
 \boldsymbol v_2$ and eigenvalues $\lambda_1, \lambda_2$ using the
 theorem of matrix diagonalisation

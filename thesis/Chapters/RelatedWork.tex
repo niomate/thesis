@@ -59,12 +59,12 @@ pixels and inpainted pixels are reversed for a final diffusion step to smooth ou
 that may occur on the boundary between known and unknown pixels during the decompression phase.\\
 With all these additions, this new codec called \textbf{R-EED} is able to actually outperform the
 successor to the JPEG codec, namely JPEG2000 even for high compression rates.
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{tree_trui.png}
     \caption{Examples for rectangular subdivision in the R-EED codec~\cite{schmaltz09}.}
 \end{figure}
-In~\cite{hoeltgen12}, an alternative approach to the rectangular subdivision used in
+\noindent In~\cite{hoeltgen12}, an alternative approach to the rectangular subdivision used in
 ~\cite{schmaltz09} was proposed. They considered two different methods. First, they used the results
 from~\cite{belhachmi09} to derive an \textit{analytical approach} by calculating the \textit{Laplacian of a
 Gaussian} $\vert \Delta f \vert^s$ for some exponent $s>0$ and then apply electrostatic 
@@ -88,10 +88,10 @@ the new mask, the change is undone and the procedure continued.
 The mask resulting from this process can only be better than the previous one by construction of
 the algorithm~\cite{hoeltgen12}.
 Finally, they proposed several algorithms for \textit{tonal optimisation}, i.e.\ grey value
-optimisation by means of a linear least squares optimisation problem. They showed some important
-mathematical properties like the uniqueness and existence of a solution for this problem and
-came up with a numerical algorithm to solve the linear system of equations arising for this
-optimisation problem.
+optimisation by means of a linear least squares optimisation problem. \\
+They showed some important mathematical properties like the uniqueness and existence of a 
+solution for this problem and came up with a numerical algorithm to solve the linear system of 
+equations arising for this optimisation problem.
 Using all these optimisations, they were able to cut down the reconstruction error in terms of the
 mean squared error by a significant portion and achieve a quality that has not been reached before 
 with similar PDE based inpainting approaches for the same mask density.
@@ -133,10 +133,10 @@ to a fairly inaccurate localisation of the corners. The cause for this will be d
 a later section.
 Since only a small neighbourhood of pixels around each estimated corner
 location was kept, the likelihood that the actual corner is not included in the final mask
-increases the larger the integration scale is chosen, as we will see in Chapter~\ref{ch:Implementation}, 
-where I will also adress how to approach this problem and provide a possible solution.\\
-\\
-In~\cite{mainberger09, mainberger10}, the authors implemented a diffusion based reconstruction
+increases the larger the integration scale is chosen, as we will see in Section~\ref{sec:MaskEx},
+where I go over some experiments that were conducted in order to examine this hypothesis.\\
+
+\noindent In~\cite{mainberger09, mainberger10}, the authors implemented a diffusion based reconstruction
 using mainly edges as the inpainting mask. For the mask construction they used the \textit{\enquote{Marr-Hildreth
 edge detector~\cite{marr80} combined with hysteresis thresholding as proposed by
 Canny~\cite{canny86}}}~\cite{mainberger09}
@@ -154,7 +154,7 @@ values of the mask pixels. Another improvement was the use of an advanced method
 linear systems arising from the inpainting problem. In contrast to the earlier publications a fast
 \textit{full multigrid scheme} was implemented to speed up the decoding phase significantly to 
 a point where the codec is now realtime capable.\\
-\\
+\newpage\noindent
 In~\cite{peter15}, region of interest (ROI) coding was first introduced for the R-EED codec. Previously,
 it was not possible to specify certain regions of an image to be reconstructed with higher detail.
 With this new contribution, they allowed the user to specify a weighting mask that is used during
@@ -170,8 +170,8 @@ becomes available. Last but certainly not least, they showed that their PDE-base
 capable of realtime video decoding and playback which sets a milestone in proving the
 \textit{suitability of R-EED for real-world applications}~\cite{peter15}. In their words, this
 publication, or rather the extensions presented therein, \textit{\enquote{mark the first step of an evolution of
-    PDE-based compression codecs from the proof-of-concept stage to fully grown codecs with relevance
-for practical applications~\cite{peter15}}}.\\
+PDE-based compression codecs from the proof-of-concept stage to fully grown codecs with relevance
+for practical applications}}~\cite{peter15}.\\
 \\
 In~\cite{kanters05}, a method is presented that uses extrema and saddle points in the Gaussian
 scale space of an image as a basis for reconstruction using a linear reconstruction scheme proposed
@@ -181,22 +181,22 @@ descriptors. They use a classical image indexing software to retrieve descriptor
 SIFT~\cite{sift}, then query an image database to find patches that are similar to these descriptors
 retrieved from the image. These patches are then transformed to fit the geometry in the original
 image and stitched together afterwards in a seamless fashion.
-
+\newpage\noindent
 \section{Outline}
 So far, we have reviewed some of the work that is closely related to my work and 
 motivated the goal that I am tring to achieve.
 To explain what exactly was done in order to achieve this goal, we first have to go over some of the
 theoretical background. I will introduce basic concepts from
-calculus and linear algebra (\ref{sec:Basics}) as well as some more advanced topics
-like the structure tensor (\ref{sec:Structure}), diffusion processes (\ref{sec:Diffusion}) and
-digital image inpainting (\ref{sec:Inpainting}).\\
+calculus and linear algebra (Section~\ref{sec:Basics}) as well as some more advanced topics
+like the structure tensor (Section~\ref{sec:Structure}), diffusion processes (Section~\ref{sec:Diffusion}) and
+digital image inpainting (Section~\ref{sec:Inpainting}).\\
 In Chapter~\ref{ch:Implementation}, I will then talk about the technical details of the  
 implementation, for example the discretisation used to implement the theoretical ideas from 
-the previous chapter (\ref{sec:Discretisation}). 
-Furthermore, I will describe the shortcomings of the approach described in~\cite{zimmer07} in more
-detail and discuss a method to address these issues. In this chapter, I will also present some
-additional procedures that I implemented in order to improve the selection of mask pixels. \\
-Afterwards, I am going to review the experiments that were performed in order to evaluate the
-approach and show some examples.\\
+the previous chapter (Section~\ref{sec:Discretisation}). Furthermore, I describe some additional procedures
+related to the introduction of circular corner regions (Section~\ref{sec:Contribution}).\\
+In Chapter~\ref{ch:Experiments}, I will shortly discuss the choice of parameters for both the
+corner detection and inpainting process (Section~\ref{sec:ParameterSelection}) as well as show 
+the results of several experiments that were performed in order to confirm the hypothesis that was
+already mentioned in Section~\ref{sec:Goal} \\
 Last but not least in Chapter~\ref{ch:Conclusion}, I conclude the work, discuss the strengths
 and shortcomings of my approach and how it could be improved in future research.

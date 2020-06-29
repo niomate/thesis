@@ -2,13 +2,14 @@
 As technology evolves, the quality and resolution of digital images improve as well. But as the
 quality increases so does the memory required to store the image on a hard drive. To counteract
 this increase in disk space usage, people have tried to reduce the sizes of digital images a lot in the
-last decades.\\
+last decades.
+
+\section{Motivation}
 One of the most successful and probably most well known \textit{codecs}
 is \textbf{JPEG}~\cite{wallace91} and its lesser known but more advanced successor \textbf{JPEG
 2000}~\cite{jpeg2000}. Both are lossy image compression methods
-known for fairly high compression rates while still providing a reasonable image quality.\\
-For
-higher compression rates however, the quality deteriorates pretty quickly and the infamous ``block
+known for fairly high compression rates while still providing a reasonable image quality.
+For higher compression rates however, the quality deteriorates pretty quickly and the infamous ``block
 artifacts'' are being introduced. As a remedy, a new class of image compression methods based on
 \textit{digital image inpainting} have been developed over the last
 years~\cite{galic05, galic08, mainberger12, peloquin09, zimmer07, mainberger09, mainberger10, dong07, schmaltz09} that
@@ -21,15 +22,16 @@ As one can imagine, selecting the right data is a fairly minute process and one 
 select the pixels to keep. Even though there has been a lot of work done in this
 area~\cite{belhachmi09, schmaltz14, hoeltgen12}, the
 selection can still be improved.\\
-In the past, few methods explored how well corners/corner-like features do as candidates for
+In the past, few methods explored how well corners or corner-like features perform as candidates for
 the inpainting process. In~\cite{zimmer07}, a method for image compression using corners was
 proposed, but was not able to come close to the performance of JPEG\@.
-However, the full potential of this method was not explored. One of the main points of criticism is,
+However, the full potential of this method was not explored. \newpage\noindent
+One of the main points of criticism is,
 that the corner localisation was not accurate enough, or rather the inaccuracies were not accounted 
 for in the mask selection~\cite{conversation}. This is why I want to improve on this approach and try 
-to tap into its unexplored potential.\\
+to tap into its unexplored potential.
 
-\subsection*{Goal}\label{ssub:Goal}
+\section{Goal}\label{sec:Goal}
 
 The goal of this thesis is two-fold:
 Firstly, I want to explore how inaccuracies in the corner localisation can be properly accounted
@@ -43,4 +45,4 @@ One of the biggest factors that I had to consider was that corners and similar f
 rare in images, severely limiting the amount of candidates one can choose from, especially compared to
 approaches like~\cite{schmaltz09, hoeltgen12}. 
 I will cover these procedures in~\ref{sec:Contribution} while the first goal will be covered
-in\ref{sec:ParameterSelection}.
+in~\ref{sec:ParameterSelection}.
