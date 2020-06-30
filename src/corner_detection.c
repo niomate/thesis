@@ -934,7 +934,7 @@ int main(int argc, char **argv) {
   printf("CORNER DETECTION WITH THE STRUCTURE TENSOR\n\n");
 
   int c;
-  while ((c = getopt(argc, argv, "q:c:s:r:o:m:CDMP")) != -1) {
+  while ((c = getopt(argc, argv, "q:c:s:r:o:m:d:CDMP")) != -1) {
     switch (c) {
     case 'q':
       q = atof(optarg);
@@ -971,11 +971,13 @@ int main(int argc, char **argv) {
       OPTIONS.display_mask = true;
       break;
     case 'd':
-      if (*optarg != 'x' || *optarg != 'o') {
-        fprintf(stderr, "Invalid corner display type! Defaulting to circle\n");
+      printf("Arg: %c\n", *optarg);
+      if (*optarg != 'x' && *optarg != 'o') {
+        fprintf(stderr, "Invalid corner display type! Defaulting to cross\n");
       } else {
         display_type = *optarg;
       }
+      printf("Using %c to mark corner locations.\n", display_type);
       break;
     default:
       abort();

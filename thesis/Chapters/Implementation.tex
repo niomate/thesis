@@ -320,7 +320,8 @@ for two different input images as we can see in~\ref{fig:PercExample}.
     \centering
     \includegraphics[width=0.4\linewidth]{example_rect_50.png}
     \includegraphics[width=0.4\linewidth]{example_cat_50.png}
-    \caption{Corner detection with the same parameters}%
+    \caption{Corner detection with the same parameters. Parameters are $\sigma=1,\rho=2,q=0.3$, no
+    CNMS, no TPPT}
     \label{fig:PercExample}
 \end{figure}\\
 To tackle this issue, I propose a new method that I call \textit{Total Pixel Percentage
@@ -337,8 +338,7 @@ by~\cite{hilbert96}
     \frac{r^2}{4i+3}\right\rfloor\right)
 \end{equation}
 but since this is an infinite sum, the exact solution can not be computed this way. This is why I
-chose the naive way by just iterating through a loop and count the numbers inside the disk.% as seen
-%in~\ref{fig:PixelRegion}. 
+chose the naive way by just iterating through a loop and count the numbers inside the disk.
 I could have also chosen to use an upper bound and estimate the number of pixels that 
 way, but this would not have been as accurate.\\
 %\begin{figure}[ht]

@@ -18,30 +18,30 @@ def inpaint(inim, mask, *args, outim=None):
     args = str_list(args)
     if outim is None:
         outim = inpaint_name(inim)
-    cmd = ['build/inpainting', inim, mask, *args, '-o', outim]
+    cmd = ['bin/inpaint', inim, mask, *args, '-o', outim]
     print(' '.join(cmd))
     run(cmd)
 
 
 def mask(inim, *args, outim=None):
-    ''' Pass all arguments that build/corners accepts '''
+    ''' Pass all arguments that bin/corner accepts '''
     log_thread(f'Mask computation {inim}')
     args = str_list(args)
     if outim is None:
         outim = mask_name(inim)
-    cmd = ['build/corners', inim, '-M', '-o', outim, *args]
+    cmd = ['bin/corner', inim, '-M', '-o', outim, *args]
     print(' '.join(cmd))
     run(cmd)
     return outim
 
 
 def corners(inim, *args, outim=None):
-    ''' Pass all arguments that build/corners accepts '''
+    ''' Pass all arguments that bin/corner accepts '''
     log_thread(f'Corner detection {inim}')
     args = str_list(args)
     if outim is None:
         outim = mask_name(inim)
-    cmd = ['build/corners', inim, '-o', outim, *args]
+    cmd = ['bin/corner', inim, '-o', outim, *args]
     print(' '.join(cmd))
     run(cmd)
     return outim

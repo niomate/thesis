@@ -12,7 +12,7 @@ CLEAN_LIST = $(TARGET_PATH) \
 default: all
 .PHONY: all clean
 
-$(TARGET_PATH)/corner: $(OBJ_PATH)/corner_detection.o $(OBJ_PATH)/utils.o
+$(TARGET_PATH)/corner: $(OBJ_PATH)/corner_detection.o $(OBJ_PATH)/utils.o 
 	if [ ! -d $(TARGET_PATH) ]; then\
 		echo "Create directory ${TARGET_PATH}";\
 		mkdir -p $(TARGET_PATH);\
@@ -26,7 +26,7 @@ $(TARGET_PATH)/inpaint: $(OBJ_PATH)/inpainting.o
 	fi
 	$(CC) $(CC_FLAGS) -o $@ $?
 
-$(OBJ_PATH)/%.o: $(SRC_PATH)/%.c*
+$(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
 	if [ ! -d $(OBJ_PATH) ]; then\
  	    echo "Create directory ${OBJ_PATH}";\
  	    mkdir -p $(OBJ_PATH);\
