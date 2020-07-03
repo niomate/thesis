@@ -1402,7 +1402,7 @@ int main(int argc, char **argv) {
   float rho = 2.5;               /* Integration scale */
   float mask_factor = 0; /* Factor to scale integration scale with to obtain
                             radius of corner regions */
-  char display_type = 'x';
+  char display_type = 'o';
 
   printf("\n");
   printf("CORNER DETECTION WITH THE STRUCTURE TENSOR\n\n");
@@ -1447,7 +1447,7 @@ int main(int argc, char **argv) {
     case 'd':
       printf("Arg: %c\n", *optarg);
       if (*optarg != 'x' && *optarg != 'o') {
-        fprintf(stderr, "Invalid corner display type! Defaulting to cross\n");
+        fprintf(stderr, "Invalid corner display type! Defaulting to circle\n");
       } else {
         display_type = *optarg;
       }

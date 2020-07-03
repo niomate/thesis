@@ -1680,13 +1680,13 @@ int main(int argc, char **argv)
   /* Defaults or command line arguments */
   char *out = "inpaint.pgm"; /* for reading data */
   long dtype = 0;            /* type of diffusivity */
-  float lambda = 0.03;       /* contrast parameter */
+  float lambda = 1.0;       /* contrast parameter */
   float sigma = 3.0;         /* noise scale */
   float rho = 0;             /* integration scale */
   float alpha = 0.5;         /* dissipativity parameter */
   float gamma = 1;           /* nonnegativity parameter */
   float ht = 1000;           /* time step size */
-  long kmax = 100;           /* largest iteration number */
+  long kmax = 1000;           /* largest iteration number */
   long imax = 200;           /* largest solver iteration number */
   long timediscr = 1;        /* type of time discretisation */
   long stype = 0;            /* type of linear system solver */
