@@ -25,7 +25,7 @@
 
 \documentclass[
 12pt, % The default document font size, options: 10pt, 11pt, 12pt
-oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
+%oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
 english, % ngerman for German
 onehalfspacing, % Single line spacing, alternatives: onehalfspacing or doublespacing
 %draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
@@ -57,10 +57,14 @@ chapterinoneline, % Uncomment to place the chapter title next to the number on o
 \usepackage{diagbox}
 \usepackage{array} 
 \usepackage{float}
+\usepackage[a4]{crop}
 \usepackage[colorlinks=false]{hyperref}
 
 \graphicspath{{/home/daniel/Uni/Thesis/thesis/Images/}{/home/daniel/Uni/Thesis/images/}}
 
+\crop
+
+\substitutecolormodel{rgb}{cmyk}
 
 % To get rid of widows and clubs.
 \clubpenalty=10000
