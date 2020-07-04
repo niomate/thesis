@@ -98,4 +98,4 @@ Diffusivity: 		Charbonnier
 Time-discretisation:	semi-implicit
 Solver:			Conjugate Gradients (CG)
 
-Rho is always set to 0, since I examined EED, not CED.
+Rho is always set to 0 since I examined EED not CED.
