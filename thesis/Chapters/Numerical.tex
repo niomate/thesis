@@ -1,0 +1,273 @@
+\chapter{Numerical Aspects}\label{ch:Numerical} 
+In this chapter, we will go over the numerical aspects of our work.
+Firstly we are going to explain how images are usually defined in a discrete setting.
+Afterwards, we will go over numerical differentiation and showcase how a so called
+finite differences scheme for first order derivatives is derived. 
+Lastly, we will talk about the discretisation of diffusion processes or, more specifically, the
+discretisation of the EED process described in~\ref{sub:EEDInpaint}.
+Since reality is not infinitely fine, things such as infinitesimal calculations as seen in 
+calculus, e.g.\ differentiation of functions, can not be applied to the real world directly.
+This is a problem since digital images are inherently not continuous as they contain only a
+finite number of pixels. 
+
+\section{Discrete Images}\label{sec:DiscreteImages}
+Let $f:\Omega \rightarrow \R$ be an image where $\Omega
+:= (0, n_x)\times(0, n_y) \subset \R^2$ as defined in Section~\ref{sec:Basics}. To
+\textit{sample} the image, i.e.\ to discretise the image domain, we assume that all pixels lie on a
+rectangular equidistant grid inside $\Omega$, where each cell in the grid has a size of $h_x
+\times h_y$.
+That yields $N_x := n_x/h_x$ pixels in x- and $N_y := n_y/h_y$ pixels in
+y-direction.
+That being said, we define the pixel $u_{i,j}$ at grid location ${(i, j)}^\top$ as
+\begin{equation}
+    u_{i, j} := u(ih_x, jh_y)\qquad \forall(i ,j) \in \{1,\dots,N_x\}\times\{1,\dots,N_y\}
+\end{equation}
+With that approach, the pixels are defined to lie on the crossing of the grid lines.
+An alternative idea defines the pixels to lie in the centre of each cell, i.e.\ at location 
+\begin{equation}
+    {\left(\left(i-\frac{1}{2}\right)h_x,\ \left(j- \frac{1}{2}\right)h_y\right)}^\top
+\end{equation}
+As a sidenote, the cell sizes in either direction are almost always assumed to be 1 in 
+practice. 
+To keep the theory as universal as possible, however, we will use $h_x$ and $h_y$ instead.\\
+Sampling of the spatial domain is not the only step necessary to fully discretise an image; we also have
+to discretise the \textit{co-domain} or \textit{grey-value-domain}.\\
+This step of the discretisation process is also called \textit{quantisation}.
+In the continuous setting, the so called \textit{co-domain} is the complete set of irrational numbers $\R$.
+To save disk space, this range is usually limited to 1 byte, that is values in the range 
+of whole numbers from 0 to $2^8=256$~\cite{ipcv}.
+
+\section{Numerical Differentiation}\label{sec:NumDiff}
+Image derivatives are essential to image processing as seen in the previous chapter. 
+Therefore, we need a way to compute them even on discrete images. To compute the 
+gradient or, in the simpler case, the derivative of a discrete function, one 
+generally uses so called \textit{finite difference schemes}. 
+Such a scheme is normally derived from the \textit{Taylor expansion} of the continuous
+function. For example, we want to compute the first derivative of a 1D function $f:\R
+\rightarrow \R$, following closely the method described in~\cite{ipcv}.
+The Taylor expansion of \textit{degree $n$} of this function around the point $x_0\in\R$ is given by 
+\begin{equation}
+    f(x) = T_n(x, x_0) + \mathcal{O}(h^{n+1})
+\end{equation}
+where $\mathcal{O}(h^{n+1})$ describes the magnitude of the leading error term and as such the
+\textit{approximation quality} of the Taylor series.
+The actual Taylor series is defined as
+\begin{equation}
+    T_n(x, x_0) = \sum\limits_{k=0}^{n} \frac{{(x-x_0)}^k}{k!}f^{(k)}(x_0)
+\end{equation}
+where $f^{(k)}$ denotes the $k$-th derivative of the function $f$.
+A finite difference scheme generally uses a weighted sum of neighbouring values to compute the
+desired derivative expression. In our example, we want to derive a scheme to compute the first
+derivative of $f_i$ using its neighbours $f_{i-1}$ and $f_{i+1}$, i.e.
+\begin{equation}
+    f_i' \approx \alpha f_{i-1} + \beta f_i + \gamma f_{i+1}
+\end{equation}
+We can now describe $f_{i-1}$ and $f_{i+1}$ in terms of their Taylor expansion around $f_i$: 
+\begin{align}
+    f_{i-1} &= f((i-1)h) \notag\\
+            &= T_n((i-1)h, ih) + \mathcal{O}(h^{n+1})\notag\\
+            &= \sum\limits_{k=0}^{n}\frac{{(-h)}^k}{k!}f_i^{(k)}+ \mathcal{O}(h^{n+1})\\
+    f_{i+1} &= \cdots = \sum\limits_{k=0}^{n}\frac{h^k}{k!}f_i^{(k)}+ \mathcal{O}(h^{n+1})
+\end{align}
+If we now choose a concrete value for $n$ (here $n=5$) we can actually compute the approximation:
+\begin{align}
+    f_{i-1} &= f_i - hf_i' + \frac{h^2}{2}f_i'' - \frac{h^3}{6}f_i^{(3)} + \frac{h^4}{24}f_i^{(4)} -
+    \frac{h^5}{120}f_i^{(5)} + \mathcal{O}(h^6)\label{eq:fi-1}\\
+    f_{i+1} &= f_i + hf_i' + \frac{h^2}{2}f_i'' + \frac{h^3}{6}f_i^{(3)} + \frac{h^4}{24}f_i^{(4)} +
+    \frac{h^5}{120}f_i^{(5)} + \mathcal{O}(h^6)\label{eq:fi+1}
+\end{align}
+The next step is the \textit{comparison of coefficients}. We insert~\eqref{eq:fi-1} and~\eqref{eq:fi+1}
+into the equation and solve the arising linear system of equations for $\alpha,\beta,\gamma$.
+\begin{align}
+    0\cdot f_i + 1\cdot f_i' + 0\cdot f_i'' \overset{!}{=} \alpha f_{i-1} + \beta f_i + \gamma
+    f_{i+1}
+\end{align}
+After the substitution, the right hand side becomes
+\begin{align}
+    &\alpha \left(f_i - hf_i' + \frac{h^2}{2}f_i''\right) + \beta f_i + \gamma\left(f_i + hf_i' + \frac{h^2}{2}f_i''\right)\notag\\
+    = &\left(\alpha+\beta+\gamma\right)f_i + h\left(-\alpha+\gamma\right)f_i' + \frac{h^2}{2}\left(\alpha+\gamma\right)f_i''
+\end{align} 
+Note that for the comparison of coefficients it suffices to use the first 3 summands of the
+approximation. The linear system defined by the above equation
+\begin{equation}
+    \begin{pmatrix}
+        1&1&1\\
+        -1&0&1\\
+        1&0&1
+    \end{pmatrix}
+    \begin{pmatrix}
+        \alpha\\
+        \beta\\
+        \gamma
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        0\\
+        \frac{1}{h}\\
+        0
+    \end{pmatrix}
+\end{equation}
+has the solutions $\alpha = -\frac{1}{2h}, \beta = 0, \gamma = \frac{1}{2h}$.
+This yields the approximation 
+\begin{equation}
+    f_i'\approx\frac{f_{i+1} - f_{i-1}}{2h}
+\end{equation}
+To find out how good this scheme is, we re-insert~\eqref{eq:fi-1} and~\eqref{eq:fi+1} to get
+\begin{align}
+    \frac{f_{i+1} - f_{i-1}}{2h}= -&\frac{1}{2h}\left(f_i - hf_i' + \frac{h^2}{2}f_i'' -
+        \frac{h^3}{6}f_i^{(3)} + \frac{h^4}{24}f_i^{(4)} -
+    \frac{h^5}{120}f_i^{(5)} + \mathcal{O}(h^6)\right) + \notag\\
+                                   &\frac{1}{2h}\left(f_i - hf_i' + \frac{h^2}{2}f_i'' -
+                                       \frac{h^3}{6}f_i^{(3)} + \frac{h^4}{24}f_i^{(4)} -
+                                   \frac{h^5}{120}f_i^{(5)} + \mathcal{O}(h^6)\right)\notag
+\end{align}
+Expanding and simplifying yields
+\begin{align}
+        \frac{f_{i+1} - f_{i-1}}{2h} &= f_i' + \underbrace{\frac{h^2}{6}f_i'' +
+            \frac{h^4}{30}f_i^{(4)} +
+        \mathcal{O}(h^5)}_\text{quadratic leading error term}\notag\\
+            \Rightarrow \frac{f_{i+1} - f_{i-1}}{2h} &= f_i' + \mathcal{O}(h^2)
+\end{align}
+This means that the error of our approximation is quadratic in the grid size. 
+We also say that this approximation has a \textit{consistency order} of 2. Note that for such an
+approximation to be reasonable, it has to have at least consistency order of 1. Otherwise, it is
+not guaranteed that the error term diminishes if we send the grid size $h$ to 0.\\
+The scheme derived above is also called \textit{central difference scheme}. Note that there are
+other schemes such as \textit{forward} and \textit{backward} differences, but for the most part, we
+will only use central differences since it provides us with the highest consistency
+order out of all three. 
+\begin{align}
+    f_i' &= \frac{f_i - f_{i-1}}{h} + \mathcal{O}(h)&\textnormal{(backward differences)}\notag\\
+    f_i' &= \frac{f_{i+1} - f_i}{h} + \mathcal{O}(h)&\textnormal{(forward differences)}\notag
+\end{align}
+\section{Numerical Schemes for Diffusion}\label{sec:NumSchemesDiffusion}
+As discretisation for the inpainting process, the non-standard discretisation scheme as
+derived in~\cite{www13} was used. The actual derivation of the scheme is fairly complex 
+and beyond the scope of this thesis.
+That is why we will just cover the essential information and then refer the interested 
+reader to~\cite{weickert96, www13} for more information on numerical schemes for diffusion
+processes in general.\\
+We remember the defining equation of EED\@:
+\begin{equation}
+    \partial_t u = \diverg(\underbrace{g(\del\mathbf{u}_\sigma\del\mathbf{u}_\sigma^\top)}_{=:\mathbf{D}}\del
+    \mathbf{u})\label{eq:EED}
+\end{equation}
+To discretise this equation, we first write the diffusion tensor $D$ as a symmetric matrix
+\begin{equation}
+    D = \begin{pmatrix}
+        a&b\\b&c
+    \end{pmatrix}
+\end{equation}
+Resubstituting this into~\eqref{eq:EED}, we get 
+\begin{equation}
+\partial_t u = \diverg \begin{pmatrix}
+    a\cdot \partial_x u+b\cdot \partial_y u\\
+    b\cdot \partial_x u+c\cdot \partial_y u
+\end{pmatrix} = a\cdot\partial_{xx} u + 2b\cdot \partial_{xy}u+ c\cdot \partial_{yy} u
+\end{equation}
+These second order derivatives can easily be discretised using central differences. This leads to a
+fairly complex stencil that the interested reader can look up in~\cite{weickert96}.
+The problem with this discretisation is that it is not guaranteed to satisfy the
+\textit{nonnegativity requirement} or \textit{stability in the maximum norm}~\cite{weickert96}. This requirement is
+an important theoretical requirement as it is needed to guarantee the well-posedness of the
+diffusion process, which in turn guarantees the numerical stability of the
+algorithm~\cite{weickert96}.
+In order to enable the discretisation to fulfill this requirement, one has to impose the restriction that
+the \textit{spectral condition number $\kappa$}, which is the ratio between the smallest and
+largest eigenvalue of the matrix $D$, is bounded by 
+\begin{equation}
+    \kappa \leq 3 + 2\sqrt{2}
+\end{equation}
+This restriction might seem arbitrary, but the proof of this upper bound can be found
+in~\cite{weickert96}.
+However, this requirement also puts a restriction on the anisotropy of the diffusion process, as the
+ratio between the largest and smallest eigenvalue of the diffusion tensor is now bounded from above.
+Therefore, one might consider another discretisation that is not necessarily stable in
+the maximum norm.
+In~\cite{www13}, Weickert et al.\ derived a framework for discretisations stable in the
+\textit{Euclidean or 2-norm}. This framework embeds a series of 8 different
+stencils. An example for such a stencil can be seen in Figure~\ref{fig:Stencil}.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{Stencil}
+    \caption{$L^2$-stable nonstandard stencil for anisotropic diffusion in dependence of parameters
+    $\alpha, \beta$~\cite{www13}}\label{fig:Stencil}
+\end{figure}
+These stencils are dependent on 2 parameters $\alpha,\beta$ which can both be variant in space.
+In the specific implementation we are using, $\alpha$ is fixed, while $\beta$ is space variant.
+Additionally, a \textit{nonnegativity parameter} $\lambda \in [0,1]$ was introduced that is required
+in the computation of the space-variant parameter $\beta$. \newpage\noindent
+The parameter $\beta$ at location $(i,j)$ is then calculated as 
+\begin{equation}\label{eq:Gamma}
+    \beta_{i,j} = \gamma \cdot (1-2\alpha) \cdot \text{sgn}(b_{i,j})
+\end{equation}
+where sgn is the \textit{signum function} that returns the sign of a number
+\begin{equation}
+    \text{sgn}(x) = \begin{cases}
+        0 & \text{ if } x = 0\\
+        \dfrac{x}{\lvert x\rvert} & \text{ else }
+    \end{cases}
+\end{equation}
+Let us now denote such a spatial discretisation of~\eqref{eq:EED} by 
+\begin{equation}
+    \frac{d\mathbf{u}}{dt} = \mathbf{A}(\mathbf{u})\mathbf{u}
+\end{equation}
+It can be shown that the matrix $\mathbf{A}$ is negative semidefinite, i.e.\  
+\begin{equation*}
+    x^\top \mathbf{A}x \leq 0
+\end{equation*}
+for all vectors $x$, if the parameters $\alpha,\beta$ satisfy
+\begin{eqnarray}
+    0 \leq \alpha \leq \frac{1}{2}\\
+    \vert\beta\vert \leq 1-2\alpha
+\end{eqnarray}
+The negative semidefiniteness of $\mathbf{A}$ is useful to show that the semi-implicit and
+explicit time discretisations both are stable in the 2-norm.\newpage\noindent
+Both time discretisations work by applying a forward difference on
+the temporal derivative on the left side with a time step size $\tau$ (this corresponds to the grid
+size in the spatial derivative). 
+The difference between the explicit and the implicit time discretisation is fairly small, but makes
+a huge difference in efficiency since, as we will see next, we can choose much larger time steps in
+the semi-implicit scheme than in the explicit scheme. 
+The difference lies in the fact, that in the explicit scheme, the right hand side does not involve any terms
+`from the future', while in the semi-implicit scheme it does.
+We can now write the explicit scheme given by
+\begin{equation}
+    \frac{u^{k+1} - u^{k}}{\tau} = \mathbf{A}(u^k)u^k
+\end{equation}
+as
+\begin{equation}
+    u^{k+1} = (I + \tau\mathbf{A}(u^k))u^k
+\end{equation}
+The upper index $k$ denotes the `time level' of $u$.
+Stability for this scheme can be guaranteed, if 
+\begin{equation}
+    \rho(I + \tau\mathbf{A}(u^k)) \leq 1\ \Leftrightarrow\ \tau \leq \frac{2}{\rho(\mathbf{A}(u^k))}
+\end{equation}
+where $\rho$ denotes the \textit{spectral norm} or \textit{modulus of the largest
+eigenvalue}~\cite{www13}.
+The semi-implicit scheme, however, is given by
+\begin{equation}
+    \frac{u^{k+1} - u^{k}}{\tau} = \mathbf{A}(u^k)u^{k+1}
+\end{equation}
+which boils down to solving the linear system of equations
+\begin{equation}
+    (I-\mathbf{A}(u^k))u^{k+1} = u^k\label{eq:SemiImpl}
+\end{equation}
+Note that the matrix on the left hand side is invertible thanks to the negative semidefiniteness of
+$\mathbf{A}(u^k)$: One can show that because of the negative semidefiniteness, $(I-\mathbf{A}(u^k))$ only has eigenvalues
+larger than 1.
+This shows that the semi-implicit scheme given by 
+\begin{equation}
+    u^{k+1} = {(I- \mathbf{A}(u^k))}^{-1}u^k
+\end{equation}
+is stable in the 2-norm for every time step size $\tau$.\newpage\noindent
+Furthermore, in the semi-implicit scheme the next iteration can not be computed explicitly (as the name
+suggests) as is the case with the explicit scheme. Instead one has to solve
+the linear system of equations given by~\eqref{eq:SemiImpl}. This is usually done with an iterative
+solver like Gauss-Seidel or conjugate gradients (CG)~\cite{conjugateGradients}.\\
+An in-depth explanation of these solvers would be beyond the scope of this thesis.
+Hence, the only thing important to know is that for the evaluation of the inpainting masks in our work,
+we used a semi-implicit scheme with a CG solver and a timestep size of 1000.
+Moreover, we implemented a stopping criterion which ensures that the residual error of the solution
+of the CG solver is below a set threshold of $10^{-6}$.

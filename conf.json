@@ -105,11 +105,6 @@
         },
         "-n": {
             "style": "textbox",
-            "label": "Outer iterations",
-            "default": 100
-        },
-        "-N": {
-            "style": "textbox",
             "label": "Solver iterations",
             "default": 200
         }

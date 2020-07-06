@@ -1,20 +1,20 @@
 \chapter{Conclusion and Outlook}\label{ch:Conclusion}
 
-In this last chapter, I will shortly recap the work in this thesis and afterwards discuss the
+In this last chapter, we will shortly recap the work in this thesis and afterwards discuss the
 advantages and shortcomings of the approach.
-Lastly, I will talk about possible additions and improvements one could touch on in future work in Section~\ref{sec:FutureWork}.
+Lastly, we will talk about possible additions and improvements one could touch on in future work in Section~\ref{sec:FutureWork}.
 
 \section{What has been done?}
 
-To summarise, I have adapted the method proposed in~\cite{zimmer07} by introducing circular corner
+To summarise, we have adapted the method proposed in~\cite{zimmer07} by introducing circular corner
 regions and explored their potential for PDE based inpainting and compression approaches.\\
-I used a simple structure tensor based approach for corner detection, namely the Förstner-Harris
+We used a simple structure tensor based approach for corner detection, namely the Förstner-Harris
 corner detector to find corner candidates. Using the new additional procedures called
 \textit{circular non-maximum suppression} and \textit{total pixel percentile thresholding}, these
 candidates were filtered to get a mask that satisfies a pre-defined pixel density criterion. With
 these additions, it was possible to construct masks of similar pixel densities fairly consistently.
 However, one should mention that both methods are pretty naive approaches and far from perfect.\\
-I tested the hypothesis that the mask radius should be chosen in dependence of the integration
+We tested the hypothesis that the mask radius should be chosen in dependence of the integration
 scale during the computation of the structure tensor. Moreover, the hypothesis stated that the mask
 radius should always be larger than the integration scale in order to cover the possible inaccuracy
 in the localisation of the corner. The experiments yielded reasonable evidence that this is the
@@ -37,7 +37,7 @@ the corner regions larger so that more corners are covered by a single region. B
 however, the mask will become so dense that it will be suboptimal in a compression context.
 Another point to mention, that Zimmer's method~\cite{zimmer07} struggled with as well, is the sparsity
 of corners in images. While corners are semantically important features, they are pretty seldom in
-organic images like portraits.\\
+natural images like portraits.\\
 Something to consider as well is the compression of noisy images. Here one has to pose the question
 whether the decompressed version of these images should contain noise or not. On one hand, noise in
 images is mostly a degradation that one wants to remove. On the other hand, image compression
@@ -75,8 +75,8 @@ like a mask from a probabilistic sparsification or subdivision based approach.
 Since it is pretty difficult to produce good inpainting masks, i.e.\ masks that result in
 reconstructions with a high PSNR, only using corners and corner regions, one could consider
 applying methods from other approaches to corner based mask creation. One method that comes into
-mind would be probabilistic sparsification~\cite{hoeltgen12, schmaltz14} applied to corner regions.\\
-Seeing what impact tonal optimisation had~\cite{hoeltgen12, schmaltz14}, one could also consider
+mind would be probabilistic sparsification~\cite{schmaltz14, hoeltgen12} applied to corner regions.\\
+Seeing what impact tonal optimisation had~\cite{schmaltz14, hoeltgen12}, one could also consider
 applying this to a corner region based approach.
 
 \subsection*{Possible application to region of interest (ROI) coding}

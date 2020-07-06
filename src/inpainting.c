@@ -1683,16 +1683,16 @@ int main(int argc, char **argv)
   float lambda = 1.0;       /* contrast parameter */
   float sigma = 3.0;         /* noise scale */
   float rho = 0;             /* integration scale */
-  float alpha = 0.5;         /* dissipativity parameter */
+  float alpha = 0.49;         /* dissipativity parameter */
   float gamma = 1;           /* nonnegativity parameter */
   float ht = 1000;           /* time step size */
-  long kmax = 1000;           /* largest iteration number */
+  /*long kmax = 1000;           [> largest iteration number <]*/
   long imax = 200;           /* largest solver iteration number */
   long timediscr = 1;        /* type of time discretisation */
   long stype = 0;            /* type of linear system solver */
 
   int c;
-  while ((c = getopt(argc, argv, "l:s:a:g:n:N:o:")) != -1) {
+  while ((c = getopt(argc, argv, "l:s:a:g:n:o:")) != -1) {
     switch (c) {
     case 'l':
       lambda = atof(optarg);
@@ -1707,9 +1707,6 @@ int main(int argc, char **argv)
       gamma = atof(optarg);
       break;
     case 'n':
-      kmax = atol(optarg);
-      break;
-    case 'N':
       imax = atol(optarg);
       break;
     case 'o':
@@ -1834,7 +1831,7 @@ int main(int argc, char **argv)
 
   /* ---- process image ---- */
 
-  while (res >= 0.000001 && k < kmax) {
+  while (res >= 0.000001) {
     /* perform one inpainting iteration */
     k = k + 1;
     if (timediscr == 0)
@@ -1875,7 +1872,7 @@ int main(int argc, char **argv)
   outimage = fopen(out, "w");
   fprintf(outimage, "P5 \n");
   fprintf(outimage, "# inpainting with EED\n");
-  fprintf(outimage, "# kmax:             %1ld\n", kmax);
+  fprintf(outimage, "# number iterations:             %1ld\n", k);
   if (timediscr == 0)
     fprintf(outimage, "# explicit scheme\n");
   else if (timediscr == 1) {
@@ -1898,7 +1895,7 @@ int main(int argc, char **argv)
   fprintf(outimage, "# alpha:          %8.4lf\n", alpha);
   fprintf(outimage, "# gamma:          %8.4lf\n", gamma);
   fprintf(outimage, "# ht:             %8.2lf\n", ht);
-  fprintf(outimage, "# time steps:     %8ld\n", kmax);
+  fprintf(outimage, "# time steps:     %8ld\n", k);
   fprintf(outimage, "# minimum:        %8.2lf\n", min);
   fprintf(outimage, "# maximum:        %8.2lf\n", max);
   fprintf(outimage, "# mean:           %8.2lf\n", mean);

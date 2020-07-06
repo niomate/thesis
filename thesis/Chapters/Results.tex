@@ -3,8 +3,8 @@
 }
 
 \chapter{Experiments}\label{ch:Experiments} 
-In this chapter, I will present the experiments conducted to test and verify the methods I
-introduced. Furthermore, I will explain how to figure out what the best parameters for both corner detection and inpainting
+In this chapter, we will present the experiments conducted to test and verify the methods I
+introduced. Furthermore, we will explain how to figure out what the best parameters for both corner detection and inpainting
 are. Below, we can see all the test images that were used for the experiments.
 \begin{figure}[h]
     \centering
@@ -53,7 +53,7 @@ possible, meaning that we want to choose the smallest noise scale that gets rid 
 noise in the image since with a larger $\sigma$ 
 one often faces the problem that the detected corners can not be located as accurately anymore,
 since more and more relevant features are smoothed away (see~\ref{sub:ScaleSpaces}). Another problem
-is that the gaussian scale space (iterated gaussian smoothing) may even introduce new
+is that the Gaussian scale space (iterated Gaussian smoothing) may even introduce new
 corners~\cite{weickert96}.
  Most of the time however, a $\sigma$ of 1 is sufficient enough to remove most of the noise and unnecessary
  details and still provide an accurate result.\\
@@ -62,8 +62,8 @@ corners~\cite{weickert96}.
  dependent on the noise scale in the sense that the integration scale always should be 
  at least as large as the noise scale.\\
  On the other hand, by increasing the integration scale, we also increase the inaccuracy in the corner 
- localisation as we see in figure~\ref{fig:Integration}.
-\begin{figure}[h]
+ localisation as we see in figure~\ref{fig:Integration}.\\
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.4\linewidth]{rect/rect_2_corner.png}
     \includegraphics[width=0.4\linewidth]{rect/rect_4_corner.png}
@@ -73,13 +73,13 @@ corners~\cite{weickert96}.
 \textbf{Top left:} $\rho=2$, \textbf{Top right:} $\rho=4$, \textbf{Bottom left:}
 $\rho=6$, \textbf{Bottom right} $\rho=8$. Original image: \texttt{rect\_tiny} (see Figure~\ref{fig:BinaryImages})}\label{fig:Integration}
 \end{figure}
-This demonstrates the issue mentioned in Chapter~\ref{ch:RelatedWork} with Zimmer's approach~\cite{zimmer07} quite nicely. 
+\noindent This demonstrates the issue mentioned in Chapter~\ref{ch:RelatedWork} with Zimmer's approach~\cite{zimmer07} quite nicely. 
 We can see that with increasing integration scale, the inaccuracy increases
-steadily. The problem with Zimmer's approach is that they did not adress these inaccuracies in
-their mask generation. They fixed the mask radius to be just a small neighbourhood of 4 to 8 pixels.
-To adjust the amount of corners introduced into the mask, they adapted the integration scale.
+steadily. The problem with Zimmer's approach is that he did not adress these inaccuracies in
+their mask generation. Zimmer fixed the mask radius to be just a small neighbourhood of 4 to 8 pixels.
+To adjust the amount of corners introduced into the mask, he adapted the integration scale.
 Obviously this introduces the aforementioned inaccuracies and combined with the fixed neighbourhood
-size, can lead to the actual corner not even being included in the final mask (see figure
+size, can lead to the actual corner not even being included in the final mask (see Figure
 ~\ref{fig:Inacc}).
 \begin{figure}[h]
     \centering
@@ -91,15 +91,15 @@ size, can lead to the actual corner not even being included in the final mask (s
 purposes, not the actual mask). Original image: \texttt{rect\_tiny} (see Figure~\ref{fig:BinaryImages})}\label{fig:Inacc}
 \end{figure}
 We will discuss the optimal choice for the mask radius in the next section (\ref{sec:MaskEx}), but
-first I will show some examples demonstrating the ideas behind the methods introduced in
-Section~\ref{sub:Percentile} and~\ref{sub:Suppression}. As we can see in
+first we will show some examples demonstrating the ideas behind the methods introduced in
+Section~\ref{sec:Percentile} and~\ref{sec:Suppression}. As we can see in
 figure~\ref{fig:CNMSExample}, CNMS allows us to distribute the corner regions in the mask more
 evenly across the whole image. \\\ \\
 While in the example without CNMS, most of the corners are
 overlapping and grouped up in the lower half of the image; using CNMS, the overlapping corners are
 removed and free up slots for corners with a lower cornerness measure, i.e.\ less sharp corners in
 the upper half. Later in Figure~\ref{fig:AbstractCNMSExamples}, we can also observe that thanks to
-CNMS, a few extra slots are freed up to be used in other regions.
+CNMS, a few extra slots become available to be used for other regions.
 \begin{figure}
     \centering
     \includegraphics[width=0.31\linewidth]{trui/trui_corners_cnms.png}
@@ -142,11 +142,11 @@ Original image: \texttt{abstract1\_small} (see Figure~\ref{fig:BinaryImages})}\l
     Figure~\ref{fig:BinaryImages})}\label{fig:TPPTEx}
 \end{figure}
 \\\noindent In Figure~\ref{fig:TPPTEx}, we can also see that TPPT actually produces masks of a
-similar size, bound by the percentage given by the parameter $p$. What I also noticed is that the
+similar size, bound by the percentage given by the parameter $p$. What we also noticed is that the
 percentage is not as accurate when using a normal non-maximum suppression approach. This is due to
 the potential overlap that is not accounted for in the initial estimation of the amount of corner
 regions that can be introduced into the mask.
-However, the TPPT approach is not perfect.\\
+However, as already mentioned, the TPPT approach is not perfect.
 It does not always yield accurate masks since for one
 reason, the maximum possible pixel density depends on the amount of corners detected. On the other
 hand, with increasing mask radius it is also harder to get an accurate pixel density. Some possible
@@ -161,29 +161,26 @@ as explained in Section~\ref{sec:Inpainting}.
 The main parameters required by the inpainting process are 
 \begin{itemize}
     \item the noise scale $\sigma$,
-    \item the integration scale $\rho$,
     \item the contrast parameter $\lambda$, 
     \item the dissipativity parameter $\alpha$ and
     \item a non-negativity parameter $\gamma$.
 \end{itemize}
-If we recall from Section~\ref{sec:Inpainting}, when using EED, we do not need the integation scale, as the
-integration scale only influences the radius of the structure tensor which is actually not needed
-for this method of inpainting. Thus, this parameter will be fixed to 0.\\
+\newpage\noindent
 The parameters $\alpha$ and $\gamma$ are purely numerical parameters that are used to 
 stabilise the algorithm or rather help to ensure that the stencil weights of the discretisation of
 the diffusion process meet certain requirements.
-In this work I fixed these parameters to $\alpha=0.49,\, \gamma=1.0$~\cite{conversation}.
+In this work we fixed these parameters to $\alpha=0.49,\, \gamma=1.0$~\cite{conversation}.
 In general, one could image the parameter $\alpha$ as a sharpness parameter: the larger the
 $\alpha$ (but not larger than 0.5), the sharper the image. More on the nature of these two parameters can be read about in
 ~\cite{www13, weickert96}.\\
-More interesting is the contrast parameter $\gamma$ that is required in the diffusivity function
+More interesting is the contrast parameter $\lambda$ that is required in the diffusivity function
 \eqref{def:Diffusivity}. As already explained in Section~\ref{sec:Structure}, this parameter helps to
 distinguish between edges and non-edges. For the EED inpainting this is especially important since
-it basically determines how strongly edges will be continued into inpainting regions. \\
+it basically determines how strongly edges will be continued into inpainting regions.
 The caveat with this parameter is that even though a smaller $\lambda\ (\leq0.1)$ yields very sharp
 results, especially for binary images, it increases the chance of the algorithm becoming unstable.
 Normally a $\lambda<0.1$ should not be used~\cite{conversation}. Since the optimal choice for this parameter is still a
-topic of current research, I had to experiment a little to find the best choice. Furthermore it was
+topic of current research, we had to experiment a little to find the best choice. Furthermore it was
 suggested that the optimal $\lambda$ depends on the input image~\cite{schmaltz14}. 
 The noise scale $\sigma$ was always chosen to be somewhere between 1 and 4 as this seemed to give
 the best results.
@@ -217,7 +214,7 @@ mentioned in Section~\ref{sec:CornerEx}~\cite{conversation}.
     1, 2, 3, 4, 5. PSNR from top to bottom: 12.49, 12.49, 12.49, 11.31, 8.09. Original image:
 \texttt{flatcorner} (see Figure~\ref{fig:BinaryImages})}\label{fig:MaskEx}
 \end{figure}
-\newpage\noindent The hypothesis was tested by switching out the Gaussian
+\newpage\noindent The hypothesis was tested by replacing the Gaussian
 convolution in the computation of the structure tensor in the corner detection process for a
 regular convolution with a so called \textit{normalised pillbox kernel}, which is basically just
 averaging inside a disk-shaped neighbourhood, to get a better representation of the uncertainty in
@@ -226,13 +223,13 @@ sensible in terms of reconstruction quality to choose a mask radius equal to the
 pillbox kernel~\cite{conversation}. 
 In Figure~\ref{fig:MaskEx} we can see the motivation behind the
 idea. There we can see how the actual corner slowly moves out of the corner region for increasing
-$\rho$. I should note that the corner locations and thus the masks and inpainting results for
+$\rho$. We should note that the corner locations and thus the masks and inpainting results for
 $\rho=1,2,3$ are the same. The interesting thing however is that the quality suddenly drops when we 
 have 
 \begin{equation}
     \frac{R}{\rho}\leq1
 \end{equation}
-This observation motivated the next experiment in which I tested different integration scales
+This observation motivated the next experiment in which we tested different integration scales
 paired with multiple mask radii to create the matrix we can see in Figure~\ref{fig:InaccTestMask}.
 Looking at the resulting inpainted images (see Figure~\ref{fig:InaccTestInpaint}) and their
 respective PSNR values (see Figure~\ref{fig:InaccTestPSNR}), we observe a similar effect, namely
@@ -559,9 +556,9 @@ Gray cells are cells where the $R$ and $\rho$ are equal.}\label{fig:RectInaccTes
 \end{figure}
 \newpage
 \section{Examples}\label{sec:Results}
-Finally, I will present some results of the reconstruction process using only corner regions as
+Finally, we will present some results of the reconstruction process using only corner regions as
 seed points.
-First up, I want to demonstrate the approach with multiple binary images shown in
+First up, we want to demonstrate the approach with multiple binary images shown in
 Figure~\ref{fig:BinaryImages}. As we can see in Figure~\ref{fig:AbstractInpainting}, Figure~\ref{fig:RectInaccTestInpaint} and Figure~\ref{fig:InaccTestInpaint}, the algorithm works fairly well especially for binary
 images with clearly defined corners even though the edges are not as sharp as one might have
 hoped. However, the inpainting parameters were not highly optimised in these examples. The purpose
@@ -573,7 +570,7 @@ not really detect any corners there because of the small curvature (see Figure~\
 Thus, we have too little information to reconstruct this area properly. 
 Finally, we can see that the method still works well, even with a bit of 
 noise applied to it (see Figure~\ref{fig:AbstractNoise1})
-However, if one increases the noise level we obsere that the quality of the reconstruction
+However, if one increases the noise level we observe that the quality of the reconstruction
 deteriorates further, which is to be expected.
 \begin{figure}[ht]
     \centering

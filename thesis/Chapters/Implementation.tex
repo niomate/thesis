@@ -1,4 +1,4 @@
-\chapter{Implementation}\label{ch:Implementation} 
+\chapter{Model and Implementation}\label{ch:Implementation} 
 In this chapter, I will present my contributions and go over the technical aspects of the
 implementation. First off, we need to discretise the theory introduced in Chapter~\ref{ch:Theory} in order
 to implement the corner detection and inpainting algorithms. To do that, we need to talk about
@@ -9,7 +9,7 @@ In the second chapter I will introduce corner regions as an essential concept of
 about the additions we made to the corner detection algorithm in order to select the most valuable
 corners for our inpainting mask.\\
 All the source code is written in pure C and can be found in the appendix.
-The initial corner detection algorithm as well as the code for the inpainting alogorithm was given
+The initial corner detection algorithm as well as the code for the inpainting algorithm was given
 to me by courtesy of Joachim Weickert.
 
 \section{Discretisation}\label{sec:Discretisation}
@@ -261,7 +261,7 @@ An in-depth explanation of these solvers would be beyond the scope of this thesi
 The only thing important to know is that for the evaluation of the inpainting masks in my thesis,
 I used a semi-implicit scheme with a conjugate gradients solver and a timestep size of 1000.
 
-\section{Circular Corner Regions}\label{sec:Contribution}
+\section{Disk-shaped Corner Regions}\label{sec:Contribution}
 As mentioned in the beginning, the main concern for the approach of Zimmer~\cite{zimmer07} was that the 
 corner localisation was not accurate enough that we can just keep a 4 or 8-neighbourhood 
 of pixels. The implication is that the regions they inserted into the mask were were too small to
@@ -321,8 +321,7 @@ for two different input images as we can see in~\ref{fig:PercExample}.
     \includegraphics[width=0.4\linewidth]{example_rect_50.png}
     \includegraphics[width=0.4\linewidth]{example_cat_50.png}
     \caption{Corner detection with the same parameters. Parameters are $\sigma=1,\rho=2,q=0.3$, no
-    CNMS, no TPPT}
-    \label{fig:PercExample}
+    CNMS, no TPPT}\label{fig:PercExample}
 \end{figure}\\
 To tackle this issue, I propose a new method that I call \textit{Total Pixel Percentage
 Thresholding}. The idea behind this method is that one makes the amount of corners that are kept

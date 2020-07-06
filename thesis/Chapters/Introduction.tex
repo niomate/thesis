@@ -6,13 +6,13 @@ last decades.
 
 \section{Motivation}
 One of the most successful and probably most well known \textit{codecs}
-is \textbf{JPEG}~\cite{wallace91} and its lesser known but more advanced successor \textbf{JPEG
+is \textbf{JPEG}~\cite{wallace92} and its lesser known but more advanced successor \textbf{JPEG
 2000}~\cite{jpeg2000}. Both are lossy image compression methods
 known for fairly high compression rates while still providing a reasonable image quality.
 For higher compression rates however, the quality deteriorates pretty quickly and the infamous ``block
 artifacts'' are being introduced. As a remedy, a new class of image compression methods based on
 \textit{digital image inpainting} have been developed over the last
-years~\cite{galic05, galic08, mainberger12, peloquin09, zimmer07, mainberger09, mainberger10, dong07, schmaltz09} that
+years~\cite{galic05, galic08, mainberger12, zimmer07, mainberger09, mainberger10, dong07, schmaltz09} that
 aim to create better looking images for higher compression rates than JPEG and even JPEG2000. \\
 Normal use cases for inpainting methods include, among other things, restoring damaged paintings and removing 
 objects from images but by pushing these methods to their limits, they can also be used for image compression.
@@ -34,15 +34,15 @@ to tap into its unexplored potential.
 \section{Goal}\label{sec:Goal}
 
 The goal of this thesis is two-fold:
-Firstly, I want to explore how inaccuracies in the corner localisation can be properly accounted
+Firstly, we want to explore how inaccuracies in the corner localisation can be properly accounted
 for in the mask creation. This includes finding out how large the corner region disks have to be to
 counteract the inaccuracy introduced during the detection phase.\\
-Secondly, I want to introduce some additional procedures to improve the selection of corner regions
+Secondly, we want to introduce some additional procedures to improve the selection of corner regions
 and make it a bit more robust with respect to the pixel density in the final mask, as it is fairly
 important to reliably produce masks containing only a certain percentage of pixels if one wants to
 use this approach for image compression.
-One of the biggest factors that I had to consider was that corners and similar features can be quite 
+One of the biggest factors that we had to consider was that corners and similar features can be quite 
 rare in images, severely limiting the amount of candidates one can choose from, especially compared to
 approaches like~\cite{schmaltz09, hoeltgen12}. 
-I will cover these procedures in~\ref{sec:Contribution} while the first goal will be covered
-in~\ref{sec:ParameterSelection}.
+We will cover these procedures in Section~\ref{ch:Modelling} while the first goal will be covered
+in Section~\ref{sec:ParameterSelection}.

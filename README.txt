@@ -83,19 +83,17 @@ Options:
 	-a <float>:	Alpha/Dissipitavity parameter
 			Default: 0.49
 	
-	-n <int>:	Maximum number of outer iterations
-			Default: 1000
-
-	-N <int>:       Number of inner/solver iterations
+	-n <int>:       Number of inner/solver iterations
 			Default: 200
 
 	-o <string>:	Filename of output image
 			Default: "inpaint.pgm"
 
+The algorithm stops if the residual error falls below a set threshold of 0.000001 (10^(-6))
 As for the other parameters in the original version:
 
-Diffusivity: 		Charbonnier
+Diffusivity: 		    Charbonnier
 Time-discretisation:	semi-implicit
-Solver:			Conjugate Gradients (CG)
+Solver:			        Conjugate Gradients (CG)
 
 Rho is always set to 0 since I examined EED not CED.
