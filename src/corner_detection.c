@@ -20,7 +20,7 @@
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
 /*                                                                          */
-/*                  Modified by Daniel Gusenburger for                      */
+/*                  Modified by Jana Gusenburger for                      */
 /*                use in their bachelor's thesis titled                     */
 /*      "Exploring circular corner regions in PDE-based inpainting"         */
 /*                       (October '19 - June '20)                           */

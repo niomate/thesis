@@ -14,9 +14,9 @@
 
 \newcommand{\del}[1]{\mathbf{\nabla #1}}
 
-\DeclareMathOperator{\tr}{tr} 
+\DeclareMathOperator{\tr}{tr}
 
-%\setbeamertemplate{caption}{\raggedright\insertcaption\par} 
+%\setbeamertemplate{caption}{\raggedright\insertcaption\par}
 \setbeamertemplate{bibliography item}{\insertbiblabel}
 
 \newcommand{\backupbegin}{
@@ -25,11 +25,11 @@
 }
 \newcommand{\backupend}{
    \addtocounter{framenumberappendix}{-\value{framenumber}}
-   \addtocounter{framenumber}{\value{framenumberappendix}} 
+   \addtocounter{framenumber}{\value{framenumberappendix}}
 }
 
 \title[Corner Region Inpainting]{Exploring Disk-Shaped Corner Regions as Seed Points for PDE-based Inpainting}
-\author{Daniel Gusenburger}
+\author{Jana Ariane Gusenburger}
 
 \begin{document}
 
@@ -55,7 +55,7 @@
         \begin{itemize}[<+-|alert@+>]
             \item Restoration technique (antique paintings, photographs)
             \item ``Filling in'' of areas without having to know the data in these regions
-            \item Digital inpainting introduced around 2000 (e.g.~\cite{bertalmio00, masnou98}) 
+            \item Digital inpainting introduced around 2000 (e.g.~\cite{bertalmio00, masnou98})
         \end{itemize}
     \end{frame}
 
@@ -64,7 +64,7 @@
         \frametitle{\dots and why do we care?}
         \begin{block}{Image Compression}<+->\ \\
             Inpainting based image compression methods are already able to outperform traditional
-            codecs like JPEG for high compression rates 
+            codecs like JPEG for high compression rates
         \end{block}
         \visible<2-> {
             \begin{figure}
@@ -96,7 +96,7 @@
             \item Masks as small neighbourhoods around important corners
             \item Interleaving mean curvature motion (MCM) and edge-enhancing diffusion
                 (EED) for reconstruction
-        \end{itemize}     
+        \end{itemize}
     \end{frame}
 
     \begin{frame}[t]
@@ -137,8 +137,8 @@
                 \item<4-|alert@4> Förstner-Harris measure:
                     \[ \frac{\det{J_\rho}}{\tr{J_\rho}} = \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2} > T\]
                 \item<5-|alert@5> Local maxima marked as corners
-            \end{itemize} 
-        } 
+            \end{itemize}
+        }
         \only<3> {
             \vspace{-5cm}
             \begin{figure}
@@ -148,13 +148,13 @@
             \end{figure}
         }
     \end{frame}
-    
+
     \begin{frame}[t]
         \frametitle{Effect of Integration Scale}
         \visible<1,2,4-> {\begin{itemize}
             \item<+-|alert@+> Increases uncertainty in localisation
             \item<+-|alert@+> Detected position might not align with actual position
-            \item<4-|alert@4> Reconstruction errors 
+            \item<4-|alert@4> Reconstruction errors
             \item<5-|alert@5> Increasing integration scale to restrict amount of mask pixels not viable (as in
                 \cite{zimmer07})
     \end{itemize}}
@@ -175,7 +175,7 @@
             \includegraphics[width=0.7\linewidth]{images/matrix_inpaint.png}
             \caption{Matrix containing reconstruction results for different combinations of
             integration scale and mask radius}
-        \end{figure} 
+        \end{figure}
     \end{frame}
 
     \begin{frame}
@@ -184,7 +184,7 @@
             \centering
             \includegraphics[width=0.7\linewidth]{images/psnr_mask.png}
             \caption{PSNR Values for reconstructed images from previous slide}
-        \end{figure} 
+        \end{figure}
     \end{frame}
 
     \begin{frame}[t]
@@ -212,7 +212,7 @@
             Instead of filtering out percentage of corners, calculate upper bound for number of
             corners such that only a certain percentage of \textit{pixels} is kept.
         \end{block}
-    \end{frame}  
+    \end{frame}
 
     \begin{frame}[t]
         \frametitle{Percentile Thresholding}
@@ -229,11 +229,11 @@
         \begin{block}{Observation}<+->\ \\
             Corner regions tend to overlap a lot, especially in textured regions\\
             Results in poorly distributed inpainting mask
-        \end{block} 
-        \begin{block}{Possible Remedy}<+->\ \\
-            Discard corners already covered by a `better' corner 
         \end{block}
-     \end{frame} 
+        \begin{block}{Possible Remedy}<+->\ \\
+            Discard corners already covered by a `better' corner
+        \end{block}
+     \end{frame}
 
     \begin{frame}[t]
         \frametitle{Non-maximum Suppression}
@@ -242,7 +242,7 @@
             \includegraphics[height=0.5\linewidth]{images/cnms2.png}
             \caption{Effect of CNMS on the distribution of corner regions across the image.
             Parameters: $\sigma=1,\rho=1,R=4,q=0.02$. \textbf{Top:} CNMS, \textbf{Bottom:} no CNMS}
-        \end{figure} 
+        \end{figure}
     \end{frame}
 
     \section{Reconstruction}
@@ -286,7 +286,7 @@
             \caption{ \textbf{Left:} Original image, \textbf{Middle:} Inpainting mask
                 ($\sigma=1,\rho=1,R=7,q=0.02$) 1.99\% of all pixels, \textbf{Right:} Reconstruction
             ($\sigma=2,\lambda=0.1,\alpha=0.49,\gamma=1, PSNR: 18.35$) }
-        \end{figure}        
+        \end{figure}
     \end{frame}
 
     \begin{frame}
@@ -298,7 +298,7 @@
             \caption{ \textbf{Left:} Original image, \textbf{Middle:} Inpainting mask
                 ($\sigma=1,\rho=1,R=4,q=0.02$) 1.96\% of all pixels, \textbf{Right:} Reconstruction
             ($\sigma=2,\lambda=0.1,\alpha=0.49,\gamma=1, PSNR: 31.45$) }
-        \end{figure}        
+        \end{figure}
     \end{frame}
 
     \begin{frame}
@@ -321,7 +321,7 @@
             \includegraphics[width=0.6\linewidth]{images/house.png}
             \caption{ \textbf{Left:} Original image, \textbf{Middle:} Inpainting mask ($\sigma=1,
             \rho=1, R=5, q=0.1$) 9.23\% of all pixels, \textbf{Right:} Reconstruction
-            ($\sigma=2,\lambda=0.4,\alpha=0.49,\gamma=1, PSNR: 21.11)$} 
+            ($\sigma=2,\lambda=0.4,\alpha=0.49,\gamma=1, PSNR: 21.11)$}
         \end{figure}
     \end{frame}
 
@@ -333,7 +333,7 @@
             \includegraphics[width=\linewidth]{images/less_noise.png}
             \caption{ \textbf{Left:} Original image, \textbf{Middle:} Inpainting mask ($\sigma=1.5,
             \rho=2, R=6, q=0.02$) 1.88\% of all pixels, \textbf{Right:} Reconstruction
-            ($\sigma=2,\lambda=0.2,\alpha=0.49,\gamma=1, PSNR: 20.74)$} 
+            ($\sigma=2,\lambda=0.2,\alpha=0.49,\gamma=1, PSNR: 20.74)$}
         \end{figure}
     \end{frame}
 
@@ -355,9 +355,9 @@
             \item Choose mask radius at least as large as integration scale
             \item Fairly good results for binary images
             \item Struggles with textured images
-            \item Corners are fairly seldom 
+            \item Corners are fairly seldom
         \end{itemize}
-        
+
     \end{frame}
 
     \begin{frame}

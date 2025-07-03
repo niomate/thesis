@@ -2,7 +2,7 @@
 #                                                                    #
 #         README - Usage for corner_detection and inpaint            #
 #                                                                    #
-#                  Daniel Gusenburger July 2020                      #
+#                  Jana Gusenburger July 2020                      #
 #                                                                    #
 ######################################################################
 
@@ -15,7 +15,7 @@ To build both programs, simply run make.
 Options:
 --------
 
-	-s <float>:	Sigma/Noise scale 
+	-s <float>:	Sigma/Noise scale
 			Default: 1.0
 
 	-r <float>:	Rho/Integration scale
@@ -26,8 +26,8 @@ Options:
 			  1 -> Tomasi-Kanade
 			  2 -> Förstner-Harris
 			Default: Förstner-Harris (2)
-	
-	-q <float>:	Percentile parameter 
+
+	-q <float>:	Percentile parameter
 			Meaning depends on whether TPPT is enabled or not
 			Default: 0.1
 
@@ -51,7 +51,7 @@ Options:
 2. Inpainting using edge-enhancing diffusion
 
 ######################################################################
-#                       START DISCLAIMER                             # 
+#                       START DISCLAIMER                             #
 ######################################################################
 #                                                                    #
 # The mask image used in this version has to be a black white image, #
@@ -63,7 +63,7 @@ Options:
 # with a grey value of 127.                                          #
 #                                                                    #
 ######################################################################
-#                       END DISCLAIMER                               # 
+#                       END DISCLAIMER                               #
 ######################################################################
 
 ./inpaint [OPTIONS] [input image - original (.pgm format)] [mask image (.pgm format)]
@@ -82,7 +82,7 @@ Options:
 
 	-a <float>:	Alpha/Dissipitavity parameter
 			Default: 0.49
-	
+
 	-n <int>:       Number of inner/solver iterations
 			Default: 200
 
